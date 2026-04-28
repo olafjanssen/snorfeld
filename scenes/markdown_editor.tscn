@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bgiwg4m4ui35r"]
 
 [ext_resource type="Script" uid="uid://wbb02haj18gd" path="res://scenes/markdown_editor.gd" id="1_k4myg"]
+[ext_resource type="Script" uid="uid://bkrcju0gj6lcf" path="res://scenes/markdown_content.gd" id="2_s3r50"]
 
 [node name="MarkdownEditor" type="Control" unique_id=752879554]
 layout_mode = 3
@@ -22,6 +23,7 @@ focus_mode = 2
 bbcode_enabled = true
 context_menu_enabled = true
 selection_enabled = true
+script = ExtResource("2_s3r50")
 
 [node name="Timer" type="Timer" parent="." unique_id=700370734]
 wait_time = 0.5
