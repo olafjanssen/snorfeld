@@ -1,41 +1,36 @@
-[gd_scene format=3 uid="uid://4rgrd681c2xv"]
+[gd_scene format=3 uid="uid://editor"]
 
-[ext_resource type="Script" uid="uid://b7bd543nep8b" path="res://scenes/editor.gd" id="1_b1cmn"]
+[ext_resource type="PackedScene" uid="uid://bf3eclvsm35s8" path="res://scenes/markdown_editor.tscn" id="1_b1cmn"]
+[ext_resource type="Script" uid="uid://b7bd543nep8b" path="res://scenes/editor.gd" id="1_pxqd5"]
 
-[node name="Editor" type="Control" unique_id=105917203]
+[node name="Editor" type="Control" unique_id=1446888840]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1_b1cmn")
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pxqd5")
 
-[node name="MenuBar" type="MenuBar" parent="." unique_id=1664322914]
+[node name="MenuBar" type="MenuBar" parent="." unique_id=642592578]
 layout_mode = 0
 anchor_right = 1.0
 size_flags_vertical = 0
 
-[node name="File" type="PopupMenu" parent="MenuBar" unique_id=1910163537]
+[node name="File" type="PopupMenu" parent="MenuBar" unique_id=1796061075]
 
-[node name="HSplitContainer" type="HSplitContainer" parent="." unique_id=419689212]
+[node name="HSplitContainer" type="HSplitContainer" parent="." unique_id=933558153]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 24.0
-split_offsets = PackedInt32Array(100)
-split_offset = 100
+split_offsets = PackedInt32Array(200)
+split_offset = 200
 
-[node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=801853342]
-custom_minimum_size = Vector2(100, 0)
+[node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=1189385257]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="HSplitContainer" unique_id=1804623058]
-layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_right = 40
-
-[node name="TextEdit" type="TextEdit" parent="HSplitContainer/MarginContainer" unique_id=452516716]
+[node name="MarkdownEditor" parent="HSplitContainer" unique_id=939043927 instance=ExtResource("1_b1cmn")]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-wrap_mode = 1

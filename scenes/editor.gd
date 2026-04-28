@@ -2,7 +2,7 @@ extends Control
 
 @onready var file_popup: PopupMenu = $MenuBar/File
 @onready var tree: Tree = $HSplitContainer/FileBrowser
-@onready var text_edit: TextEdit = $HSplitContainer/MarginContainer/TextEdit
+@onready var markdown_editor: Control = $HSplitContainer/MarkdownEditor
 
 const OPEN_FOLDER_ID: int = 0
 const CONFIG_FILE: String = "user://config.cfg"
@@ -10,6 +10,9 @@ var config: ConfigFile = ConfigFile.new()
 var current_path: String
 
 func _ready():
+	# Apply theme and font sizes via signals
+	_update_theme()
+
 	_load_config()
 	file_popup.add_item("Open Folder...", OPEN_FOLDER_ID)
 	file_popup.add_separator()
@@ -19,6 +22,9 @@ func _ready():
 	$HSplitContainer.offset_top = $MenuBar.size.y
 	_setup_file_tree()
 	tree.item_activated.connect(_on_item_activated)
+
+func _update_theme():
+	pass  # Customize in user code
 
 func _load_config():
 	if config.load(CONFIG_FILE) != OK:
@@ -73,7 +79,8 @@ func _on_item_activated():
 			_save_config()
 			return
 		elif FileAccess.file_exists(path):
-			text_edit.text = FileAccess.get_file_as_string(path)
+			var content: String = FileAccess.get_file_as_string(path)
+			markdown_editor.public_text = content
 			return
 		item = tree.get_next_selected(item)
 
