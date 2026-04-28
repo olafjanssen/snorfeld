@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://4rgrd681c2xv"]
+
+[ext_resource type="Script" uid="uid://b7bd543nep8b" path="res://scenes/editor.gd" id="1_b1cmn"]
+
+[node name="Editor" type="Control" unique_id=105917203]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_b1cmn")
+
+[node name="MenuBar" type="MenuBar" parent="." unique_id=1664322914]
+layout_mode = 0
+anchor_right = 1.0
+size_flags_vertical = 0
+
+[node name="File" type="PopupMenu" parent="MenuBar" unique_id=1910163537]
+
+[node name="HSplitContainer" type="HSplitContainer" parent="." unique_id=419689212]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 24.0
+split_offsets = PackedInt32Array(100)
+split_offset = 100
+
+[node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=801853342]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="HSplitContainer" unique_id=1804623058]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_right = 40
+
+[node name="TextEdit" type="TextEdit" parent="HSplitContainer/MarginContainer" unique_id=452516716]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+wrap_mode = 1
