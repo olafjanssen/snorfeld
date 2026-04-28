@@ -1,7 +1,7 @@
 extends Control
 
 @onready var scroll: ScrollContainer = $ScrollContainer
-@onready var rich_text: RichTextLabel = $ScrollContainer/RichTextContent
+@onready var markdown_label: RichTextLabel = $ScrollContainer/MarkdownContent
 @onready var cursor_timer: Timer = $Timer
 
 var text: String = ""
@@ -10,13 +10,13 @@ var cursor_visible: bool = true
 var selecting: bool = false
 var selection_start: int = 0
 
-# Public property for editor.gd to set/get text
-var public_text: String:
-	get:
-		return text
-	set(value):
-		text = value
-		_update_display()
+# Public methods for external access
+func set_text(p_text: String):
+	text = p_text
+	_update_display()
+
+func get_text() -> String:
+	return text
 
 func _ready():
 	cursor_timer.start()
@@ -84,12 +84,14 @@ func _handle_mouse_click(event: InputEventMouseButton):
 		grab_focus()
 
 	if event.pressed:
-		var pos: Vector2 = scroll.get_local_mouse_position()
-		var rt_pos: Vector2 = rich_text.to_local(pos)
-		var clicked_index: int = rich_text.get_letter_index_at_position(rt_pos)
-
-		# Map BBCode index back to Markdown index
-		cursor_pos = _bbcode_to_markdown_index(clicked_index, rich_text.text)
+		# For now: estimate position based on character count
+		var line_height: float = markdown_label.get_line_height(0)
+		var scrollbar = scroll.get_v_scrollbar()
+		var lines_visible: int = scrollbar.maximum + 1 if scrollbar else 1
+		var line_count: int = max(1, text.count("\n") + 1)
+		var char_per_line: int = text.length() / line_count
+		var clicked_line: int = int(scroll.get_local_mouse_position().y / line_height) + (scrollbar.value if scrollbar else 0)
+		cursor_pos = min(clicked_line * char_per_line, text.length())
 
 		if event.shift_pressed:
 			_select_to(cursor_pos)
@@ -98,41 +100,6 @@ func _handle_mouse_click(event: InputEventMouseButton):
 			selecting = false
 
 		_update_display()
-
-func _bbcode_to_markdown_index(bbcode_pos: int, bbcode_text: String) -> int:
-	# Convert BBCode character position back to Markdown position
-	# by counting how many BBCode tags are before bbcode_pos
-	var md_pos: int = bbcode_pos
-	var i: int = 0
-
-	while i < bbcode_pos and i < bbcode_text.length():
-		if bbcode_text.substr(i, 7) == "[size=32]" or bbcode_text.substr(i, 7) == "[size=24]" or bbcode_text.substr(i, 7) == "[size=20]":
-			md_pos -= 7
-			i += 7
-		elif bbcode_text.substr(i, 8) == "[/size]":
-			md_pos -= 8
-			i += 8
-		elif bbcode_text.substr(i, 3) == "[b]":
-			md_pos -= 3
-			i += 3
-		elif bbcode_text.substr(i, 4) == "[/b]":
-			md_pos -= 4
-			i += 4
-		elif bbcode_text.substr(i, 3) == "[i]":
-			md_pos -= 3
-			i += 3
-		elif bbcode_text.substr(i, 4) == "[/i]":
-			md_pos -= 4
-			i += 4
-		else:
-			i += 1
-
-	return md_pos
-
-func _markdown_to_bbcode_index(md_pos: int) -> int:
-	# Convert Markdown position to equivalent BBCode position
-	var bbcode: String = _markdown_to_bbcode(text.substr(0, md_pos))
-	return bbcode.length()
 
 func _move_cursor(delta: int, shift: bool):
 	if shift and not selecting:
@@ -289,88 +256,11 @@ func _on_cursor_blink():
 	pass
 
 func _update_display():
-	var bbcode: String = _markdown_to_bbcode(text)
-
-	# Selection highlighting (cursor removed for now)
-	if selecting:
-		var start_bbcode: int = _markdown_to_bbcode_index(selection_start)
-		var end_bbcode: int = _markdown_to_bbcode_index(cursor_pos)
-		if start_bbcode > end_bbcode:
-			var temp_bb: int = start_bbcode
-			start_bbcode = end_bbcode
-			end_bbcode = temp_bb
-		bbcode = (bbcode.substr(0, start_bbcode) +
-			"[color=8080ff]" + bbcode.substr(start_bbcode, end_bbcode - start_bbcode) + "[/color]" +
-			bbcode.substr(end_bbcode))
-
-	if rich_text.text != bbcode:
-		rich_text.text = bbcode
-
-func _markdown_to_bbcode(md: String) -> String:
-	var i: int = 0
-	var result: String = ""
-	var in_bold: bool = false
-	var in_italic: bool = false
-
-	while i < md.length():
-		var c: String = md[i]
-		var lookahead: String = ""
-		if i + 1 < md.length():
-			lookahead = md.substr(i, 2)
-
-		# Check for bold ** at start of word/line
-		if lookahead == "**" and (i == 0 or md[i-1] == " " or md[i-1] == "\n" or md[i-1] == "\t"):
-			in_bold = not in_bold
-			result += "[b]" if in_bold else "[/b]"
-			i += 2
-			continue
-
-		# Check for bold __ at start of word/line
-		if lookahead == "__" and (i == 0 or md[i-1] == " " or md[i-1] == "\n" or md[i-1] == "\t"):
-			in_bold = not in_bold
-			result += "[b]" if in_bold else "[/b]"
-			i += 2
-			continue
-
-		# Check for italic * at start of word
-		if c == "*" and (i == 0 or md[i-1] == " " or md[i-1] == "\n" or md[i-1] == "\t") and (i + 1 >= md.length() or md[i+1] != "*"):
-			in_italic = not in_italic
-			result += "[i]" if in_italic else "[/i]"
-			i += 1
-			continue
-
-		# Check for italic _ at start of word
-		if c == "_" and (i == 0 or md[i-1] == " " or md[i-1] == "\n" or md[i-1] == "\t") and (i + 1 >= md.length() or md[i+1] != "_"):
-			in_italic = not in_italic
-			result += "[i]" if in_italic else "[/i]"
-			i += 1
-			continue
-
-		result += c
-		i += 1
-
-	# Close any open tags
-	if in_bold:
-		result += "[/b]"
-	if in_italic:
-		result += "[/i]"
-
-	# Post-process headers: lines starting with #
-	var lines := result.split("\n")
-	result = ""
-	for line in lines:
-		var stripped := line.strip_edges()
-		if stripped.begins_with("#"):
-			var level: int = 0
-			while level < stripped.length() and stripped[level] == "#":
-				level += 1
-			var header_text: String = stripped.substr(level).strip_edges()
-			var size: int = 32
-			if level >= 2:
-				size = 24
-			if level >= 3:
-				size = 20
-			line = "[size=%d]%s[/size]" % [size, header_text]
-		result += line + "\n"
-
-	return result
+	# Use markdown_text property if MarkdownLabel script is assigned
+	if markdown_label.has_method("set_markdown_text"):
+		print("adding markdown text")
+		markdown_label.markdown_text = text
+	else:
+		# Fallback: plain text (MarkdownLabel will format it if script is assigned)
+		print("plain text fallback")
+		markdown_label.text = text

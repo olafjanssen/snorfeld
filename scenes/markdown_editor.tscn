@@ -1,28 +1,27 @@
-[gd_scene format=3 uid="uid://bf3eclvsm35s8"]
+[gd_scene format=3 uid="uid://bgiwg4m4ui35r"]
 
 [ext_resource type="Script" uid="uid://wbb02haj18gd" path="res://scenes/markdown_editor.gd" id="1_k4myg"]
 
-[node name="MarkdownEditor" type="Control" unique_id=756319153]
+[node name="MarkdownEditor" type="Control" unique_id=752879554]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_k4myg")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1481921349]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=872335635]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="RichTextContent" type="RichTextLabel" parent="ScrollContainer" unique_id=166191797]
+[node name="MarkdownContent" type="RichTextLabel" parent="ScrollContainer" unique_id=1400961899]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
 bbcode_enabled = true
-fit_content = true
 context_menu_enabled = true
 selection_enabled = true
 
-[node name="Timer" type="Timer" parent="." unique_id=1494302450]
+[node name="Timer" type="Timer" parent="." unique_id=700370734]
 wait_time = 0.5

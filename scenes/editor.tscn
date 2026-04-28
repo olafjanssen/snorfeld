@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://editor"]
 
-[ext_resource type="PackedScene" uid="uid://bf3eclvsm35s8" path="res://scenes/markdown_editor.tscn" id="1_b1cmn"]
+[ext_resource type="PackedScene" uid="uid://bgiwg4m4ui35r" path="res://scenes/markdown_editor.tscn" id="1_b1cmn"]
 [ext_resource type="Script" uid="uid://b7bd543nep8b" path="res://scenes/editor.gd" id="1_pxqd5"]
 
 [node name="Editor" type="Control" unique_id=1446888840]
