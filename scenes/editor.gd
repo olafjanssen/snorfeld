@@ -17,16 +17,8 @@ func _ready():
 	file_popup.id_pressed.connect(_on_menu_item_pressed)
 	await get_tree().process_frame
 	$HSplitContainer.offset_top = $MenuBar.size.y
-	_setup_font_sizes()
 	_setup_file_tree()
 	tree.item_activated.connect(_on_item_activated)
-
-func _setup_font_sizes():
-	var font_size: int = 16 * 2
-	text_edit.add_theme_font_size_override("font_size", font_size)
-	tree.add_theme_font_size_override("font_size", font_size)
-	file_popup.add_theme_font_size_override("font_size", font_size)
-	tree.add_theme_constant_override("line_spacing", int(font_size * 1.5))
 
 func _load_config():
 	if config.load(CONFIG_FILE) != OK:
