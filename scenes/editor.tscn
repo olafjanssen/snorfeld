@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://bgiwg4m4ui35r" path="res://scenes/markdown_editor.tscn" id="1_b1cmn"]
 [ext_resource type="Script" uid="uid://b7bd543nep8b" path="res://scenes/editor.gd" id="1_pxqd5"]
+[ext_resource type="Script" uid="uid://0eyhknua844u" path="res://scenes/menu_bar.gd" id="2_q68jb"]
 
 [node name="Editor" type="Control" unique_id=1446888840]
 layout_mode = 3
@@ -16,6 +17,7 @@ script = ExtResource("1_pxqd5")
 layout_mode = 0
 anchor_right = 1.0
 size_flags_vertical = 0
+script = ExtResource("2_q68jb")
 
 [node name="File" type="PopupMenu" parent="MenuBar" unique_id=1796061075]
 

@@ -2,7 +2,7 @@ extends Control
 
 @onready var file_popup: PopupMenu = $MenuBar/File
 @onready var tree: Tree = $HSplitContainer/FileBrowser
-@onready var markdown_editor_root: Node = $HSplitContainer/MarkdownEditor
+@onready var markdown_editor: Control = $HSplitContainer/MarkdownEditor
 
 const OPEN_FOLDER_ID: int = 0
 const CONFIG_FILE: String = "user://config.cfg"
@@ -80,7 +80,7 @@ func _on_item_activated():
 			return
 		elif FileAccess.file_exists(path):
 			var content: String = FileAccess.get_file_as_string(path)
-			$HSplitContainer/MarkdownEditor.set_text(content)
+			markdown_editor.call_deferred("set_text", content)
 			return
 		item = tree.get_next_selected(item)
 

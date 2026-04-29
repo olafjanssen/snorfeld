@@ -1,7 +1,7 @@
 extends Control
 
 @onready var scroll: ScrollContainer = $ScrollContainer
-@onready var markdown_label: RichTextLabel = $ScrollContainer/MarkdownContent
+@onready var markdown_label: MarkdownLabel = $ScrollContainer/MarkdownContent
 @onready var cursor_timer: Timer = $Timer
 
 var text: String = ""
@@ -256,11 +256,7 @@ func _on_cursor_blink():
 	pass
 
 func _update_display():
-	# Use markdown_text property if MarkdownLabel script is assigned
-	if markdown_label.has_method("set_markdown_text"):
-		print("adding markdown text")
-		markdown_label.markdown_text = text
-	else:
-		# Fallback: plain text (MarkdownLabel will format it if script is assigned)
-		print("plain text fallback")
-		markdown_label.text = text
+	# Use the MarkdownLabel node's markdown_text property
+	# The MarkdownLabel script (markdown_field.gd) handles the formatting
+	markdown_label.markdown_text = text
+	markdown_label.visible_characters = -1
