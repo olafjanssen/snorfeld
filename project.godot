@@ -15,6 +15,10 @@ run/main_scene="res://scenes/editor.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[display]
+
+window/dpi/allow_hidpi=false
+
 [dotnet]
 
 project/assembly_name="snorfeld"
@@ -26,3 +30,5 @@ project/assembly_name="snorfeld"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true

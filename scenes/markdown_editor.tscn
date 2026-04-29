@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bgiwg4m4ui35r"]
 
 [ext_resource type="Script" uid="uid://wbb02haj18gd" path="res://scenes/markdown_editor.gd" id="1_k4myg"]
+[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_grceo"]
 [ext_resource type="Script" uid="uid://migi6bhiy15a" path="res://scenes/markdown_field.gd" id="2_mdfield"]
 
 [node name="MarkdownEditor" type="Control" unique_id=752879554]
@@ -16,12 +17,14 @@ script = ExtResource("1_k4myg")
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource("2_grceo")
 
 [node name="MarkdownContent" type="RichTextLabel" parent="ScrollContainer" unique_id=1400961899]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
+theme = ExtResource("2_grceo")
 bbcode_enabled = true
 text = "Hello!
 [b]Hello![/b]

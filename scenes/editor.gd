@@ -24,7 +24,7 @@ func _ready():
 	tree.item_activated.connect(_on_item_activated)
 
 func _update_theme():
-	pass  # Customize in user code
+	Window.get_focused_window().set_content_scale_factor(2.0)
 
 func _load_config():
 	if config.load(CONFIG_FILE) != OK:

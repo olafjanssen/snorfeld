@@ -1,0 +1,30 @@
+[gd_resource type="Theme" format=3 uid="uid://o8gx2nmawf21"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7tebe"]
+bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_clh54"]
+bg_color = Color(1, 1, 0.9411765, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k48q0"]
+bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
+border_width_right = 2
+border_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
+
+[resource]
+Panel/styles/panel = SubResource("StyleBoxFlat_7tebe")
+RichTextLabel/colors/default_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+RichTextLabel/font_sizes/bold_font_size = 22
+RichTextLabel/font_sizes/bold_italics_font_size = 22
+RichTextLabel/font_sizes/h1_font_size = 44
+RichTextLabel/font_sizes/h2_font_size = 16
+RichTextLabel/font_sizes/h3_font_size = 16
+RichTextLabel/font_sizes/h4_font_size = 16
+RichTextLabel/font_sizes/h5_font_size = 16
+RichTextLabel/font_sizes/h6_font_size = 16
+RichTextLabel/font_sizes/italics_font_size = 22
+RichTextLabel/font_sizes/mono_font_size = 22
+RichTextLabel/font_sizes/normal_font_size = 22
+RichTextLabel/styles/background = SubResource("StyleBoxFlat_clh54")
+Tree/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+Tree/styles/panel = SubResource("StyleBoxFlat_k48q0")
