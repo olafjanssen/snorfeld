@@ -7,18 +7,17 @@ var current_path: String = "res://"
 
 func _ready():
 	Window.get_focused_window().set_content_scale_factor(2.0)
-	_load_config()
-	_setup_file_tree()
 	item_selected.connect(_on_item_selected)
 	GlobalSignals.request_open_folder.connect(_on_open_folder_requested)
 	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	_load_config()
 
 func _load_config():
 	if config.load(CONFIG_FILE) != OK:
-		current_path = "res://"
+		GlobalSignals.folder_opened.emit("res://")
 	else:
-		current_path = config.get_value("general", "last_folder", "res://")
-
+		GlobalSignals.folder_opened.emit(config.get_value("general", "last_folder", "res://"))
+	
 func _save_config():
 	config.set_value("general", "last_folder", current_path)
 	config.save(CONFIG_FILE)

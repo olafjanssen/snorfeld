@@ -23,6 +23,7 @@ window/stretch/scale_mode="integer"
 [autoload]
 
 GlobalSignals="*res://autoload/global_signals.gd"
+CacheManager="*res://autoload/cache_manager.gd"
 
 [dotnet]
 
