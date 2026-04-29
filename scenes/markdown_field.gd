@@ -65,9 +65,26 @@ func _process_header(line: String) -> String:
 
 func _process_inline_formatting(line: String) -> String:
 	var result := line
+	# Process dialogue first (before other inline formatting)
+	result = _process_dialogue(result)
+	# Then process markdown formatting
 	result = _process_paired(result, "(\\*\\*|__)(.+?)\\1", "[b]", "[/b]")
 	result = _process_paired(result, "(\\*|_)(.+?)\\1", "[i]", "[/i]")
 	result = _process_paired(result, "(~~)(.+?)\\1", "[s]", "[/s]")
+	return result
+
+func _process_dialogue(text: String) -> String:
+	var regex := RegEx.create_from_string("\"([^\"]*)\"")
+	if not regex:
+		return text
+	var result := text
+	var matches := regex.search_all(result)
+	for i in range(matches.size() - 1, -1, -1):
+		var m := matches[i]
+		var start := m.get_start()
+		var end := m.get_end()
+		# Replace quotes and content with colored version (preserving quotes if keep_markdown_markers)
+		result = result.substr(0, start) + "\"[color=#000000AA]" + m.get_string(1) + "[/color]\"" + result.substr(end)
 	return result
 
 func _process_paired(text: String, pattern: String, open_tag: String, close_tag: String) -> String:
@@ -88,10 +105,8 @@ func _process_paired(text: String, pattern: String, open_tag: String, close_tag:
 
 func _get_header_size(level: int) -> int:
 	var theme_names := ["h1_font_size", "h2_font_size", "h3_font_size", "h4_font_size", "h5_font_size", "h6_font_size"]
-	print(level)
 	if level >= 1 and level <= 6:
 		var theme_size := get_theme_font_size(theme_names[level - 1])
-		print(theme_size)
 		if theme_size != null:
 			return theme_size
 	return get_theme_default_font_size()

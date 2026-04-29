@@ -64,11 +64,7 @@ func _refresh_files(parent_item: TreeItem, path: String):
 		var is_dir: bool = dir.current_is_dir()
 		entries.append({"name": file_name, "path": full_path, "is_dir": is_dir})
 	
-	print(entries)
-
 	entries.sort_custom(func(a, b): return a["name"].naturalnocasecmp_to(b["name"]) < 0)
-	
-	print(entries)
 	
 	for entry in entries:
 		var item: TreeItem = tree.create_item(parent_item)
