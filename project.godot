@@ -24,6 +24,7 @@ window/stretch/scale_mode="integer"
 
 GlobalSignals="*res://autoload/global_signals.gd"
 CacheManager="*res://autoload/cache_manager.gd"
+OllamaClient="*res://autoload/ollama_client.gd"
 
 [dotnet]
 
