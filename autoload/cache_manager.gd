@@ -7,6 +7,11 @@ const CACHE_DIR_NAME := ".snorfeld"
 const PARAGRAPH_DIR_NAME := "paragraph"
 var current_cache_path := ""
 
+# Task queue for paragraph cache creation
+var task_queue := []
+var queue_mutex := Mutex.new()
+var processing := false
+
 
 func _ready() -> void:
 	# Connect to folder_opened signal to auto-create cache
@@ -29,14 +34,60 @@ func _on_file_scanned(path: String, paragraphs: Array) -> void:
 	if not DirAccess.dir_exists_absolute(cache_path):
 		create_folder(cache_path)
 
-	# Create a cache file for each paragraph
+	# Queue tasks for each paragraph
 	for paragraph in paragraphs:
 		var hash := _hash_paragraph_md5(paragraph)
 		var cache_file_path := cache_path.path_join("%s.json" % hash)
 
 		# Only create if it doesn't exist
 		if not _file_exists(cache_file_path):
-			_create_cache_file(cache_file_path, paragraph)
+			_queue_task(cache_path, hash, paragraph)
+
+	# Start processing if not already running
+	if not processing:
+		_processing_start()
+
+
+# Queue a task for paragraph cache creation
+func _queue_task(cache_path: String, hash: String, paragraph: String) -> void:
+	queue_mutex.lock()
+	task_queue.append({"cache_path": cache_path, "hash": hash, "paragraph": paragraph})
+	queue_mutex.unlock()
+
+	# If already processing, just return - the thread will pick up new tasks
+	if processing:
+		return
+
+	# Otherwise start processing
+	_processing_start()
+
+
+# Start processing tasks
+func _processing_start() -> void:
+	if processing:
+		return
+	processing = true
+	_process_next_task()
+
+
+# Process next task using call_deferred to avoid blocking the main thread
+func _process_next_task() -> void:
+	queue_mutex.lock()
+	if task_queue.is_empty():
+		queue_mutex.unlock()
+		processing = false
+		return
+
+	var task: Dictionary = task_queue.pop_front()
+	queue_mutex.unlock()
+
+	# Process the task - create cache file
+	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
+	if not _file_exists(cache_file_path):
+		_create_cache_file(cache_file_path, task["paragraph"])
+
+	# Process next task
+	call_deferred("_process_next_task")
 
 
 # Check if file exists
