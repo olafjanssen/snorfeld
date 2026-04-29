@@ -6,14 +6,21 @@ bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_clh54"]
 bg_color = Color(1, 1, 0.9411765, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2586"]
+bg_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k48q0"]
 bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
 border_width_right = 2
 border_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0a83b"]
+bg_color = Color(0.6784314, 0.8392157, 1, 1)
+
 [resource]
 Panel/styles/panel = SubResource("StyleBoxFlat_7tebe")
 RichTextLabel/colors/default_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+RichTextLabel/constants/line_separation = 0
 RichTextLabel/font_sizes/bold_font_size = 22
 RichTextLabel/font_sizes/bold_italics_font_size = 22
 RichTextLabel/font_sizes/h1_font_size = 44
@@ -27,4 +34,9 @@ RichTextLabel/font_sizes/mono_font_size = 22
 RichTextLabel/font_sizes/normal_font_size = 22
 RichTextLabel/styles/background = SubResource("StyleBoxFlat_clh54")
 Tree/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+Tree/colors/font_hovered_color = Color(0, 0.47058824, 0.83137256, 1)
+Tree/colors/font_hovered_selected_color = Color(0, 0.47058824, 0.83137256, 1)
+Tree/colors/font_selected_color = Color(0, 0, 0, 1)
+Tree/styles/hovered = SubResource("StyleBoxFlat_b2586")
 Tree/styles/panel = SubResource("StyleBoxFlat_k48q0")
+Tree/styles/selected = SubResource("StyleBoxFlat_0a83b")

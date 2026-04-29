@@ -27,7 +27,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/margin_left = 22
 theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 100
+theme_override_constants/margin_bottom = 400
 
 [node name="MarkdownContent" type="RichTextLabel" parent="ScrollContainer/MarginContainer" unique_id=1400961899]
 layout_mode = 2

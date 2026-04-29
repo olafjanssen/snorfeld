@@ -21,7 +21,7 @@ func _ready():
 	await get_tree().process_frame
 	$HSplitContainer.offset_top = $MenuBar.size.y
 	_setup_file_tree()
-	tree.item_activated.connect(_on_item_activated)
+	tree.item_selected.connect(_on_item_activated)
 
 func _update_theme():
 	Window.get_focused_window().set_content_scale_factor(2.0)
@@ -52,6 +52,7 @@ func _refresh_files(parent_item: TreeItem, path: String):
 	if dir == null:
 		return
 	dir.list_dir_begin()
+	var entries: Array = []
 	var file_name: String
 	while true:
 		file_name = dir.get_next()
@@ -61,11 +62,20 @@ func _refresh_files(parent_item: TreeItem, path: String):
 			continue
 		var full_path: String = path + file_name
 		var is_dir: bool = dir.current_is_dir()
+		entries.append({"name": file_name, "path": full_path, "is_dir": is_dir})
+	
+	print(entries)
+
+	entries.sort_custom(func(a, b): return a["name"].naturalnocasecmp_to(b["name"]) < 0)
+	
+	print(entries)
+	
+	for entry in entries:
 		var item: TreeItem = tree.create_item(parent_item)
-		item.set_text(0, file_name)
-		item.set_metadata(0, {"path": full_path, "is_dir": is_dir})
-		if is_dir:
-			_refresh_files(item, _ensure_trailing_slash(full_path))
+		item.set_text(0, entry["name"])
+		item.set_metadata(0, {"path": entry["path"], "is_dir": entry["is_dir"]})
+		if entry["is_dir"]:
+			_refresh_files(item, _ensure_trailing_slash(entry["path"]))
 
 func _on_item_activated():
 	var item: TreeItem = tree.get_next_selected(null)
