@@ -39,8 +39,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 24.0
 theme = ExtResource("2_xg7d5")
-split_offsets = PackedInt32Array(200)
-split_offset = 200
+split_offsets = PackedInt32Array(116)
+split_offset = 116
 
 [node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=1189385257]
 layout_mode = 2

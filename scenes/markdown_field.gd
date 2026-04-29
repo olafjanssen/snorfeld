@@ -10,14 +10,6 @@ extends RichTextLabel
 
 @export var keep_markdown_markers: bool = true
 
-@export_group("Header formats")
-@export var h1_size: int = 24
-@export var h2_size: int = 20
-@export var h3_size: int = 18
-@export var h4_size: int = 16
-@export var h5_size: int = 14
-@export var h6_size: int = 12
-
 var _dirty: bool = false
 
 func _ready() -> void:
@@ -39,7 +31,7 @@ func _process(_delta: float) -> void:
 func _update() -> void:
 	super.clear()
 	super.parse_bbcode(_convert_markdown(markdown_text))
-	
+
 
 func _convert_markdown(source_text: String) -> String:
 	if not bbcode_enabled:
@@ -63,12 +55,12 @@ func _process_header(line: String) -> String:
 	var m := regex.search(line)
 	if not m:
 		return result
-		
+
 	if keep_markdown_markers:
 		result = "[b][font_size=%d]%s %s[/font_size][/b]" % [_get_header_size(m.get_string(1).length()), m.get_string(1), m.get_string(2)]
 	else:
 		result = "[b][font_size=%d]%s[/font_size][/b]" % [_get_header_size(m.get_string(1).length()), m.get_string(2)]
-	
+
 	return result
 
 func _process_inline_formatting(line: String) -> String:
@@ -95,11 +87,11 @@ func _process_paired(text: String, pattern: String, open_tag: String, close_tag:
 	return result
 
 func _get_header_size(level: int) -> int:
-	match level:
-		1: return h1_size
-		2: return h2_size
-		3: return h3_size
-		4: return h4_size
-		5: return h5_size
-		6: return h6_size
-	return h1_size
+	var theme_names := ["h1_font_size", "h2_font_size", "h3_font_size", "h4_font_size", "h5_font_size", "h6_font_size"]
+	print(level)
+	if level >= 1 and level <= 6:
+		var theme_size := get_theme_font_size(theme_names[level - 1])
+		print(theme_size)
+		if theme_size != null:
+			return theme_size
+	return get_theme_default_font_size()

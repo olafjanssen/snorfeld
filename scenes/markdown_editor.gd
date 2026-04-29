@@ -1,7 +1,7 @@
 extends Control
 
 @onready var scroll: ScrollContainer = $ScrollContainer
-@onready var markdown_label: MarkdownLabel = $ScrollContainer/MarkdownContent
+@onready var markdown_label: MarkdownLabel = $ScrollContainer/MarginContainer/MarkdownContent
 @onready var cursor_timer: Timer = $Timer
 
 var text: String = ""
