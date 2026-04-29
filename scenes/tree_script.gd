@@ -17,7 +17,7 @@ func _load_config():
 		GlobalSignals.folder_opened.emit("res://")
 	else:
 		GlobalSignals.folder_opened.emit(config.get_value("general", "last_folder", "res://"))
-	
+
 func _save_config():
 	config.set_value("general", "last_folder", current_path)
 	config.save(CONFIG_FILE)
@@ -58,6 +58,25 @@ func _refresh_files(parent_item: TreeItem, path: String):
 		item.set_metadata(0, {"path": entry["path"], "is_dir": entry["is_dir"]})
 		if entry["is_dir"]:
 			_refresh_files(item, _ensure_trailing_slash(entry["path"]))
+		else:
+			# Scan file and emit signal with paragraphs
+			_scan_file_and_emit(entry["path"])
+
+func _scan_file_and_emit(file_path: String) -> void:
+	# Only scan text files
+	if not file_path.ends_with(".txt") and not file_path.ends_with(".md"):
+		return
+
+	var file := FileAccess.open(file_path, FileAccess.READ)
+	if file:
+		var content := file.get_as_text()
+		file.close()
+
+		# Split into paragraphs (separated by double newlines)
+		var paragraphs := content.split("\n\n")
+
+		# Emit file_scanned signal with paragraphs
+		GlobalSignals.file_scanned.emit(file_path, paragraphs)
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()
