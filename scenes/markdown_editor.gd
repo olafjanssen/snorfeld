@@ -21,6 +21,12 @@ func get_text() -> String:
 func _ready():
 	cursor_timer.start()
 	_update_display()
+	GlobalSignals.file_selected.connect(_on_file_selected)
+
+func _on_file_selected(path: String):
+	if FileAccess.file_exists(path):
+		var content: String = FileAccess.get_file_as_string(path)
+		set_text(content)
 
 func _input(event: InputEvent):
 	if not has_focus():
@@ -84,12 +90,10 @@ func _handle_mouse_click(event: InputEventMouseButton):
 		grab_focus()
 
 	if event.pressed:
-		# For now: estimate position based on character count
 		var line_height: float = markdown_label.get_line_height(0)
 		var scrollbar = scroll.get_v_scrollbar()
-		var lines_visible: int = scrollbar.maximum + 1 if scrollbar else 1
 		var line_count: int = max(1, text.count("\n") + 1)
-		var char_per_line: int = text.length() / line_count
+		var char_per_line: int = int(text.length() / float(line_count))
 		var clicked_line: int = int(scroll.get_local_mouse_position().y / line_height) + (scrollbar.value if scrollbar else 0)
 		cursor_pos = min(clicked_line * char_per_line, text.length())
 
@@ -252,11 +256,8 @@ func _update_selection():
 	selecting = false
 
 func _on_cursor_blink():
-	# Cursor blink disabled for now
 	pass
 
 func _update_display():
-	# Use the MarkdownLabel node's markdown_text property
-	# The MarkdownLabel script (markdown_field.gd) handles the formatting
 	markdown_label.markdown_text = text
 	markdown_label.visible_characters = -1

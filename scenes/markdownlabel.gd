@@ -65,33 +65,30 @@ func _process_header(line: String) -> String:
 
 func _process_inline_formatting(line: String) -> String:
 	var result := line
-	# Process dialogue first (before other inline formatting)
 	result = _process_dialogue(result)
-	# Then process markdown formatting
 	result = _process_paired(result, "(\\*\\*|__)(.+?)\\1", "[b]", "[/b]")
 	result = _process_paired(result, "(\\*|_)(.+?)\\1", "[i]", "[/i]")
 	result = _process_paired(result, "(~~)(.+?)\\1", "[s]", "[/s]")
 	return result
 
-func _process_dialogue(text: String) -> String:
+func _process_dialogue(_text: String) -> String:
 	var regex := RegEx.create_from_string("\"([^\"]*)\"")
 	if not regex:
-		return text
-	var result := text
+		return _text
+	var result := _text
 	var matches := regex.search_all(result)
 	for i in range(matches.size() - 1, -1, -1):
 		var m := matches[i]
 		var start := m.get_start()
 		var end := m.get_end()
-		# Replace quotes and content with colored version (preserving quotes if keep_markdown_markers)
 		result = result.substr(0, start) + "\"[color=#000000AA]" + m.get_string(1) + "[/color]\"" + result.substr(end)
 	return result
 
-func _process_paired(text: String, pattern: String, open_tag: String, close_tag: String) -> String:
+func _process_paired(_text: String, pattern: String, open_tag: String, close_tag: String) -> String:
 	var regex := RegEx.create_from_string(pattern)
 	if not regex:
-		return text
-	var result := text
+		return _text
+	var result := _text
 	var matches := regex.search_all(result)
 	for i in range(matches.size() - 1, -1, -1):
 		var m := matches[i]

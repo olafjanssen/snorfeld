@@ -20,6 +20,10 @@ config/icon="res://icon.svg"
 window/stretch/aspect="expand"
 window/stretch/scale_mode="integer"
 
+[autoload]
+
+GlobalSignals="*res://autoload/global_signals.gd"
+
 [dotnet]
 
 project/assembly_name="snorfeld"
