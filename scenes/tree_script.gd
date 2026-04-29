@@ -5,6 +5,8 @@ const CONFIG_FILE: String = "user://config.cfg"
 var config: ConfigFile = ConfigFile.new()
 var current_path: String = "res://"
 
+var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
+
 func _ready():
 	Window.get_focused_window().set_content_scale_factor(2.0)
 	item_selected.connect(_on_item_selected)
@@ -62,9 +64,16 @@ func _refresh_files(parent_item: TreeItem, path: String):
 			# Scan file and emit signal with paragraphs
 			_scan_file_and_emit(entry["path"])
 
+func _is_text_file(file_path: String) -> bool:
+	for ext in text_file_whitelist:
+		if file_path.ends_with(".%s" % ext):
+			return true
+	return false
+
+
 func _scan_file_and_emit(file_path: String) -> void:
-	# Only scan text files
-	if not file_path.ends_with(".txt") and not file_path.ends_with(".md"):
+	# Only scan whitelisted text files
+	if not _is_text_file(file_path):
 		return
 
 	var file := FileAccess.open(file_path, FileAccess.READ)

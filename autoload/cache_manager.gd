@@ -31,7 +31,7 @@ func _on_file_scanned(path: String, paragraphs: Array) -> void:
 
 	# Create a cache file for each paragraph
 	for paragraph in paragraphs:
-		var hash := _hash_paragraph(paragraph)
+		var hash := _hash_paragraph_md5(paragraph)
 		var cache_file_path := cache_path.path_join("%s.json" % hash)
 
 		# Only create if it doesn't exist
@@ -47,13 +47,13 @@ func _file_exists(path: String) -> bool:
 	return false
 
 
-# Creates a simple hash from a paragraph string
-func _hash_paragraph(paragraph: String) -> String:
-	var hash := 0
-	for i in range(paragraph.length()):
-		var char_code := ord(paragraph[i])
-		hash = (hash * 31 + char_code) % 0xFFFFFFFF
-	return "%08x" % hash
+# Creates an MD5 hash from a paragraph string
+func _hash_paragraph_md5(paragraph: String) -> String:
+	var hash_ctx := HashingContext.new()
+	hash_ctx.start(HashingContext.HASH_MD5)
+	hash_ctx.update(paragraph.to_utf8_buffer())
+	var hash_bytes := hash_ctx.finish()
+	return hash_bytes.hex_encode()
 
 
 # Creates an empty JSON cache file for a paragraph
@@ -61,7 +61,7 @@ func _create_cache_file(path: String, paragraph: String) -> bool:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		# Write empty JSON structure with paragraph reference
-		var data := {"paragraph_hash": _hash_paragraph(paragraph), "source": "", "text": paragraph}
+		var data := {"paragraph_hash": _hash_paragraph_md5(paragraph), "source": "", "text": paragraph}
 		var json_str := JSON.stringify(data)
 		file.store_string(json_str)
 		file.close()
@@ -80,6 +80,7 @@ func create_folder(base_path: String) -> bool:
 			return false
 	else:
 		return true
+
 
 # Clears the cache folder and all its contents
 func clear_cache(base_path: String) -> bool:
