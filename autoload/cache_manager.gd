@@ -168,9 +168,9 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 	var corrected_text := paragraph
 	var explanation := ""
 
-	if llm_response.get("response", null) != null:
+	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us
-		var parsed = llm_response["response"]
+		var parsed = llm_response["parsed_json"]
 		print("[CacheManager] Parsed JSON: corrected=%s, explanation=%s" % [parsed.get("corrected", ""), parsed.get("explanation", "")])
 		if parsed is Dictionary:
 			if parsed.has("corrected"):

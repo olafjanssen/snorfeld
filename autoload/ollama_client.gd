@@ -27,23 +27,37 @@ func _ready() -> void:
 	http_request.request_completed.connect(_on_http_request_completed)
 
 ## Generate text from a model with a given prompt
-## @param model The model name (e.g., "llama3", "mistral")
-## @param prompt The prompt to send to the model
-## @param options Optional dictionary with additional parameters
-## @return Dictionary with response data or error information
 func generate(model: String, prompt: String, options: Dictionary = {}) -> Dictionary:
 	var request_body: Dictionary = _build_request_body(model, prompt, options)
 	return await _make_api_request(DEFAULT_ENDPOINT, request_body, "generate")
 
 ## Generate JSON response from a model
 ## Sets format to "json" in the request options
-## @param model The model name
-## @param prompt The prompt to send to the model
-## @param options Optional dictionary with additional parameters
-## @return Dictionary with parsed JSON response or error information
 func generate_json(model: String, prompt: String, options: Dictionary = {}) -> Dictionary:
 	options["format"] = "json"
 	var response: Dictionary = await generate(model, prompt, options)
+
+	# Extract and parse the actual response data
+	if response.get("error", null) == null and response.has("json_data"):
+		var json_data: Dictionary = response["json_data"]
+		var response_text: String = ""
+
+		# Try response field first, then thinking
+		if json_data.has("response") and json_data["response"] != "":
+			response_text = json_data["response"]
+		elif json_data.has("thinking"):
+			response_text = json_data["thinking"]
+
+		if response_text != "":
+			var json = JSON.new()
+			var parse_err: int = json.parse(response_text)
+			if parse_err == OK:
+				response["parsed_json"] = json.get_data()
+				response["is_json"] = true
+			else:
+				response["is_json"] = false
+			response["raw_response"] = response_text
+
 	return response
 
 ## Build the request body dictionary for the Ollama API
@@ -82,9 +96,8 @@ func _make_api_request(endpoint: String, request_body: Dictionary, request_type:
 		return {"error": "Failed to send request", "error_code": request_err}
 
 	print("[OllamaClient] Request sent, waiting for response...")
-	# Wait for the signal
 	var response: Dictionary = await generate_complete
-	print("[OllamaClient] Received response: %s" % JSON.stringify(response))
+	print("[OllamaClient] Received response")
 	return response
 
 ## Generic HTTP request completion callback
@@ -97,26 +110,15 @@ func _on_http_request_completed(result: int, response_code: int, headers: Packed
 
 	# Otherwise it's a generate request
 	var response_body_str: String = body.get_string_from_utf8()
-	print("[OllamaClient] Response body: %s" % response_body_str)
+	print("[OllamaClient] Response body received")
 
 	if result == OK and response_code == 200:
 		var json = JSON.new()
 		var parse_err: int = json.parse(response_body_str)
 		if parse_err == OK:
 			var json_data: Dictionary = json.get_data()
-			print("[OllamaClient] Parsed JSON: %s" % JSON.stringify(json_data))
-			
-			# Parse actual JSON response
-			var data_string : String = json_data.get("response") if json_data.has("response") and json_data["response"] != "" else (json_data.get("thinking") if json_data.has("thinking") and json_data["thinking"] != "" else "")
-			var json2 = JSON.new()
-			var parse_err2: int = json2.parse(data_string)
-			if parse_err == OK:
-				generate_complete.emit({"response": json2.get_data(), "model": json_data.get("model", ""), "done": json_data.get("done", false)})
-				return
-			else:
-				print("[OllamaClient] JSON parse error of response data: %d" % parse_err)
-				generate_complete.emit({"error": "Failed to parse JSON response data", "raw_response": response_body_str, "parse_error": parse_err})
-					
+			generate_complete.emit({"json_data": json_data, "raw_response": response_body_str})
+			return
 		else:
 			print("[OllamaClient] JSON parse error: %d" % parse_err)
 			generate_complete.emit({"error": "Failed to parse JSON response", "raw_response": response_body_str, "parse_error": parse_err})
@@ -127,14 +129,6 @@ func _on_http_request_completed(result: int, response_code: int, headers: Packed
 	else:
 		print("[OllamaClient] API request failed with code: %d" % response_code)
 		generate_complete.emit({"error": "API request failed", "error_code": response_code, "response": response_body_str})
-
-## Parse JSON from the response text
-func _parse_json_response(response_text: String):
-	var json = JSON.new()
-	var err: int = json.parse(response_text)
-	if err == OK:
-		return json.get_data()
-	return null
 
 ## Check if Ollama is running and accessible
 func is_ollama_running() -> bool:
@@ -150,7 +144,6 @@ func is_ollama_running() -> bool:
 		return false
 
 	print("[OllamaClient] Check request sent to %s, waiting for response..." % CHECK_ENDPOINT)
-	# Wait for the signal
 	var running: bool = await check_complete
 	print("[OllamaClient] Ollama running: %s" % running)
 	current_request_type = ""
