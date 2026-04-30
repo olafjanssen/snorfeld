@@ -29,8 +29,6 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var in_italic: bool = false
 	var in_dialog: bool = false
 
-	print("highlighting line ", line, ": ", text, ' - ', length)
-
 	while pos < length:
 		# Check for headers at start of line
 		if pos == 0:
@@ -72,5 +70,4 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 		
 		pos += 1
 
-	print(tokens)
 	return tokens

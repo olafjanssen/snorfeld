@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cggewxv0plvcs" path="res://scenes/tree_script.gd" id="3"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="4"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/text_editor.tscn" id="6_eqbpn"]
+[ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/paragraph_check.tscn" id="7_5lcyj"]
 
 [node name="Editor" type="Control" unique_id=1329163321]
 layout_mode = 3
@@ -41,8 +42,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 24.0
 theme = ExtResource("4")
-split_offsets = PackedInt32Array(10, 22)
-split_offset = 10
+split_offsets = PackedInt32Array(200, 612)
+split_offset = 200
 
 [node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=282338753]
 custom_minimum_size = Vector2(200, 0)
@@ -57,4 +58,8 @@ custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
 [node name="MarkdownEditor" parent="HSplitContainer" unique_id=755770291 instance=ExtResource("0")]
+visible = false
+layout_mode = 2
+
+[node name="ParagraphCheck" parent="HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
 layout_mode = 2

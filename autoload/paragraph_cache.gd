@@ -160,3 +160,27 @@ func _create_cache_directory(base_path: String) -> bool:
 			return false
 	else:
 		return true
+
+
+# Get cached data for a paragraph by its hash
+# Returns Dictionary with cached data or null if not found
+func get_paragraph_cache(paragraph_hash: String, file_path: String) -> Dictionary:
+	var dir_path := file_path.get_base_dir()
+	var cache_path := dir_path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
+	var cache_file_path := cache_path.path_join("%s.json" % paragraph_hash)
+
+	if _file_exists(cache_file_path):
+		var file := FileAccess.open(cache_file_path, FileAccess.READ)
+		if file:
+			var content := file.get_as_text()
+			file.close()
+			var json := JSON.new()
+			var parse_result := json.parse(content)
+			if parse_result == OK:
+				return json.get_data()
+			else:
+				print("[ParagraphCache] ERROR: Failed to parse cache file: %s" % cache_file_path)
+		return {}
+	else:
+		print("[ParagraphCache] Cache not found for hash: %s" % paragraph_hash)
+		return {}
