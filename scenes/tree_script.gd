@@ -8,7 +8,6 @@ var current_path: String = "res://"
 var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
 
 func _ready():
-	Window.get_focused_window().set_content_scale_factor(2.0)
 	item_selected.connect(_on_item_selected)
 	GlobalSignals.request_open_folder.connect(_on_open_folder_requested)
 	GlobalSignals.folder_opened.connect(_on_folder_opened)

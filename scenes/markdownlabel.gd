@@ -36,6 +36,7 @@ func _update() -> void:
 func _convert_markdown(source_text: String) -> String:
 	if not bbcode_enabled:
 		return source_text
+
 	var result: String = ""
 	var lines := source_text.split("\n")
 	for line in lines:
