@@ -11,9 +11,11 @@ func _on_paragraph_selected(paragraph_hash: String, file_path: String):
 	if cache_data:
 		var original : String = cache_data.get("original_text", "")
 		var corrected : String = cache_data.get("corrected_text", "")
+
 		if original != corrected:
 			var diff_utility: DiffUtility = DiffUtility.new()
 			GrammarText.text = diff_utility.calculate_diff(original, corrected)
+			#print(GrammarText.text)
 		else:
 			GrammarText.text = corrected
 		Explanation.text = cache_data.get("explanation", "")
