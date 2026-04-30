@@ -32,6 +32,7 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_conte
 		# Only create if it doesn't exist
 		if not _file_exists(cache_file_path):
 			print("[ParagraphCache] Queuing paragraph (hash: %s, length: %d chars)" % [paragraph_hash, paragraph.length()])
+			# Pass file_content as full_chapter for structure analysis
 			_queue_task(cache_path, paragraph_hash, paragraph, file_content)
 			queued_count += 1
 		else:
@@ -126,6 +127,8 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 	var grammar_result = await TextAnalyzer.analyze_grammar(paragraph, context_before, context_after)
 	# Use TextAnalyzer to get stylistic improvements with context
 	var style_result = await TextAnalyzer.analyze_style(paragraph, context_before, context_after)
+	# Use TextAnalyzer to get structural suggestions with full chapter context
+	var structure_result = await TextAnalyzer.analyze_structure(paragraph, context_before, context_after, file_content)
 
 	# Write cache file with original, grouped analysis results
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -142,6 +145,10 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 				"style": {
 					"enhanced": style_result.get("enhanced", paragraph),
 					"explanation": style_result.get("explanation", "")
+				},
+				"structure": {
+					"suggestion": structure_result.get("suggestion", ""),
+					"explanation": structure_result.get("explanation", "")
 				}
 			},
 			"llm_model": grammar_result.get("model", "unknown"),
