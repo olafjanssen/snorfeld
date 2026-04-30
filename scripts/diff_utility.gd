@@ -46,12 +46,10 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 		var max_look_ahead : int = min(5, old_words.size() - i, new_words.size() - j)
 
 		for look_ahead in range(1, max_look_ahead + 1):
-			# Check if old_words[i + look_ahead - 1] matches new_words[j]
 			if i + look_ahead - 1 < old_words.size() and old_words[i + look_ahead - 1] == new_words[j]:
 				best_match_idx = j
 				best_match_old_idx = i + look_ahead - 1
 				break
-			# Check if old_words[i] matches new_words[j + look_ahead - 1]
 			if j + look_ahead - 1 < new_words.size() and old_words[i] == new_words[j + look_ahead - 1]:
 				best_match_idx = j + look_ahead - 1
 				best_match_old_idx = i
@@ -59,30 +57,42 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 
 		# If we found a match ahead, add the unmatched words as changes and skip to the match
 		if best_match_idx != -1:
-			# Add unmatched old words as deletions
+			# Collect unmatched old and new words
+			var old_changes := []
 			while i < best_match_old_idx:
-				if show_deletions:
-					result.append("[bgcolor=red]" + old_words[i] + "[/bgcolor]")
-				else:
-					result.append(old_words[i])
+				old_changes.append(old_words[i])
 				i += 1
 
-			# Add unmatched new words as insertions
+			var new_changes := []
 			while j < best_match_idx:
-				if show_insertions:
-					result.append("[bgcolor=green]" + new_words[j] + "[/bgcolor]")
-				else:
-					result.append(new_words[j])
+				new_changes.append(new_words[j])
 				j += 1
+
+			# If we have equal number of deletions and insertions, show as orange changes
+			if old_changes.size() == new_changes.size() and old_changes.size() > 0:
+				for k in range(old_changes.size()):
+					if show_insertions:
+						result.append("[bgcolor=orange]" + new_changes[k] + "[/bgcolor]")
+					else:
+						result.append(new_changes[k])
+			else:
+				# Different counts - show deletions and insertions separately
+				for word in old_changes:
+					if show_deletions:
+						result.append("[bgcolor=red]" + word + "[/bgcolor]")
+					else:
+						result.append(word)
+				for word in new_changes:
+					if show_insertions:
+						result.append("[bgcolor=green]" + word + "[/bgcolor]")
+					else:
+						result.append(word)
 		else:
 			# No match found ahead, just mark current word as changed
 			if i < old_words.size() and j < new_words.size():
-				if show_deletions:
-					result.append("[bgcolor=red]" + old_words[i] + "[/bgcolor]")
-				else:
-					result.append(old_words[i])
+				# This is a deletion+insertion pair at same position - show as orange
 				if show_insertions:
-					result.append("[bgcolor=green]" + new_words[j] + "[/bgcolor]")
+					result.append("[bgcolor=orange]" + new_words[j] + "[/bgcolor]")
 				else:
 					result.append(new_words[j])
 				i += 1
