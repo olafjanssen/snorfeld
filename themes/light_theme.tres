@@ -1,5 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://o8gx2nmawf21"]
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7tebe"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7tebe"]
 bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
 
@@ -18,6 +20,12 @@ border_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
 bg_color = Color(0.6784314, 0.8392157, 1, 1)
 
 [resource]
+CodeEdit/colors/background_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
+CodeEdit/colors/caret_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+CodeEdit/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+CodeEdit/colors/selection_color = Color(0.6784314, 0.8392157, 1, 1)
+CodeEdit/constants/wrap_offset = 0
+CodeEdit/styles/focus = SubResource("StyleBoxEmpty_7tebe")
 Panel/styles/panel = SubResource("StyleBoxFlat_7tebe")
 RichTextLabel/colors/default_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 RichTextLabel/constants/line_separation = 0
