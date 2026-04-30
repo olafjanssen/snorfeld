@@ -2,15 +2,23 @@ extends Node
 # Text analyzer for generating corrections and explanations using LLM
 
 # Analyzes text for grammar/spelling corrections
-func analyze_grammar(paragraph: String) -> Dictionary:
+func analyze_grammar(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
 	print("[TextAnalyzer] Generating grammar LLM response for paragraph...")
+	# Build context from surrounding text (trim to reasonable size)
+	var context := ""
+	if context_before.length() > 0 or context_after.length() > 0:
+		# Take up to 100 words before and after
+		var before_words := _get_words(context_before, 100)
+		var after_words := _get_words(context_after, 100)
+		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
+
 	# Call Ollama to get spelling/grammar corrections with explanations
 	var prompt := """
 You are a helpful writing assistant. Analyze the following text and provide:
-1. A corrected version with improved spelling and grammar (keep the original meaning)
+1. A corrected version with improved spelling and grammar (keep the original meaning), be aware the text may contain dialogue between \"...\" and MarkDown markup.
 2. A brief explanation of the changes made
 
-Text to analyze:
+%sText to analyze:
 %s
 
 Respond with a JSON object containing 'corrected' and 'explanation' fields:
@@ -18,7 +26,7 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
   "corrected": "[corrected text]",
   "explanation": "[brief explanation of changes]"
 }
-""" % paragraph
+""" % [context, paragraph]
 
 	print("[TextAnalyzer] Sending grammar prompt to Ollama (length: %d chars)" % prompt.length())
 	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
@@ -54,15 +62,23 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 
 
 # Analyzes text for stylistic improvements
-func analyze_style(paragraph: String) -> Dictionary:
+func analyze_style(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
 	print("[TextAnalyzer] Generating style LLM response for paragraph...")
+	# Build context from surrounding text (trim to reasonable size)
+	var context := ""
+	if context_before.length() > 0 or context_after.length() > 0:
+		# Take up to 100 words before and after
+		var before_words := _get_words(context_before, 100)
+		var after_words := _get_words(context_after, 100)
+		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
+
 	# Call Ollama to get stylistic improvements with explanations
 	var prompt := """
 You are a helpful writing assistant. Analyze the following text and provide:
 1. An enhanced version with improved style, flow, and readability (keep the original meaning)
 2. A brief explanation of the stylistic improvements made
 
-Text to analyze:
+%sText to analyze:
 %s
 
 Respond with a JSON object containing 'enhanced' and 'explanation' fields:
@@ -70,7 +86,7 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
   "enhanced": "[enhanced text]",
   "explanation": "[brief explanation of stylistic changes]"
 }
-""" % paragraph
+""" % [context, paragraph]
 
 	print("[TextAnalyzer] Sending style prompt to Ollama (length: %d chars)" % prompt.length())
 	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
@@ -103,6 +119,17 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 		"explanation": explanation,
 		"model": model
 	}
+
+
+# Helper function to get first N words from text
+func _get_words(text: String, max_words: int) -> String:
+	var words := text.split(" ", false)
+	if words.size() <= max_words:
+		return text
+	var result_words := []
+	for i in range(min(words.size(), max_words)):
+		result_words.append(words[i])
+	return " ".join(result_words)
 
 
 # Backward compatible wrapper - analyzes text for grammar corrections

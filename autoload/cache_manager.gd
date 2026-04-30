@@ -20,10 +20,10 @@ func _on_folder_opened(path: String) -> void:
 	create_folder(current_cache_path)
 
 
-func _on_file_scanned(path: String, paragraphs: Array) -> void:
+func _on_file_scanned(path: String, paragraphs: Array, file_content: String) -> void:
 	print("[CacheManager] File scanned: %s (paragraphs: %d)" % [path, paragraphs.size()])
 	# Delegate to ParagraphCache
-	ParagraphCache.queue_paragraphs_for_cache(path, paragraphs)
+	ParagraphCache.queue_paragraphs_for_cache(path, paragraphs, file_content)
 
 
 # Creates a folder for the given directory

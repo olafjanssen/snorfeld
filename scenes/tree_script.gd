@@ -83,8 +83,8 @@ func _scan_file_and_emit(file_path: String) -> void:
 		# Split into paragraphs (separated by double newlines)
 		var paragraphs := content.split("\n\n")
 
-		# Emit file_scanned signal with paragraphs
-		GlobalSignals.file_scanned.emit(file_path, paragraphs)
+		# Emit file_scanned signal with paragraphs and full content for context
+		GlobalSignals.file_scanned.emit(file_path, paragraphs, content)
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()

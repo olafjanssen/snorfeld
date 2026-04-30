@@ -13,7 +13,7 @@ func connect_signals() -> void:
 
 
 # Handle file scanned event - queue paragraphs for caching
-func queue_paragraphs_for_cache(file_path: String, paragraphs: Array) -> void:
+func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_content: String = "") -> void:
 	# Get the base directory from the file path
 	var dir_path := file_path.get_base_dir()
 	var cache_path := dir_path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
@@ -32,7 +32,7 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array) -> void:
 		# Only create if it doesn't exist
 		if not _file_exists(cache_file_path):
 			print("[ParagraphCache] Queuing paragraph (hash: %s, length: %d chars)" % [paragraph_hash, paragraph.length()])
-			_queue_task(cache_path, paragraph_hash, paragraph)
+			_queue_task(cache_path, paragraph_hash, paragraph, file_content)
 			queued_count += 1
 		else:
 			print("[ParagraphCache] Paragraph already cached (hash: %s)" % paragraph_hash)
@@ -45,9 +45,9 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array) -> void:
 
 
 # Queue a task for paragraph cache creation
-func _queue_task(cache_path: String, paragraph_hash: String, paragraph: String) -> void:
+func _queue_task(cache_path: String, paragraph_hash: String, paragraph: String, file_content: String) -> void:
 	queue_mutex.lock()
-	task_queue.append({"cache_path": cache_path, "hash": paragraph_hash, "paragraph": paragraph})
+	task_queue.append({"cache_path": cache_path, "hash": paragraph_hash, "paragraph": paragraph, "file_content": file_content})
 	queue_mutex.unlock()
 	print("[ParagraphCache] Task queued. Queue size: %d" % task_queue.size())
 
@@ -88,16 +88,16 @@ func _process_next_task() -> void:
 	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
 	if not _file_exists(cache_file_path):
 		print("[ParagraphCache] Creating cache file: %s" % cache_file_path)
-		_create_cache_file_and_continue(cache_file_path, task["paragraph"])
+		_create_cache_file_and_continue(cache_file_path, task["paragraph"], task.get("file_content", ""))
 	else:
 		print("[ParagraphCache] Cache file already exists, skipping: %s" % cache_file_path)
 		call_deferred("_process_next_task")
 
 
 # Helper to create cache file and continue processing
-func _create_cache_file_and_continue(cache_file_path: String, paragraph: String) -> void:
+func _create_cache_file_and_continue(cache_file_path: String, paragraph: String, file_content: String) -> void:
 	print("[ParagraphCache] Calling TextAnalyzer for paragraph...")
-	var success := await _create_cache_file(cache_file_path, paragraph)
+	var success := await _create_cache_file(cache_file_path, paragraph, file_content)
 	if success:
 		print("[ParagraphCache] Cache file created successfully: %s" % cache_file_path)
 	else:
@@ -107,11 +107,25 @@ func _create_cache_file_and_continue(cache_file_path: String, paragraph: String)
 
 
 # Creates a cache file for a paragraph with analysis results
-func _create_cache_file(path: String, paragraph: String) -> bool:
-	# Use TextAnalyzer to get grammar corrections
-	var grammar_result = await TextAnalyzer.analyze_grammar(paragraph)
-	# Use TextAnalyzer to get stylistic improvements
-	var style_result = await TextAnalyzer.analyze_style(paragraph)
+func _create_cache_file(path: String, paragraph: String, file_content: String = "") -> bool:
+	# Extract context from file_content (text before and after the paragraph)
+	var context_before := ""
+	var context_after := ""
+	if file_content.length() > 0 and paragraph.length() > 0:
+		var paragraph_index := file_content.find(paragraph)
+		if paragraph_index != -1:
+			# Get up to 100 words before the paragraph
+			var before_start = max(0, paragraph_index - 1000)  # Look back ~1000 chars for context
+			context_before = file_content.substr(before_start, paragraph_index - before_start)
+			# Get up to 100 words after the paragraph
+			var after_start := paragraph_index + paragraph.length()
+			var after_end = min(file_content.length(), after_start + 1000)
+			context_after = file_content.substr(after_start, after_end - after_start)
+
+	# Use TextAnalyzer to get grammar corrections with context
+	var grammar_result = await TextAnalyzer.analyze_grammar(paragraph, context_before, context_after)
+	# Use TextAnalyzer to get stylistic improvements with context
+	var style_result = await TextAnalyzer.analyze_style(paragraph, context_before, context_after)
 
 	# Write cache file with original, grouped analysis results
 	var file := FileAccess.open(path, FileAccess.WRITE)
