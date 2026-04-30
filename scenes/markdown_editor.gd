@@ -5,9 +5,6 @@ extends Control
 
 var text: String = ""
 var cursor_position: int = 0
-var cursor_opening: String = "[bgcolor=#aaaaaa]"
-var cursor_closing: String = "[/bgcolor]"
-
 
 # Public methods for external access
 func set_text(p_text: String):
@@ -29,15 +26,14 @@ func _on_file_selected(path: String):
 
 func _update_display():
 	if text.is_empty():
-		markdown_label.markdown_text = cursor_opening + " " + cursor_closing
+		markdown_label.markdown_text = "[pulse freq=1.0 color=#ffffff40][font gl=-5]|[/font][/pulse]"
 		return
 
 	var display_text: String = text
 	if cursor_position <= text.length():
 		var before_cursor: String = text.substr(0, cursor_position)
 		if cursor_position < text.length():
-			var at_cursor: String = text.substr(cursor_position, 1)
-			display_text = before_cursor + cursor_opening + at_cursor + cursor_closing + text.substr(cursor_position + 1)
+			display_text = before_cursor + "[pulse freq=1.0 color=#ffffff40][font gl=-5]|[/font][/pulse]" + text.substr(cursor_position)
 		else:
-			display_text = before_cursor + cursor_opening + " " + cursor_closing
+			display_text = before_cursor + "[pulse freq=1.0 color=#ffffff40][font gl=-5]|[/font][/pulse]"
 	markdown_label.markdown_text = display_text
