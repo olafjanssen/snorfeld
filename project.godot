@@ -15,18 +15,21 @@ run/main_scene="res://scenes/editor.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
-[display]
-
-window/stretch/aspect="expand"
-window/stretch/scale_mode="integer"
-
 [autoload]
 
 GlobalSignals="*res://autoload/global_signals.gd"
 CacheManager="*res://autoload/cache_manager.gd"
+OllamaClient="*res://autoload/ollama_client.gd"
 ParagraphCache="*res://autoload/paragraph_cache.gd"
 TextAnalyzer="*res://autoload/text_analyzer.gd"
-OllamaClient="*res://autoload/ollama_client.gd"
+SettingsManager="*res://autoload/settings_manager.gd"
+SettingsHandler="*res://autoload/settings_handler.gd"
+
+[display]
+
+window/subwindows/embed_subwindows=false
+window/stretch/aspect="expand"
+window/stretch/scale_mode="integer"
 
 [dotnet]
 

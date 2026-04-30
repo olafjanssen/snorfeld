@@ -16,11 +16,6 @@ func _ready() -> void:
 func _on_folder_opened(path: String) -> void:
 	print("[CacheManager] Folder opened: %s" % path)
 	current_cache_path = path.path_join(CACHE_DIR_NAME)
-
-	# Clear existing cache for testing purposes and create new folder
-	clear_cache()
-
-	current_cache_path = path.path_join(CACHE_DIR_NAME)
 	print("[CacheManager] Cache path set to: %s" % current_cache_path)
 	create_folder(current_cache_path)
 

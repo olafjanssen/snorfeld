@@ -21,12 +21,13 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 """ % paragraph
 
 	print("[TextAnalyzer] Sending prompt to Ollama (length: %d chars)" % prompt.length())
-	var llm_response = await OllamaClient.generate_json("qwen3.5:9b", prompt, {"temperature": 0.3, "max_tokens": 4096})
+	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
+	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
 	print("[TextAnalyzer] Received Ollama response")
 
 	var corrected_text := paragraph
 	var explanation := ""
-	var model := "qwen3.5:9b"
+	var model := SettingsManager.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us

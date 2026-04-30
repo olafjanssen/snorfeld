@@ -6,10 +6,7 @@ extends Node
 ##   var json_response = await OllamaClient.generate_json("llama3", "Tell me a joke")
 ##   var running = await OllamaClient.is_ollama_running()
 
-## Default Ollama API endpoint
-const DEFAULT_ENDPOINT: String = "http://localhost:11434/api/generate"
-## Endpoint to check if Ollama is running
-const CHECK_ENDPOINT: String = "http://localhost:11434/api/tags"
+
 
 ## HTTP request node
 var http_request: HTTPRequest
@@ -28,8 +25,18 @@ func _ready() -> void:
 
 ## Generate text from a model with a given prompt
 func generate(model: String, prompt: String, options: Dictionary = {}) -> Dictionary:
+	# Use model from settings if not provided
+	if model == "" or model == null:
+		model = SettingsManager.get_llm_model()
+
+	# Merge options with defaults from settings
+	if not options.has("temperature"):
+		options["temperature"] = SettingsManager.get_llm_temperature()
+	if not options.has("max_tokens"):
+		options["max_tokens"] = SettingsManager.get_llm_max_tokens()
+
 	var request_body: Dictionary = _build_request_body(model, prompt, options)
-	return await _make_api_request(DEFAULT_ENDPOINT, request_body, "generate")
+	return await _make_api_request(SettingsManager.get_llm_endpoint(), request_body, "generate")
 
 ## Generate JSON response from a model
 ## Sets format to "json" in the request options
@@ -136,14 +143,14 @@ func is_ollama_running() -> bool:
 	current_request_type = "check"
 	var headers: PackedStringArray = []
 
-	var request_err: int = http_request.request(CHECK_ENDPOINT, headers, HTTPClient.METHOD_GET, "")
+	var request_err: int = http_request.request(SettingsManager.get_llm_check_endpoint(), headers, HTTPClient.METHOD_GET, "")
 
 	if request_err != OK:
 		print("[OllamaClient] ERROR: Failed to send check request, error code: %d" % request_err)
 		current_request_type = ""
 		return false
 
-	print("[OllamaClient] Check request sent to %s, waiting for response..." % CHECK_ENDPOINT)
+	print("[OllamaClient] Check request sent to %s, waiting for response..." % SettingsManager.get_llm_check_endpoint())
 	var running: bool = await check_complete
 	print("[OllamaClient] Ollama running: %s" % running)
 	current_request_type = ""
