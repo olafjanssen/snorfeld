@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("0")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=811769730]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1483406397]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,21 +19,45 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="VBoxContainer" unique_id=631995457]
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=811769730]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=631995457]
 layout_mode = 2
 text = "Grammar and spelling:"
 
-[node name="GrammarText" type="RichTextLabel" parent="VBoxContainer" unique_id=2071257063]
+[node name="GrammarText" type="RichTextLabel" parent="ScrollContainer/VBoxContainer" unique_id=2071257063]
 layout_mode = 2
 bbcode_enabled = true
-text = "Test text"
+text = "Grammar corrected test"
 fit_content = true
 
-[node name="Label2" type="Label" parent="VBoxContainer" unique_id=1053352535]
+[node name="Label2" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=1053352535]
 layout_mode = 2
 text = "Explanation:"
 
-[node name="Explanation" type="RichTextLabel" parent="VBoxContainer" unique_id=1415928413]
+[node name="GrammarExplanation" type="RichTextLabel" parent="ScrollContainer/VBoxContainer" unique_id=1415928413]
 layout_mode = 2
-text = "Test explanation"
+text = "Grammar explanation"
+fit_content = true
+
+[node name="Label3" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=1276937670]
+layout_mode = 2
+text = "Stylistic improvement:"
+
+[node name="StyleText" type="RichTextLabel" parent="ScrollContainer/VBoxContainer" unique_id=1612059421]
+layout_mode = 2
+bbcode_enabled = true
+text = "Style enhanced text"
+fit_content = true
+
+[node name="Label4" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=52542134]
+layout_mode = 2
+text = "Explanation:"
+
+[node name="StyleExplanation" type="RichTextLabel" parent="ScrollContainer/VBoxContainer" unique_id=673186146]
+layout_mode = 2
+text = "Style explanation"
 fit_content = true

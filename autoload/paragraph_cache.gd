@@ -108,19 +108,29 @@ func _create_cache_file_and_continue(cache_file_path: String, paragraph: String)
 
 # Creates a cache file for a paragraph with analysis results
 func _create_cache_file(path: String, paragraph: String) -> bool:
-	# Use TextAnalyzer to get corrections and explanations
-	var analysis_result = await TextAnalyzer.analyze_text(paragraph)
+	# Use TextAnalyzer to get grammar corrections
+	var grammar_result = await TextAnalyzer.analyze_grammar(paragraph)
+	# Use TextAnalyzer to get stylistic improvements
+	var style_result = await TextAnalyzer.analyze_style(paragraph)
 
-	# Write cache file with original, corrected version, and explanation
+	# Write cache file with original, grouped analysis results
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		var data := {
 			"paragraph_hash": _hash_paragraph_md5(paragraph),
 			"source": "",
 			"original_text": paragraph,
-			"corrected_text": analysis_result.get("corrected_text", paragraph),
-			"explanation": analysis_result.get("explanation", ""),
-			"llm_model": analysis_result.get("model", "unknown"),
+			"analyses": {
+				"grammar": {
+					"corrected": grammar_result.get("corrected", paragraph),
+					"explanation": grammar_result.get("explanation", "")
+				},
+				"style": {
+					"enhanced": style_result.get("enhanced", paragraph),
+					"explanation": style_result.get("explanation", "")
+				}
+			},
+			"llm_model": grammar_result.get("model", "unknown"),
 			"cached_at": Time.get_unix_time_from_system()
 		}
 		var json_str := JSON.stringify(data)
