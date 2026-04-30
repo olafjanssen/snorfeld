@@ -27,9 +27,12 @@ SettingsHandler="*res://autoload/settings_handler.gd"
 
 [display]
 
+window/size/viewport_width=1920
+window/size/viewport_height=980
 window/subwindows/embed_subwindows=false
 window/stretch/aspect="expand"
 window/stretch/scale_mode="integer"
+window/per_pixel_transparency/allowed=true
 
 [dotnet]
 

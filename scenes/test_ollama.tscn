@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://ca6ew62el2q10"]
-
-[ext_resource type="Script" path="res://test_ollama.gd" id="1"]
-
-[node name="TestOllama" type="Node" unique_id=1079296836]
-script = ExtResource("1")
