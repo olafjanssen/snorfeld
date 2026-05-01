@@ -83,26 +83,39 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 		return
 
 	var current_paragraph = lines[cursor_line]
-
-	# Apply the patch
 	var words := current_paragraph.split(" ")
 
-	match operation:
-		"delete":
-			# Remove the word at word_index
-			if word_index >= 0 and word_index < words.size():
-				words.remove_at(word_index)
+	# Apply the patch
+	if operation == "delete":
+		# Remove words starting at word_index
+		# new_text contains the words to delete (from the diff)
+		var delete_words := new_text.split(" ")
+		if word_index >= 0 and word_index + delete_words.size() <= words.size():
+			# Verify the words match what we expect to delete
+			var words_match = true
+			for k in range(delete_words.size()):
+				if words[word_index + k] != delete_words[k]:
+					words_match = false
+					break
+			if words_match:
+				# Remove multiple words starting at word_index
+				for _k in range(delete_words.size()):
+					words.remove_at(word_index)
 				current_paragraph = " ".join(words)
-		"insert":
-			# Insert new_text at word_index
-			if word_index >= 0 and word_index <= words.size():
-				words.insert(word_index, new_text)
-				current_paragraph = " ".join(words)
-		"change":
-			# Replace the word at word_index with new_text
-			if word_index >= 0 and word_index < words.size():
-				words[word_index] = new_text
-				current_paragraph = " ".join(words)
+	elif operation == "insert":
+		# Insert new_text at word_index
+		if word_index >= 0 and word_index <= words.size():
+			words.insert(word_index, new_text)
+			current_paragraph = " ".join(words)
+	elif operation == "change":
+		# Replace words starting at word_index with new_text
+		# new_text contains the replacement words
+		var new_words_list := new_text.split(" ")
+		# For change, we replace the same number of words as in new_text
+		if word_index >= 0 and word_index + new_words_list.size() <= words.size():
+			for k in range(new_words_list.size()):
+				words[word_index + k] = new_words_list[k]
+			current_paragraph = " ".join(words)
 
 	# Update the line in the editor
 	if current_paragraph != lines[cursor_line]:
