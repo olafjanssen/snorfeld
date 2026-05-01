@@ -68,7 +68,10 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 	if current_file_path != file_path:
 		return
 
+	# Store current cursor position and scroll position
 	var cursor_line := get_caret_line()
+	var cursor_column := get_caret_column()
+	var scroll_pos := get_v_scroll_bar().value
 	var text := get_text()
 	var lines := text.split("\n")
 
@@ -104,11 +107,23 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 	# Update the line in the editor
 	if current_paragraph != lines[cursor_line]:
 		lines[cursor_line] = current_paragraph
-		set_text("\n".join(lines))
-		# Move cursor to maintain position
-		set_caret_line(cursor_line)
-		set_caret_column(0)
+		var new_text_full = "\n".join(lines)
+
+		# Store cursor line before set_text (which may reset cursor)
+		var target_line = cursor_line
+
+		set_text(new_text_full)
+
+		# Restore scroll position first
+		get_v_scroll_bar().value = scroll_pos
+
+		# Restore cursor to the same line
+		set_caret_line(target_line)
+		# Try to restore column, but clamp to line length
+		var line_length = lines[target_line].length()
+		set_caret_column(min(cursor_column, line_length))
+
 		# Update current hash but keep original hash (so more patches can be applied)
-		paragraph_current_hashes[cursor_line] = _hash_paragraph(current_paragraph)
+		paragraph_current_hashes[target_line] = _hash_paragraph(current_paragraph)
 		# Re-trigger paragraph selection to update diff display (with same original hash)
 		GlobalSignals.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
