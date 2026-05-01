@@ -6,8 +6,6 @@ extends Node
 ##   var json_response = await OllamaClient.generate_json("llama3", "Tell me a joke")
 ##   var running = await OllamaClient.is_ollama_running()
 
-
-
 ## HTTP request node
 var http_request: HTTPRequest
 
@@ -108,7 +106,7 @@ func _make_api_request(endpoint: String, request_body: Dictionary, request_type:
 	return response
 
 ## Generic HTTP request completion callback
-func _on_http_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	print("[OllamaClient] HTTP callback: result=%d, response_code=%d" % [result, response_code])
 	if current_request_type == "check":
 		print("[OllamaClient] Check request completed with code: %d" % response_code)

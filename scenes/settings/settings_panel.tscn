@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://settings_panel"]
 
-[ext_resource type="Script" uid="uid://settings_panel_script" path="res://scenes/settings/settings_panel.gd" id="0"]
+[ext_resource type="Script" uid="uid://hhn0hkpgptrr" path="res://scenes/settings/settings_panel.gd" id="0"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1"]
 
 [node name="SettingsPanel" type="Window"]

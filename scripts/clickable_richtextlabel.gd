@@ -17,8 +17,8 @@ func _on_meta_clicked(meta: Variant):
 		if parts.size() >= 3:
 			var operation = parts[0]
 			var word_index = int(parts[1])
-			var text = _url_decode(parts[2])
-			emit_signal("diff_span_clicked", operation, word_index, text)
+			var full_text = _url_decode(parts[2])
+			emit_signal("diff_span_clicked", operation, word_index, full_text)
 
 func _url_decode(encoded: String) -> String:
 	# URL decoding for our use case

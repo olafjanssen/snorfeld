@@ -38,9 +38,9 @@ func _merge_adjacent_spans(bbcode: String) -> String:
 	# Format: [url=operationDELIMITERword_indexDELIMITERencoded_text][bgcolor=X]text[/bgcolor][/url]
 	var spans := []
 	var i := 0
-	var len := bbcode.length()
+	var length := bbcode.length()
 
-	while i < len:
+	while i < length:
 		if bbcode.substr(i, 5) == "[url=":
 			# Found a span start
 			var url_end := bbcode.find("]", i)
@@ -145,7 +145,7 @@ func _merge_adjacent_spans(bbcode: String) -> String:
 		last_pos = merged_span["end"]
 
 	# Add remaining text
-	if last_pos < len:
+	if last_pos < length:
 		final_result.append(bbcode.substr(last_pos))
 
 	return "".join(final_result)

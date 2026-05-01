@@ -24,8 +24,8 @@ func _on_file_selected(path: String):
 
 func _on_cursor_changed():
 	var cursor_line := get_caret_line()
-	var text := get_text()
-	var lines := text.split("\n")
+	var full_text := get_text()
+	var lines := full_text.split("\n")
 	if cursor_line >= 0 and cursor_line < lines.size():
 		var paragraph := lines[cursor_line]
 		# Only process non-empty paragraphs
@@ -72,8 +72,8 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 	var cursor_line := get_caret_line()
 	var cursor_column := get_caret_column()
 	var scroll_pos := get_v_scroll_bar().value
-	var text := get_text()
-	var lines := text.split("\n")
+	var full_text := get_text()
+	var lines := full_text.split("\n")
 
 	if cursor_line < 0 or cursor_line >= lines.size():
 		return
