@@ -30,6 +30,12 @@ func _ready():
 	root.connect("tree_exiting", _on_tree_exiting)
 
 func _on_request_save_file(path: String):
+	# Cancel any pending debounced save for this file
+	if pending_saves.has(path):
+		pending_saves[path].stop()
+		pending_saves[path].queue_free()
+		pending_saves.erase(path)
+	# Save immediately
 	_save_file(path)
 
 func _on_file_changed(path: String, content: String):
@@ -87,25 +93,36 @@ func _save_file(path: String):
 	if not FileAccess.file_exists(path):
 		return
 
+	# Get content from the map
+	var new_content = ""
+	if file_contents.has(path):
+		new_content = file_contents[path]
+
+	if new_content == "":
+		is_saving = false
+		return
+
+	# Compare with existing file content
+	var existing_content = FileAccess.get_file_as_string(path)
+	if existing_content == new_content:
+		# Content hasn't changed, don't save
+		file_contents.erase(path)
+		is_saving = false
+		return
+
 	is_saving = true
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		is_saving = false
 		return
 
-	# Get content from the map
-	var content = ""
-	if file_contents.has(path):
-		content = file_contents[path]
+	file.store_string(new_content)
+	file.close()
 
-	if content != "":
-		file.store_string(content)
-		file.close()
+	has_unsaved_changes = false
+	file_contents.erase(path)
+	GlobalSignals.file_saved.emit(path)
 
-		has_unsaved_changes = false
-		file_contents.erase(path)
-		GlobalSignals.file_saved.emit(path)
-
-		print("Saved: ", path)
+	print("Saved: ", path)
 
 	is_saving = false

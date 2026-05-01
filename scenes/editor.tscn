@@ -63,7 +63,6 @@ layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("4")
 scroll_horizontal_enabled = false
-scroll_hint_mode = 1
 script = ExtResource("3")
 
 [node name="TextEditor" parent="VBoxContainer/HSplitContainer" unique_id=1652980615 instance=ExtResource("6_eqbpn")]

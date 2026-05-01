@@ -24,8 +24,10 @@ func _on_request_save_all_files():
 		GlobalSignals.file_changed.emit(current_file_path, get_text())
 
 func _on_file_selected(path: String):
-	# Save current file before switching
+	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
+		var current_content = get_text()
+		GlobalSignals.file_changed.emit(current_file_path, current_content)
 		GlobalSignals.request_save_file.emit(current_file_path)
 
 	current_file_path = path
