@@ -4,6 +4,7 @@ const CONFIG_FILE: String = "user://config.cfg"
 
 var config: ConfigFile = ConfigFile.new()
 var current_path: String = "res://"
+var is_building_tree: bool = false
 
 var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
 
@@ -14,6 +15,10 @@ func _ready():
 	_load_config()
 
 func _load_config():
+	# Use call_deferred to ensure tree is ready
+	call_deferred("_load_config_deferred")
+
+func _load_config_deferred():
 	if config.load(CONFIG_FILE) != OK:
 		GlobalSignals.folder_opened.emit("res://")
 	else:
@@ -29,10 +34,21 @@ func _ensure_trailing_slash(path: String) -> String:
 	return path
 
 func _setup_file_tree():
+	if is_building_tree:
+		return
+	is_building_tree = true
+
 	clear()
-	var root: TreeItem = create_item()
-	root.set_text(0, current_path)
-	_refresh_files(root, _ensure_trailing_slash(current_path))
+	var root_item: TreeItem = create_item()
+	var path_parts = current_path.split("/")
+	var root_name = path_parts[-2] if current_path.ends_with("/") else path_parts[-1]
+
+	root_item.set_text(0, root_name)
+	root_item.set_icon(0, load("res://icons/folder-open.svg"))
+	root_item.set_metadata(0, {"path": current_path, "is_dir": true})
+	_refresh_files(root_item, _ensure_trailing_slash(current_path))
+
+	is_building_tree = false
 
 func _refresh_files(parent_item: TreeItem, path: String):
 	var dir: DirAccess = DirAccess.open(path)
@@ -57,9 +73,12 @@ func _refresh_files(parent_item: TreeItem, path: String):
 		var item: TreeItem = create_item(parent_item)
 		item.set_text(0, entry["name"])
 		item.set_metadata(0, {"path": entry["path"], "is_dir": entry["is_dir"]})
+		# Set icons for folders and files
 		if entry["is_dir"]:
+			item.set_icon(0, load("res://icons/folder.svg"))
 			_refresh_files(item, _ensure_trailing_slash(entry["path"]))
 		else:
+			item.set_icon(0, load("res://icons/file.svg"))
 			# Scan file and emit signal with paragraphs
 			_scan_file_and_emit(entry["path"])
 
@@ -90,7 +109,9 @@ func _on_item_selected():
 	var item: TreeItem = get_selected()
 	if item == null:
 		return
-	var info: Dictionary = item.get_metadata(0)
+	var info = item.get_metadata(0)
+	if info == null:
+		return
 	var path: String = info["path"]
 	var is_dir: bool = info["is_dir"]
 
@@ -118,16 +139,23 @@ func _on_dir_selected(path: String):
 
 func _on_folder_opened(path: String):
 	current_path = path
+	# Use call_deferred to avoid clear() during tree processing
+	call_deferred("_setup_file_tree_deferred")
+
+func _setup_file_tree_deferred():
 	_setup_file_tree()
 	# Select the first text file in the folder
 	_select_first_text_file()
 
 func _select_first_text_file():
 	await get_tree().process_frame  # Wait for tree to be populated
-	var first_text_item = _find_first_text_file_item(get_root())
-	if first_text_item != null:
-		first_text_item.select(0)
-		_on_item_selected()
+	# Start from root's first child (skip the root itself)
+	var root = get_root()
+	if root != null and root.get_child_count() > 0:
+		var first_text_item = _find_first_text_file_item(root.get_child(0))
+		if first_text_item != null:
+			first_text_item.select(0)
+			_on_item_selected()
 
 func _find_first_text_file_item(parent: TreeItem) -> TreeItem:
 	for i in range(parent.get_child_count()):
@@ -139,7 +167,8 @@ func _find_first_text_file_item(parent: TreeItem) -> TreeItem:
 			if not is_dir and _is_text_file(path):
 				return child
 			# Recursively check subdirectories
-			var found = _find_first_text_file_item(child)
-			if found != null:
-				return found
+			if is_dir:
+				var found = _find_first_text_file_item(child)
+				if found != null:
+					return found
 	return null
