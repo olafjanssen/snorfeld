@@ -22,7 +22,7 @@
   - [ ] Clear cache of unused cache files (no longer in project)
   - [ ] Schedule chapter and bookwide LLM tasks
 - [ ] Usability updates
-  - [ ] Automatically open first file of project when opening
+  - [x] Automatically open first file of project when opening
   - [ ] Pick a slimmer font for the interface and a more elegant font for the text
 - [ ] Architectural design
 	- [ ] Rearrange scenes in logical folders

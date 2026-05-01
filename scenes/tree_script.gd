@@ -119,3 +119,27 @@ func _on_dir_selected(path: String):
 func _on_folder_opened(path: String):
 	current_path = path
 	_setup_file_tree()
+	# Select the first text file in the folder
+	_select_first_text_file()
+
+func _select_first_text_file():
+	await get_tree().process_frame  # Wait for tree to be populated
+	var first_text_item = _find_first_text_file_item(get_root())
+	if first_text_item != null:
+		first_text_item.select(0)
+		_on_item_selected()
+
+func _find_first_text_file_item(parent: TreeItem) -> TreeItem:
+	for i in range(parent.get_child_count()):
+		var child = parent.get_child(i)
+		var info = child.get_metadata(0)
+		if info != null:
+			var path = info["path"]
+			var is_dir = info["is_dir"]
+			if not is_dir and _is_text_file(path):
+				return child
+			# Recursively check subdirectories
+			var found = _find_first_text_file_item(child)
+			if found != null:
+				return found
+	return null
