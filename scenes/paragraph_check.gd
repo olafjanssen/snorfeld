@@ -8,7 +8,7 @@ extends Control
 @onready var StructureExplanation: RichTextLabel = $TabContainer/Structure/VBoxContainer/StructureExplanation
 
 # Store current context for patch application
-var current_paragraph_hash: String = ""
+var current_paragraph_original_hash: String = ""
 var current_file_path: String = ""
 var current_paragraph_text: String = ""
 
@@ -20,20 +20,19 @@ func _ready():
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
 	# Emit signal to apply the patch to the editor
 	GlobalSignals.apply_diff_patch.emit(
-		current_paragraph_hash,
+		current_paragraph_original_hash,
 		current_file_path,
-		current_paragraph_text,
 		operation,
 		word_index,
 		text
 	)
 
-func _on_paragraph_selected(paragraph_hash: String, file_path: String, paragraph_text: String):
-	current_paragraph_hash = paragraph_hash
+func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_text: String):
+	current_paragraph_original_hash = original_hash
 	current_file_path = file_path
 	current_paragraph_text = paragraph_text
 
-	var cache_data := ParagraphCache.get_paragraph_cache(paragraph_hash, file_path)
+	var cache_data := ParagraphCache.get_paragraph_cache(original_hash, file_path)
 	if cache_data:
 		var corrected : String = cache_data.get("analyses",{}).get("grammar",{}).get("corrected", "")
 
