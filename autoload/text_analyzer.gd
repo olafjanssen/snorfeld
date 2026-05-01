@@ -18,7 +18,10 @@ You are a helpful writing assistant. Analyze the following text and provide:
 1. A corrected version with improved spelling and grammar (keep the original meaning), be aware the text may contain dialogue between \"...\" and MarkDown markup.
 2. A brief explanation of the changes made
 
-%sText to analyze:
+Context:
+%s
+
+Paragraph to analyze:
 %s
 
 Respond with a JSON object containing 'corrected' and 'explanation' fields:
@@ -78,7 +81,10 @@ You are a helpful writing assistant. Analyze the following text and provide:
 1. An enhanced version with improved style, flow, and readability (keep the original meaning)
 2. A brief explanation of the stylistic improvements made
 
-%sText to analyze:
+Context:
+%s
+
+Paragraph to analyze:
 %s
 
 Respond with a JSON object containing 'enhanced' and 'explanation' fields:
@@ -152,7 +158,10 @@ You are a helpful writing assistant specializing in story structure. Analyze the
 1. A rewrite for this paragraph to improve plot, pacing, or structural flow
 2. A brief explanation of how this suggestion enhances the narrative
 
-%sText to analyze:
+Context:
+%s
+
+Paragraph to analyze:
 %s
 
 Respond with a JSON object containing 'suggestion' and 'explanation' fields:
