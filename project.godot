@@ -24,6 +24,7 @@ ParagraphCache="*res://autoload/paragraph_cache.gd"
 TextAnalyzer="*res://autoload/text_analyzer.gd"
 SettingsManager="*res://autoload/settings_manager.gd"
 SettingsHandler="*res://autoload/settings_handler.gd"
+FileSaver="*res://autoload/file_saver.gd"
 
 [display]
 
@@ -37,6 +38,10 @@ window/per_pixel_transparency/allowed=true
 [dotnet]
 
 project/assembly_name="snorfeld"
+
+[gui]
+
+theme/custom="uid://o8gx2nmawf21"
 
 [physics]
 

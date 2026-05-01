@@ -1,0 +1,111 @@
+extends Node
+
+# FileSaver - Handles automatic saving of files with debouncing
+# Implements:
+# - Save when changing editor to another file
+# - Save X seconds after last change (debounced)
+# - Save when application closes
+
+const SAVE_DEBOUNCE_SECONDS: float = 5.0
+
+var current_file_path: String = ""
+var has_unsaved_changes: bool = false
+var is_saving: bool = false
+
+# Map of file paths to their pending save timers
+var pending_saves := {}
+# Map of file paths to their content
+var file_contents := {}
+
+func _ready():
+	# Connect to global signals
+	GlobalSignals.request_save_file.connect(_on_request_save_file)
+	GlobalSignals.file_changed.connect(_on_file_changed)
+	GlobalSignals.request_close_file.connect(_on_request_close_file)
+	GlobalSignals.file_selected.connect(_on_file_selected)
+	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
+
+	# Connect to tree signals for application close
+	var root = get_tree().root
+	root.connect("tree_exiting", _on_tree_exiting)
+
+func _on_request_save_file(path: String):
+	_save_file(path)
+
+func _on_file_changed(path: String, content: String):
+	# Mark file as having unsaved changes
+	has_unsaved_changes = true
+	current_file_path = path
+
+	# Store content for later save
+	file_contents[path] = content
+
+	# Debounce the save - reset timer
+	if pending_saves.has(path):
+		pending_saves[path].stop()
+		pending_saves[path].start(SAVE_DEBOUNCE_SECONDS)
+	else:
+		var timer = Timer.new()
+		timer.timeout.connect(_on_debounced_save_timeout.bind(path))
+		add_child(timer)
+		pending_saves[path] = timer
+		timer.start(SAVE_DEBOUNCE_SECONDS)
+
+func _on_debounced_save_timeout(path: String):
+	# Save the file after debounce period
+	if pending_saves.has(path):
+		pending_saves[path].queue_free()
+		pending_saves.erase(path)
+	_save_file(path)
+
+func _on_request_close_file(path: String):
+	# Save file before closing it
+	_save_file(path)
+
+func _on_file_selected(path: String):
+	# Save current file before switching to another
+	if current_file_path != "" and current_file_path != path and has_unsaved_changes:
+		_save_file(current_file_path)
+	current_file_path = path
+
+func _on_request_save_all_files():
+	# Save all files that have pending changes
+	for path in file_contents.keys():
+		_save_file(path)
+
+func _on_tree_exiting():
+	# Request all editors to emit their final content
+	GlobalSignals.request_save_all_files.emit()
+	# Then save all files that have pending changes
+	for path in file_contents.keys():
+		_save_file(path)
+
+func _save_file(path: String):
+	if is_saving:
+		return
+
+	if not FileAccess.file_exists(path):
+		return
+
+	is_saving = true
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		is_saving = false
+		return
+
+	# Get content from the map
+	var content = ""
+	if file_contents.has(path):
+		content = file_contents[path]
+
+	if content != "":
+		file.store_string(content)
+		file.close()
+
+		has_unsaved_changes = false
+		file_contents.erase(path)
+		GlobalSignals.file_saved.emit(path)
+
+		print("Saved: ", path)
+
+	is_saving = false

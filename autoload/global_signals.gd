@@ -17,3 +17,13 @@ signal apply_diff_patch(original_hash: String, file_path: String, operation: Str
 signal open_settings
 @warning_ignore("unused_signal")
 signal settings_closed
+@warning_ignore("unused_signal")
+signal request_save_file(path: String)
+@warning_ignore("unused_signal")
+signal file_saved(path: String)
+@warning_ignore("unused_signal")
+signal file_changed(path: String, content: String)
+@warning_ignore("unused_signal")
+signal request_close_file(path: String)
+@warning_ignore("unused_signal")
+signal request_save_all_files

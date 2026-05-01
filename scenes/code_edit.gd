@@ -6,21 +6,36 @@ var paragraph_original_hashes := {}
 # Map from line number to current hash for that paragraph
 var paragraph_current_hashes := {}
 
+var last_text_hash: String = ""
+
 func _ready():
 	var highlighter = load("res://scripts/markdown_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
 	GlobalSignals.file_selected.connect(_on_file_selected)
 	GlobalSignals.apply_diff_patch.connect(_on_apply_diff_patch)
+	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
 	caret_changed.connect(_on_cursor_changed)
+	text_changed.connect(_on_text_changed)
+
+func _on_request_save_all_files():
+	# Emit final file_changed with current content before shutdown
+	if current_file_path != "" and FileAccess.file_exists(current_file_path):
+		GlobalSignals.file_changed.emit(current_file_path, get_text())
 
 func _on_file_selected(path: String):
+	# Save current file before switching
+	if current_file_path != "" and current_file_path != path:
+		GlobalSignals.request_save_file.emit(current_file_path)
+
 	current_file_path = path
 	paragraph_original_hashes = {}
 	paragraph_current_hashes = {}
+	last_text_hash = ""
 	if FileAccess.file_exists(path):
 		var content: String = FileAccess.get_file_as_string(path)
 		set_text(content)
+		last_text_hash = _hash_text(content)
 
 func _on_cursor_changed():
 	var cursor_line := get_caret_line()
@@ -60,6 +75,21 @@ func _hash_paragraph(paragraph: String) -> String:
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
 	hash_ctx.update(paragraph.to_utf8_buffer())
+	var hash_bytes := hash_ctx.finish()
+	return hash_bytes.hex_encode()
+
+func _on_text_changed():
+	# Emit file_changed signal when text changes
+	var current_text = get_text()
+	var current_hash = _hash_text(current_text)
+	if current_hash != last_text_hash:
+		last_text_hash = current_hash
+		GlobalSignals.file_changed.emit(current_file_path, current_text)
+
+func _hash_text(text: String) -> String:
+	var hash_ctx := HashingContext.new()
+	hash_ctx.start(HashingContext.HASH_MD5)
+	hash_ctx.update(text.to_utf8_buffer())
 	var hash_bytes := hash_ctx.finish()
 	return hash_bytes.hex_encode()
 
@@ -140,3 +170,5 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 		paragraph_current_hashes[target_line] = _hash_paragraph(current_paragraph)
 		# Re-trigger paragraph selection to update diff display (with same original hash)
 		GlobalSignals.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
+		# Emit file_changed signal since text was modified
+		GlobalSignals.file_changed.emit(current_file_path, get_text())
