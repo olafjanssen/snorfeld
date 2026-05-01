@@ -8,6 +8,11 @@
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/paragraph_check.tscn" id="7_5lcyj"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5lcyj"]
+bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
+border_width_top = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+
 [node name="Editor" type="Control" unique_id=1329163321]
 layout_mode = 3
 anchors_preset = 15
@@ -36,30 +41,58 @@ theme = ExtResource("4")
 theme = ExtResource("4")
 script = ExtResource("2")
 
-[node name="HSplitContainer" type="HSplitContainer" parent="." unique_id=1412264399]
-layout_mode = 0
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer" unique_id=1412264399]
+layout_mode = 2
+size_flags_vertical = 3
 theme = ExtResource("4")
 split_offsets = PackedInt32Array(200, 612)
 split_offset = 200
 
-[node name="FileBrowser" type="Tree" parent="HSplitContainer" unique_id=282338753]
+[node name="FileBrowser" type="Tree" parent="VBoxContainer/HSplitContainer" unique_id=282338753]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("4")
-hide_root = true
+scroll_horizontal_enabled = false
+scroll_hint_mode = 1
 script = ExtResource("3")
 
-[node name="TextEditor" parent="HSplitContainer" unique_id=1652980615 instance=ExtResource("6_eqbpn")]
+[node name="TextEditor" parent="VBoxContainer/HSplitContainer" unique_id=1652980615 instance=ExtResource("6_eqbpn")]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
-[node name="MarkdownEditor" parent="HSplitContainer" unique_id=755770291 instance=ExtResource("0")]
+[node name="MarkdownEditor" parent="VBoxContainer/HSplitContainer" unique_id=755770291 instance=ExtResource("0")]
 visible = false
 layout_mode = 2
 
-[node name="ParagraphCheck" parent="HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
+[node name="ParagraphCheck" parent="VBoxContainer/HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
 layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1364190975]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5lcyj")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772968]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme = ExtResource("4")
+
+[node name="Spacer" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1751899859]
+custom_minimum_size = Vector2(12, 0)
+layout_mode = 2
+
+[node name="StatusMessage" type="Label" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=37567921]
+layout_mode = 2
+theme = ExtResource("4")
+theme_override_colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+theme_override_font_sizes/font_size = 12
+text = "Nothing to report!"

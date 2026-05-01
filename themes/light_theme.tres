@@ -42,15 +42,24 @@ expand_margin_left = 4.0
 expand_margin_right = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2586"]
-bg_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
+bg_color = Color(0.8745098, 0.8745098, 0.8784314, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3rr8x"]
+bg_color = Color(0.7921569, 0.7921569, 0.7921569, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.019607844, 0.53333336, 0.9411765, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k48q0"]
-bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
-border_width_right = 2
-border_color = Color(0.9098039, 0.9098039, 0.9098039, 1)
+bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
+border_width_right = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0a83b"]
-bg_color = Color(0.6784314, 0.8392157, 1, 1)
+bg_color = Color(0.7921569, 0.7921569, 0.7921569, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.019607844, 0.53333336, 0.9411765, 1)
 
 [resource]
 CodeEdit/colors/background_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
@@ -78,10 +87,12 @@ TabContainer/styles/panel = SubResource("StyleBoxEmpty_k48q0")
 TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_t7qon")
 TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_xu2q4")
 TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_x03xt")
-Tree/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
+Tree/colors/font_color = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_hovered_color = Color(0, 0.47058824, 0.83137256, 1)
 Tree/colors/font_hovered_selected_color = Color(0, 0.47058824, 0.83137256, 1)
-Tree/colors/font_selected_color = Color(0, 0, 0, 1)
+Tree/colors/font_selected_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+Tree/font_sizes/font_size = 14
 Tree/styles/hovered = SubResource("StyleBoxFlat_b2586")
+Tree/styles/hovered_selected = SubResource("StyleBoxFlat_3rr8x")
 Tree/styles/panel = SubResource("StyleBoxFlat_k48q0")
 Tree/styles/selected = SubResource("StyleBoxFlat_0a83b")

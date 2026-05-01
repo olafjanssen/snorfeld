@@ -86,10 +86,10 @@ func _on_text_changed():
 		last_text_hash = current_hash
 		GlobalSignals.file_changed.emit(current_file_path, current_text)
 
-func _hash_text(text: String) -> String:
+func _hash_text(full_text: String) -> String:
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(text.to_utf8_buffer())
+	hash_ctx.update(full_text.to_utf8_buffer())
 	var hash_bytes := hash_ctx.finish()
 	return hash_bytes.hex_encode()
 
