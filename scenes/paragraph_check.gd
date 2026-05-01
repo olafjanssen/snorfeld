@@ -1,14 +1,20 @@
 extends Control
 
-@onready var GrammarText: RichTextLabel = $TabContainer/Grammar/VBoxContainer/GrammarText
+@onready var GrammarText: ClickableRichTextLabel = $TabContainer/Grammar/VBoxContainer/GrammarText
 @onready var GrammarExplanation: RichTextLabel = $TabContainer/Grammar/VBoxContainer/GrammarExplanation
-@onready var StyleText: RichTextLabel = $TabContainer/Style/VBoxContainer/StyleText
+@onready var StyleText: ClickableRichTextLabel = $TabContainer/Style/VBoxContainer/StyleText
 @onready var StyleExplanation: RichTextLabel = $TabContainer/Style/VBoxContainer/StyleExplanation
 @onready var StructureText: RichTextLabel = $TabContainer/Structure/VBoxContainer/StructureText
 @onready var StructureExplanation: RichTextLabel = $TabContainer/Structure/VBoxContainer/StructureExplanation
 
 func _ready():
 	GlobalSignals.paragraph_selected.connect(_on_paragraph_selected)
+	GrammarText.diff_span_clicked.connect(_on_diff_span_clicked)
+	StyleText.diff_span_clicked.connect(_on_diff_span_clicked)
+
+func _on_diff_span_clicked(operation: String, text: String):
+	print("Diff span clicked: ", operation, " - ", text)
+	# Handle applying the change to your main text
 
 func _on_paragraph_selected(paragraph_hash: String, file_path: String):
 	var cache_data := ParagraphCache.get_paragraph_cache(paragraph_hash, file_path)

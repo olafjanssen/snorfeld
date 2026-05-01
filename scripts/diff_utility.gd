@@ -72,19 +72,19 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 			if old_changes.size() == new_changes.size() and old_changes.size() > 0:
 				for k in range(old_changes.size()):
 					if show_insertions:
-						result.append("[bgcolor=orange]" + new_changes[k] + "[/bgcolor]")
+						result.append("[url=change:" + new_changes[k].replace(" ", "%20") + "][bgcolor=orange]" + new_changes[k] + "[/bgcolor][/url]")
 					else:
 						result.append(new_changes[k])
 			else:
 				# Different counts - show deletions and insertions separately
 				for word in old_changes:
 					if show_deletions:
-						result.append("[bgcolor=red]" + word + "[/bgcolor]")
+						result.append("[url=delete:" + word.replace(" ", "%20") + "][bgcolor=red]" + word + "[/bgcolor][/url]")
 					else:
 						result.append(word)
 				for word in new_changes:
 					if show_insertions:
-						result.append("[bgcolor=green]" + word + "[/bgcolor]")
+						result.append("[url=insert:" + word.replace(" ", "%20") + "][bgcolor=green]" + word + "[/bgcolor][/url]")
 					else:
 						result.append(word)
 		else:
@@ -92,20 +92,20 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 			if i < old_words.size() and j < new_words.size():
 				# This is a deletion+insertion pair at same position - show as orange
 				if show_insertions:
-					result.append("[bgcolor=orange]" + new_words[j] + "[/bgcolor]")
+					result.append("[url=change:" + new_words[j].replace(" ", "%20") + "][bgcolor=orange]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				i += 1
 				j += 1
 			elif j < new_words.size():
 				if show_insertions:
-					result.append("[bgcolor=green]" + new_words[j] + "[/bgcolor]")
+					result.append("[url=insert:" + new_words[j].replace(" ", "%20") + "][bgcolor=green]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				j += 1
 			elif i < old_words.size():
 				if show_deletions:
-					result.append("[bgcolor=red]" + old_words[i] + "[/bgcolor]")
+					result.append("[url=delete:" + old_words[i].replace(" ", "%20") + "][bgcolor=red]" + old_words[i] + "[/bgcolor][/url]")
 				else:
 					result.append(old_words[i])
 				i += 1

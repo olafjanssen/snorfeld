@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dblbt20rwgkun" path="res://scenes/paragraph_check.gd" id="0"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_bhh05"]
+[ext_resource type="Script" uid="uid://0bf138a8f168" path="res://scripts/clickable_richtextlabel.gd" id="1"]
 
 [node name="ParagraphCheck" type="Control" unique_id=242299029]
 layout_mode = 3
@@ -40,6 +41,7 @@ layout_mode = 2
 bbcode_enabled = true
 text = "Grammar corrected test"
 fit_content = true
+script = ExtResource( "1" )
 
 [node name="Label2" type="Label" parent="TabContainer/Grammar/VBoxContainer" unique_id=1053352535]
 layout_mode = 2
@@ -69,6 +71,7 @@ layout_mode = 2
 bbcode_enabled = true
 text = "Style enhanced text"
 fit_content = true
+script = ExtResource( "1" )
 
 [node name="Label4" type="Label" parent="TabContainer/Style/VBoxContainer" unique_id=1834282615]
 layout_mode = 2
