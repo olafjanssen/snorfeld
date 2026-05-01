@@ -58,6 +58,8 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 		# If we found a match ahead, add the unmatched words as changes and skip to the match
 		if best_match_idx != -1:
 			# Collect unmatched old and new words
+			var start_i := i
+			var start_j := j
 			var old_changes := []
 			while i < best_match_old_idx:
 				old_changes.append(old_words[i])
@@ -72,40 +74,43 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 			if old_changes.size() == new_changes.size() and old_changes.size() > 0:
 				for k in range(old_changes.size()):
 					if show_insertions:
-						result.append("[url=change:" + new_changes[k].replace(" ", "%20") + "][bgcolor=orange]" + new_changes[k] + "[/bgcolor][/url]")
+						var word_idx = start_i + k
+						result.append("[url=change:" + str(word_idx) + ":" + new_changes[k].replace(" ", "%20") + "][bgcolor=orange]" + new_changes[k] + "[/bgcolor][/url]")
 					else:
 						result.append(new_changes[k])
 			else:
 				# Different counts - show deletions and insertions separately
-				for word in old_changes:
+				for k in range(old_changes.size()):
 					if show_deletions:
-						result.append("[url=delete:" + word.replace(" ", "%20") + "][bgcolor=red]" + word + "[/bgcolor][/url]")
+						var word_idx = start_i + k
+						result.append("[url=delete:" + str(word_idx) + ":" + old_changes[k].replace(" ", "%20") + "][bgcolor=red]" + old_changes[k] + "[/bgcolor][/url]")
 					else:
-						result.append(word)
-				for word in new_changes:
+						result.append(old_changes[k])
+				for k in range(new_changes.size()):
 					if show_insertions:
-						result.append("[url=insert:" + word.replace(" ", "%20") + "][bgcolor=green]" + word + "[/bgcolor][/url]")
+						var word_idx = start_j + k
+						result.append("[url=insert:" + str(word_idx) + ":" + new_changes[k].replace(" ", "%20") + "][bgcolor=green]" + new_changes[k] + "[/bgcolor][/url]")
 					else:
-						result.append(word)
+						result.append(new_changes[k])
 		else:
 			# No match found ahead, just mark current word as changed
 			if i < old_words.size() and j < new_words.size():
 				# This is a deletion+insertion pair at same position - show as orange
 				if show_insertions:
-					result.append("[url=change:" + new_words[j].replace(" ", "%20") + "][bgcolor=orange]" + new_words[j] + "[/bgcolor][/url]")
+					result.append("[url=change:" + str(i) + ":" + new_words[j].replace(" ", "%20") + "][bgcolor=orange]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				i += 1
 				j += 1
 			elif j < new_words.size():
 				if show_insertions:
-					result.append("[url=insert:" + new_words[j].replace(" ", "%20") + "][bgcolor=green]" + new_words[j] + "[/bgcolor][/url]")
+					result.append("[url=insert:" + str(j) + ":" + new_words[j].replace(" ", "%20") + "][bgcolor=green]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				j += 1
 			elif i < old_words.size():
 				if show_deletions:
-					result.append("[url=delete:" + old_words[i].replace(" ", "%20") + "][bgcolor=red]" + old_words[i] + "[/bgcolor][/url]")
+					result.append("[url=delete:" + str(i) + ":" + old_words[i].replace(" ", "%20") + "][bgcolor=red]" + old_words[i] + "[/bgcolor][/url]")
 				else:
 					result.append(old_words[i])
 				i += 1
