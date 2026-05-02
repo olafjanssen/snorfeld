@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://tncq4cf0k61t"]
+
+[ext_resource type="Script" uid="uid://bgn8xb80w21lh" path="res://scripts/clickable_richtextlabel.gd" id="1_3y3hr"]
+[ext_resource type="Script" uid="uid://8php3eqvs7vm" path="res://scenes/paneled_richtextlabel.gd" id="1_bi6yx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bi6yx"]
+bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="PanelContainer" type="PanelContainer" unique_id=1890990576]
+theme_override_styles/panel = SubResource("StyleBoxFlat_bi6yx")
+script = ExtResource("1_bi6yx")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=393265088]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="ClickableRichTextLabel" type="RichTextLabel" parent="MarginContainer" unique_id=1202707609]
+layout_mode = 2
+bbcode_enabled = true
+text = "Test message"
+fit_content = true
+meta_underlined = false
+hint_underlined = false
+script = ExtResource("1_3y3hr")
+metadata/_custom_type_script = "uid://bgn8xb80w21lh"

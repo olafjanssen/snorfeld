@@ -5,8 +5,6 @@ class_name ClickableRichTextLabel
 # Pipe as delimiter - must match DiffUtility
 const DELIMITER := "|"
 
-signal diff_span_clicked(operation: String, word_index: int, text: String)
-
 func _ready():
 	connect("meta_clicked", Callable(self, "_on_meta_clicked"))
 

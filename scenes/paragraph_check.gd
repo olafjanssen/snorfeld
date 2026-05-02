@@ -1,11 +1,11 @@
 extends Control
 
-@onready var GrammarText: ClickableRichTextLabel = $TabContainer/Grammar/VBoxContainer/GrammarText
-@onready var GrammarExplanation: RichTextLabel = $TabContainer/Grammar/VBoxContainer/GrammarExplanation
-@onready var StyleText: ClickableRichTextLabel = $TabContainer/Style/VBoxContainer/StyleText
-@onready var StyleExplanation: RichTextLabel = $TabContainer/Style/VBoxContainer/StyleExplanation
-@onready var StructureText: RichTextLabel = $TabContainer/Structure/VBoxContainer/StructureText
-@onready var StructureExplanation: RichTextLabel = $TabContainer/Structure/VBoxContainer/StructureExplanation
+@onready var Correction: PaneledRichTextLabel = $TabContainer/Grammar/MarginContainer/VBoxContainer/Correction
+@onready var GrammarExplanation: RichTextLabel = $TabContainer/Grammar/MarginContainer/VBoxContainer/GrammarExplanation
+@onready var Enhancement: PaneledRichTextLabel = $TabContainer/Style/MarginContainer/VBoxContainer/Enhancement
+@onready var StyleExplanation: RichTextLabel = $TabContainer/Style/MarginContainer/VBoxContainer/StyleExplanation
+@onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
+@onready var StructureExplanation: RichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 
 # Store current context for patch application
 var current_paragraph_original_hash: String = ""
@@ -14,8 +14,7 @@ var current_paragraph_text: String = ""
 
 func _ready():
 	GlobalSignals.paragraph_selected.connect(_on_paragraph_selected)
-	GrammarText.diff_span_clicked.connect(_on_diff_span_clicked)
-	StyleText.diff_span_clicked.connect(_on_diff_span_clicked)
+	GlobalSignals.diff_span_clicked.connect(_on_diff_span_clicked)
 
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
 	# Emit signal to apply the patch to the editor
@@ -38,9 +37,9 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 
 		if current_paragraph_text != corrected:
 			var diff_utility: DiffUtility = DiffUtility.new()
-			GrammarText.text = diff_utility.calculate_diff(current_paragraph_text, corrected)
+			Correction.set_text(diff_utility.calculate_diff(current_paragraph_text, corrected))
 		else:
-			GrammarText.text = "No grammar and spelling suggestions."
+			Correction.set_text("No grammar and spelling suggestions.")
 			GrammarExplanation.text = ""
 		GrammarExplanation.text = cache_data.get("analyses",{}).get("grammar",{}).get("explanation", "")
 
@@ -48,25 +47,26 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 
 		if current_paragraph_text != enhanced:
 			var diff_utility: DiffUtility = DiffUtility.new()
-			StyleText.text = diff_utility.calculate_diff(current_paragraph_text, enhanced)
+			Enhancement.set_text(diff_utility.calculate_diff(current_paragraph_text, enhanced))
 		else:
-			StyleText.text = "No stylistic suggestions."
+			Enhancement.set_text("No stylistic suggestions.")
 			StyleExplanation.text = ""
 		StyleExplanation.text = cache_data.get("analyses",{}).get("style",{}).get("explanation", "")
 
 		# Structural analysis
 		var suggestion : String = cache_data.get("analyses",{}).get("structure",{}).get("suggestion", "")
 		if suggestion.length() > 0:
-			StructureText.text = suggestion
+			var diff_utility: DiffUtility = DiffUtility.new()
+			Suggestion.set_text(diff_utility.calculate_diff(current_paragraph_text, suggestion))
 		else:
-			StructureText.text = "No structural suggestions."
+			Suggestion.set_text("No structural suggestions.")
 			StructureExplanation.text = ""
 		StructureExplanation.text = cache_data.get("analyses",{}).get("structure",{}).get("explanation", "")
 
 	else:
-		GrammarText.text = "No cache found for this paragraph"
+		Correction.set_text("No cache found for this paragraph")
 		GrammarExplanation.text = ""
-		StyleText.text = "No cache found for this paragraph"
+		Enhancement.set_text("No cache found for this paragraph")
 		StyleExplanation.text = ""
-		StructureText.text = "No cache found for this paragraph"
+		Suggestion.set_text("No cache found for this paragraph")
 		StructureExplanation.text = ""

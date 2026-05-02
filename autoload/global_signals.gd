@@ -19,6 +19,8 @@ signal file_scanned(path: String, paragraphs: Array, file_content: String)
 signal paragraph_selected(original_hash: String, file_path: String, current_text: String)
 @warning_ignore("unused_signal")
 signal apply_diff_patch(original_hash: String, file_path: String, operation: String, word_index: int, new_text: String)
+@warning_ignore("unused_signal")
+signal diff_span_clicked(operation: String, word_index: int, text: String)
 
 # Settings
 @warning_ignore("unused_signal")

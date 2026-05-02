@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" uid="uid://dblbt20rwgkun" path="res://scenes/paragraph_check.gd" id="0"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_bhh05"]
-[ext_resource type="Script" uid="uid://bgn8xb80w21lh" path="res://scripts/clickable_richtextlabel.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/paneled_richtextlabel.tscn" id="4_6m5l1"]
+[ext_resource type="Script" uid="uid://8php3eqvs7vm" path="res://scenes/paneled_richtextlabel.gd" id="4_gvoeh"]
 
 [node name="ParagraphCheck" type="Control" unique_id=242299029]
 layout_mode = 3
@@ -21,63 +22,75 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_bhh05")
-current_tab = 0
+current_tab = 1
 
 [node name="Grammar" type="ScrollContainer" parent="TabContainer" unique_id=1483406397]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Grammar" unique_id=811769730]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Grammar" unique_id=1023878382]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Grammar/MarginContainer" unique_id=811769730]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label" type="Label" parent="TabContainer/Grammar/VBoxContainer" unique_id=631995457]
+[node name="Label" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=631995457]
 layout_mode = 2
 text = "Grammar and spelling:"
 
-[node name="GrammarText" type="RichTextLabel" parent="TabContainer/Grammar/VBoxContainer" unique_id=2071257063]
+[node name="Correction" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1890990576 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
-bbcode_enabled = true
-text = "Grammar corrected test"
-fit_content = true
-script = ExtResource( "1" )
 
-[node name="Label2" type="Label" parent="TabContainer/Grammar/VBoxContainer" unique_id=1053352535]
+[node name="Label2" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1053352535]
 layout_mode = 2
 text = "Explanation:"
 
-[node name="GrammarExplanation" type="RichTextLabel" parent="TabContainer/Grammar/VBoxContainer" unique_id=1415928413]
+[node name="GrammarExplanation" type="RichTextLabel" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1415928413]
 layout_mode = 2
 text = "Grammar explanation"
 fit_content = true
 
 [node name="Style" type="ScrollContainer" parent="TabContainer" unique_id=1376358239]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Style" unique_id=2043842199]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Style" unique_id=1522542152]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Style/MarginContainer" unique_id=2043842199]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label3" type="Label" parent="TabContainer/Style/VBoxContainer" unique_id=678994030]
+[node name="Label3" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=678994030]
 layout_mode = 2
 text = "Stylistic improvement:"
 
-[node name="StyleText" type="RichTextLabel" parent="TabContainer/Style/VBoxContainer" unique_id=135612734]
+[node name="Enhancement" type="PanelContainer" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1112195938]
 layout_mode = 2
-bbcode_enabled = true
-text = "Style enhanced text"
-fit_content = true
-script = ExtResource( "1" )
+script = ExtResource("4_gvoeh")
+metadata/_custom_type_script = "uid://8php3eqvs7vm"
 
-[node name="Label4" type="Label" parent="TabContainer/Style/VBoxContainer" unique_id=1834282615]
+[node name="Label4" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1834282615]
 layout_mode = 2
 text = "Explanation:"
 
-[node name="StyleExplanation" type="RichTextLabel" parent="TabContainer/Style/VBoxContainer" unique_id=290072973]
+[node name="StyleExplanation" type="RichTextLabel" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=290072973]
 layout_mode = 2
 text = "Style explanation"
 fit_content = true
@@ -87,26 +100,34 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Structure" unique_id=221391888]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Structure" unique_id=89750897]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Structure/MarginContainer" unique_id=221391888]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label5" type="Label" parent="TabContainer/Structure/VBoxContainer" unique_id=800771274]
+[node name="Label5" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=800771274]
 layout_mode = 2
 text = "Structural suggestion:"
 
-[node name="StructureText" type="RichTextLabel" parent="TabContainer/Structure/VBoxContainer" unique_id=1061115880]
+[node name="Suggestion" type="PanelContainer" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1679511026]
 layout_mode = 2
-bbcode_enabled = true
-text = "Structure suggestion text"
-fit_content = true
+script = ExtResource("4_gvoeh")
+metadata/_custom_type_script = "uid://8php3eqvs7vm"
 
-[node name="Label6" type="Label" parent="TabContainer/Structure/VBoxContainer" unique_id=1531681234]
+[node name="Label6" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1531681234]
 layout_mode = 2
 text = "Explanation:"
 
-[node name="StructureExplanation" type="RichTextLabel" parent="TabContainer/Structure/VBoxContainer" unique_id=597761736]
+[node name="StructureExplanation" type="RichTextLabel" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=597761736]
 layout_mode = 2
 text = "Structure explanation"
 fit_content = true

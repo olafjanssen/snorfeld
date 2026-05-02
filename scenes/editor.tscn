@@ -1,12 +1,13 @@
 [gd_scene format=3 uid="uid://editor"]
 
-[ext_resource type="PackedScene" uid="uid://dwckvnh6wfrwx" path="res://scenes/markdown_editor.tscn" id="0"]
 [ext_resource type="Script" uid="uid://vnm4h83qahvi" path="res://scenes/editor.gd" id="1"]
 [ext_resource type="Script" uid="uid://b27fo8eesubll" path="res://scenes/file_menu.gd" id="2"]
 [ext_resource type="Script" uid="uid://cggewxv0plvcs" path="res://scenes/tree_script.gd" id="3"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="4"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/paragraph_check.tscn" id="7_5lcyj"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5lcyj"]
 bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
@@ -54,6 +55,9 @@ theme_override_constants/separation = 0
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("4")
+theme_override_constants/separation = 0
+theme_override_constants/minimum_grab_thickness = 6
+theme_override_icons/grabber = SubResource("ImageTexture_5lcyj")
 split_offsets = PackedInt32Array(200, 612)
 split_offset = 200
 
@@ -68,10 +72,6 @@ script = ExtResource("3")
 
 [node name="TextEditor" parent="VBoxContainer/HSplitContainer" unique_id=1652980615 instance=ExtResource("6_eqbpn")]
 custom_minimum_size = Vector2(400, 0)
-layout_mode = 2
-
-[node name="MarkdownEditor" parent="VBoxContainer/HSplitContainer" unique_id=755770291 instance=ExtResource("0")]
-visible = false
 layout_mode = 2
 
 [node name="ParagraphCheck" parent="VBoxContainer/HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
