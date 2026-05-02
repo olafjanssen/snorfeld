@@ -449,6 +449,8 @@ func _on_folder_opened(path: String):
 	is_git_repo_cached = git_root != ""
 	GlobalSignals.git_repo_changed.emit(is_git_repo_cached)
 	if is_git_repo_cached:
+		print("GitManager: Git repo detected, ensuring .snorfeld in .gitignore")
+		ensure_snorfeld_in_gitignore()
 		print("GitManager: Git repo detected, refreshing status")
 		refresh_status(path)
 	else:
