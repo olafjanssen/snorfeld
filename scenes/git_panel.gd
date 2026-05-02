@@ -159,13 +159,36 @@ func _on_file_activated():
 		var metadata = item.get_metadata(0)
 		if metadata:
 			var file_path = metadata["path"]
-			var diff = GitManager.get_diff(file_path)
-			if diff != "":
-				# Show diff in a popup
-				_show_diff_popup(file_path, diff)
+			_show_git_diff(file_path)
 
-func _show_diff_popup(file_path: String, diff: String):
-	GlobalSignals.show_git_diff.emit(file_path, diff)
+func _show_git_diff(file_path: String):
+	print("Showing diff for: ", file_path)
+	# Get absolute path
+	var absolute_path = GitManager.get_absolute_path(file_path)
+	print("Absolute path: ", absolute_path)
+
+	# Get current file content
+	var current_content = ""
+	if FileAccess.file_exists(absolute_path):
+		var file = FileAccess.open(absolute_path, FileAccess.READ)
+		if file:
+			current_content = file.get_as_text()
+			file.close()
+			print("Current content length: ", current_content.length())
+
+	# Get git version of the file
+	var git_content = GitManager.get_file_content_from_git(file_path)
+	print("Git content length: ", git_content.length())
+
+	if git_content != "" and current_content != "":
+		# Use DiffUtility to create a human-readable diff
+		var diff_utility = DiffUtility.new()
+		print("Calculating diff...")
+		var diff_bbcode = diff_utility.calculate_diff(git_content, current_content)
+		print("Diff calculated, length: ", diff_bbcode.length())
+		GlobalSignals.show_git_diff.emit(file_path, diff_bbcode)
+	else:
+		print("Skipping diff - git_content empty:", git_content == "", " current_content empty:", current_content == "")
 
 func _on_commit_pressed():
 	var message = commit_message.text.strip_edges()

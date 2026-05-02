@@ -7,7 +7,6 @@
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/paragraph_check.tscn" id="7_5lcyj"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
-[ext_resource type="Script" uid="uid://bgn8xb80w21lh" path="res://scripts/clickable_richtextlabel.gd" id="7_o435n"]
 [ext_resource type="Script" uid="uid://dkksr2nukxj3c" path="res://scenes/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/git_panel.tscn" id="9"]
 
@@ -62,8 +61,8 @@ theme = ExtResource("4")
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
 theme_override_icons/grabber = SubResource("ImageTexture_5lcyj")
-split_offsets = PackedInt32Array(920, -600)
-split_offset = 920
+split_offsets = PackedInt32Array(660, 0)
+split_offset = 660
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer" unique_id=853678824]
 custom_minimum_size = Vector2(200, 0)
@@ -77,6 +76,7 @@ clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("4")
+allow_reselect = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
 script = ExtResource("3")
@@ -94,12 +94,6 @@ metadata/_tab_name = "Git"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="RichTextLabel" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1477200102]
-visible = false
-layout_mode = 2
-script = ExtResource("7_o435n")
-metadata/_custom_type_script = "uid://bgn8xb80w21lh"
 
 [node name="ParagraphCheck" parent="VBoxContainer/HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
 custom_minimum_size = Vector2(200, 0)

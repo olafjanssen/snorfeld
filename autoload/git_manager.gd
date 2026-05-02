@@ -265,6 +265,15 @@ func get_diff_head(file_path: String) -> String:
 		return ""
 	return _execute_git_command(["diff", "HEAD", "--", file_path], git_root)[0]
 
+func get_file_content_from_git(file_path: String) -> String:
+	if not git_executable or not git_root:
+		return ""
+	var relative_path = _make_path_relative(file_path)
+	var result = _execute_git_command(["show", "HEAD:" + relative_path], git_root)
+	if result[1] == "":
+		return result[0]
+	return ""
+
 ### Staging Operations
 
 func stage_file(file_path: String) -> bool:
@@ -423,6 +432,13 @@ func _make_path_relative(file_path: String) -> String:
 		return relative.trim_prefix("/")
 
 	return file_path
+
+func get_absolute_path(relative_path: String) -> String:
+	if not git_root:
+		return relative_path
+	var normalized_root = git_root.replace("\\", "/").replace("//", "/")
+	var normalized_relative = relative_path.replace("\\", "/").replace("//", "/")
+	return normalized_root.path_join(normalized_relative)
 
 ### Event Handlers
 

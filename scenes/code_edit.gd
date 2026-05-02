@@ -18,6 +18,8 @@ func _ready():
 	GlobalSignals.file_selected.connect(_on_file_selected)
 	GlobalSignals.apply_diff_patch.connect(_on_apply_diff_patch)
 	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
+	GlobalSignals.show_git_diff.connect(_on_show_git_diff)
+
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
 
@@ -61,6 +63,9 @@ func _on_file_check_timeout():
 				set_caret_column(min(cursor_column, line_length))
 			get_v_scroll_bar().value = scroll_pos
 
+func _on_show_git_diff(_path: String, _diff: String):
+	visible = false
+
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
@@ -77,6 +82,9 @@ func _on_file_selected(path: String):
 		set_text(content)
 		last_text_hash = _hash_text(content)
 		last_modified_time = FileAccess.get_modified_time(path)
+		
+	# Make sure panel is visible
+	visible = true
 
 func _on_cursor_changed():
 	var cursor_line := get_caret_line()
