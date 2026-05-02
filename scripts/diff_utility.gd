@@ -27,9 +27,9 @@ func _encode_text(text: String) -> String:
 # Get the bgcolor for an operation type
 func _get_bgcolor(operation: String) -> String:
 	match operation:
-		"delete": return "red"
-		"insert": return "green"
-		"change": return "orange"
+		"delete": return "#ff0000B0"  # Red with opacity
+		"insert": return "#00ff00B0"  # Green with opacity
+		"change": return "#ffa500B0"  # Orange with opacity
 	return "white"
 
 # Helper to merge adjacent spans of the same type
@@ -210,7 +210,8 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 				if show_insertions:
 					# Format: operation|word_index|encoded_text
 					var word_idx = start_i
-					result.append("[url=change" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_text) + "][bgcolor=orange]" + merged_text + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("change")
+					result.append("[url=change" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_text) + "][bgcolor=" + bgcolor + "]" + merged_text + "[/bgcolor][/url]")
 				else:
 					result.append(merged_text)
 			else:
@@ -219,7 +220,8 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 				if show_deletions and old_changes.size() > 0:
 					var merged_deletions := " ".join(old_changes)
 					var word_idx = start_i
-					result.append("[url=delete" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_deletions) + "][bgcolor=red]" + merged_deletions + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("delete")
+					result.append("[url=delete" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_deletions) + "][bgcolor=" + bgcolor + "]" + merged_deletions + "[/bgcolor][/url]")
 				else:
 					for word in old_changes:
 						result.append(word)
@@ -228,7 +230,8 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 				if show_insertions and new_changes.size() > 0:
 					var merged_insertions := " ".join(new_changes)
 					var word_idx = start_j
-					result.append("[url=insert" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_insertions) + "][bgcolor=green]" + merged_insertions + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("insert")
+					result.append("[url=insert" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_insertions) + "][bgcolor=" + bgcolor + "]" + merged_insertions + "[/bgcolor][/url]")
 				else:
 					for word in new_changes:
 						result.append(word)
@@ -237,20 +240,23 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 			if i < old_words.size() and j < new_words.size():
 				# This is a deletion+insertion pair at same position - show as orange
 				if show_insertions:
-					result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=orange]" + new_words[j] + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("change")
+					result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=" + bgcolor + "]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				i += 1
 				j += 1
 			elif j < new_words.size():
 				if show_insertions:
-					result.append("[url=insert" + DELIMITER + str(j) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=green]" + new_words[j] + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("insert")
+					result.append("[url=insert" + DELIMITER + str(j) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=" + bgcolor + "]" + new_words[j] + "[/bgcolor][/url]")
 				else:
 					result.append(new_words[j])
 				j += 1
 			elif i < old_words.size():
 				if show_deletions:
-					result.append("[url=delete" + DELIMITER + str(i) + DELIMITER + _encode_text(old_words[i]) + "][bgcolor=red]" + old_words[i] + "[/bgcolor][/url]")
+					var bgcolor = _get_bgcolor("delete")
+					result.append("[url=delete" + DELIMITER + str(i) + DELIMITER + _encode_text(old_words[i]) + "][bgcolor=" + bgcolor + "]" + old_words[i] + "[/bgcolor][/url]")
 				else:
 					result.append(old_words[i])
 				i += 1

@@ -68,4 +68,6 @@ script = ExtResource("1_sdthn")
 visible = false
 layout_mode = 2
 bbcode_enabled = true
+meta_underlined = false
+hint_underlined = false
 script = ExtResource("4_4sqaq")

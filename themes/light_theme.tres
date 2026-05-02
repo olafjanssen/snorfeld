@@ -130,6 +130,7 @@ Label/font_sizes/font_size = 14
 Panel/styles/panel = SubResource("StyleBoxFlat_7tebe")
 RichTextLabel/colors/default_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 RichTextLabel/constants/line_separation = 0
+RichTextLabel/constants/text_highlight_v_padding = 0
 RichTextLabel/font_sizes/h1_font_size = 44
 RichTextLabel/font_sizes/h2_font_size = 36
 RichTextLabel/font_sizes/h3_font_size = 28
