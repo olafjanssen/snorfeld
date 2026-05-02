@@ -21,15 +21,47 @@ func _connect_global_signals():
 	# File saving
 	GlobalSignals.file_saved.connect(_on_file_saved)
 
+	# Paragraph cache progress
+	GlobalSignals.cache_queue_updated.connect(_on_cache_queue_updated)
+	GlobalSignals.cache_task_started.connect(_on_cache_task_started)
+	GlobalSignals.cache_task_completed.connect(_on_cache_task_completed)
+	GlobalSignals.cache_cleanup_started.connect(_on_cache_cleanup_started)
+	GlobalSignals.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
+
 func _on_folder_opened(path: String):
 	_set_status(icon_text + "Opened folder: %s" % path)
 
 func _on_file_saved(path: String):
 	_set_status(icon_text + "Saved: %s" % path)
 
-func _set_status(message: String):
+func _on_cache_queue_updated(queued: int, _processing: bool):
+	if queued > 0:
+		_set_status(icon_text + "Analysis: %d paragraphs queued" % queued, false)
+
+func _on_cache_task_started(remaining: int):
+	_set_status(icon_text + "Processing analysis: %d remaining" % remaining, true)
+
+func _on_cache_task_completed(remaining: int):
+	if remaining > 0:
+		_set_status(icon_text + "Analysis processed: %d remaining" % remaining, true)
+	else:
+		_set_status(icon_text + "Analysis complete", true)
+
+func _on_cache_cleanup_started():
+	_set_status(icon_text + "Cleaning up old cache files...", true)
+
+func _on_cache_cleanup_completed(removed_count: int):
+	if removed_count > 0:
+		_set_status(icon_text + "Cache cleanup: removed %d orphaned files" % removed_count)
+	else:
+		_set_status(icon_text + "Cache cleanup: nothing to remove")
+
+func _set_status(message: String, persistent: bool = false):
 	text = message
-	timer.start(display_duration)
+	if not persistent:
+		timer.start(display_duration)
+	else:
+		timer.stop()
 
 func _on_timer_timeout():
 	text = default_message

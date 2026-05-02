@@ -31,10 +31,8 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	print("[TextAnalyzer] Sending grammar prompt to Ollama (length: %d chars)" % prompt.length())
 	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
 	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
-	print("[TextAnalyzer] Received grammar Ollama response")
 
 	var corrected_text: String = paragraph
 	var explanation: String = ""
@@ -43,9 +41,7 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us
 		var parsed = llm_response["parsed_json"]
-		print("[TextAnalyzer] Parsed grammar JSON type: %s" % typeof(parsed))
 		if parsed is Dictionary:
-			print("[TextAnalyzer] Parsed grammar JSON: corrected=%s, explanation=%s" % [parsed.get("corrected", ""), parsed.get("explanation", "")])
 			if parsed.has("corrected") and parsed["corrected"] is String:
 				corrected_text = parsed["corrected"]
 			if parsed.has("explanation") and parsed["explanation"] is String:
@@ -66,7 +62,6 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 
 # Analyzes text for stylistic improvements
 func analyze_style(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
-	print("[TextAnalyzer] Generating style LLM response for paragraph...")
 	# Build context from surrounding text (trim to reasonable size)
 	var context := ""
 	if context_before.length() > 0 or context_after.length() > 0:
@@ -94,10 +89,8 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	print("[TextAnalyzer] Sending style prompt to Ollama (length: %d chars)" % prompt.length())
 	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
 	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
-	print("[TextAnalyzer] Received style Ollama response")
 
 	var enhanced_text: String = paragraph
 	var explanation: String = ""
@@ -106,9 +99,7 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us
 		var parsed = llm_response["parsed_json"]
-		print("[TextAnalyzer] Parsed style JSON type: %s" % typeof(parsed))
 		if parsed is Dictionary:
-			print("[TextAnalyzer] Parsed style JSON: enhanced=%s, explanation=%s" % [parsed.get("enhanced", ""), parsed.get("explanation", "")])
 			if parsed.has("enhanced") and parsed["enhanced"] is String:
 				enhanced_text = parsed["enhanced"]
 			if parsed.has("explanation") and parsed["explanation"] is String:
@@ -140,7 +131,6 @@ func _get_words(text: String, max_words: int) -> String:
 
 # Analyzes text for structural/plot/pacing enhancements
 func analyze_structure(paragraph: String, context_before: String = "", context_after: String = "", full_chapter: String = "") -> Dictionary:
-	print("[TextAnalyzer] Generating structure LLM response for paragraph...")
 	# Build context - use full chapter if available, otherwise use before/after
 	var context := ""
 	if full_chapter.length() > 0:
@@ -171,10 +161,8 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	print("[TextAnalyzer] Sending structure prompt to Ollama (length: %d chars)" % prompt.length())
 	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
 	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
-	print("[TextAnalyzer] Received structure Ollama response")
 
 	var suggestion: String = ""
 	var explanation: String = ""
@@ -182,9 +170,7 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 
 	if llm_response.get("parsed_json", null) != null:
 		var parsed = llm_response["parsed_json"]
-		print("[TextAnalyzer] Parsed structure JSON type: %s" % typeof(parsed))
 		if parsed is Dictionary:
-			print("[TextAnalyzer] Parsed structure JSON: suggestion=%s, explanation=%s" % [parsed.get("suggestion", ""), parsed.get("explanation", "")])
 			if parsed.has("suggestion") and parsed["suggestion"] is String:
 				suggestion = parsed["suggestion"]
 			if parsed.has("explanation") and parsed["explanation"] is String:

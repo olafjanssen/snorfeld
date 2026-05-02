@@ -12,10 +12,9 @@
   - [ ] Location tab with list of locations and their descriptions
   - [ ] Plot overview and suggestions
 - [ ] LLM Generation
-  - [ ] Show LLM status and progress in status bar
-  - [ ] Trigger LLM generation if user clicks paragraph without cache
-  - [ ] Trigger LLM generation of all paragraphs upon saving the file
-  - [ ] Clear cache of unused cache files (no longer in project)
+  - [x] Show LLM status and progress in status bar
+  - [x] Trigger LLM generation if user clicks paragraph without cache
+  - [x] Clear cache of unused cache files (no longer in project)
   - [ ] Schedule chapter and bookwide LLM tasks
 - [ ] Architectural design
 	- [ ] Rearrange scenes in logical folders

@@ -39,3 +39,17 @@ signal file_changed(path: String, content: String)
 signal request_close_file(path: String)
 @warning_ignore("unused_signal")
 signal request_save_all_files
+
+# Paragraph cache progress
+@warning_ignore("unused_signal")
+signal cache_queue_updated(queued: int, processing: bool)
+@warning_ignore("unused_signal")
+signal cache_task_started(remaining: int)
+@warning_ignore("unused_signal")
+signal cache_task_completed(remaining: int)
+@warning_ignore("unused_signal")
+signal request_priority_cache(paragraph_hash: String, file_path: String, paragraph: String, file_content: String)
+@warning_ignore("unused_signal")
+signal cache_cleanup_started
+@warning_ignore("unused_signal")
+signal cache_cleanup_completed(removed_count: int)

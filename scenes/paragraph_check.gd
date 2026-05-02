@@ -64,9 +64,20 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 		StructureExplanation.text = cache_data.get("analyses",{}).get("structure",{}).get("explanation", "")
 
 	else:
-		Correction.set_text("No cache found for this paragraph")
+		# No cache found - queue this paragraph for analysis at the front of the queue
+		Correction.set_text("Generating analysis... Please wait.")
 		GrammarExplanation.text = ""
-		Enhancement.set_text("No cache found for this paragraph")
+		Enhancement.set_text("Generating analysis... Please wait.")
 		StyleExplanation.text = ""
-		Suggestion.set_text("No cache found for this paragraph")
+		Suggestion.set_text("Generating analysis... Please wait.")
 		StructureExplanation.text = ""
+
+		# Queue this single paragraph for immediate processing
+		# We need to get the full file content to pass as context
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if file:
+			var file_content := file.get_as_text()
+			file.close()
+			# Queue with priority - insert at front of queue
+			var paragraph_hash := ParagraphCache._hash_paragraph_md5(paragraph_text)
+			GlobalSignals.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)
