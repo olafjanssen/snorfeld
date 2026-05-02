@@ -8,9 +8,16 @@ var task_queue := []
 var queue_mutex := Mutex.new()
 var processing := false
 
+# Track the current file for chapter analysis
+var current_file_path: String = ""
+var current_file_content: String = ""
+
 func _ready() -> void:
 	GlobalSignals.request_priority_cache.connect(_on_priority_cache_requested)
 	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	GlobalSignals.run_all_analyses.connect(_on_run_all_analyses)
+	GlobalSignals.run_chapter_analyses.connect(_on_run_chapter_analyses)
+	GlobalSignals.file_selected.connect(_on_file_selected)
 
 
 # Handle file scanned event - queue paragraphs for caching
@@ -71,6 +78,37 @@ func _on_folder_opened(path: String) -> void:
 		GlobalSignals.cache_cleanup_started.emit()
 		var removed_count := _cleanup_unused_cache_files(cache_path, path)
 		GlobalSignals.cache_cleanup_completed.emit(removed_count)
+
+
+func _on_run_all_analyses() -> void:
+	# Queue all paragraphs from all text files in the project
+	var project_path := GlobalSignals.current_path
+	if project_path == "":
+		return
+	var text_files := _get_all_text_files(project_path)
+	for file_path in text_files:
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if file:
+			var content := file.get_as_text()
+			file.close()
+			var paragraphs := content.split("\n\n")
+			queue_paragraphs_for_cache(file_path, paragraphs, content)
+
+
+func _on_file_selected(path: String) -> void:
+	current_file_path = path
+	if FileAccess.file_exists(path):
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file:
+			current_file_content = file.get_as_text()
+			file.close()
+
+
+func _on_run_chapter_analyses() -> void:
+	if current_file_path == "":
+		return
+	var paragraphs := current_file_content.split("\n\n")
+	queue_paragraphs_for_cache(current_file_path, paragraphs, current_file_content)
 
 
 # Start processing tasks
@@ -248,7 +286,10 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 								push_error("Failed to delete cache file: %s" % cache_file_path)
 					# else: keep the file - it's still in use
 				else:
-					push_error("Failed to parse cache file: %s" % file_name)
+					# Failed to parse - remove the corrupt cache file
+					push_warning("Failed to parse cache file: %s - removing" % file_name)
+					if DirAccess.remove_absolute(cache_file_path) == OK:
+						removed_count += 1
 			else:
 				push_error("Failed to open cache file: %s" % file_name)
 		file_name = dir.get_next()

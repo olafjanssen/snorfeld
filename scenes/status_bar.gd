@@ -34,8 +34,6 @@ func _connect_global_signals():
 	GlobalSignals.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
 
 	# Git integration
-	GlobalSignals.git_repo_changed.connect(_on_git_repo_changed)
-	GlobalSignals.git_status_updated.connect(_on_git_status_updated)
 	GlobalSignals.git_operation_started.connect(_on_git_operation_started)
 	GlobalSignals.git_operation_completed.connect(_on_git_operation_completed)
 
@@ -81,42 +79,6 @@ func _on_timer_timeout():
 
 ## Git Status Integration
 
-func _on_git_repo_changed(is_repo: bool):
-	if not is_inside_tree():
-		return
-	is_git_repo = is_repo
-	if is_repo and GitManager != null:
-		# Request status update which will populate branch info
-		GitManager.refresh_status()
-		git_branch = "..."
-		git_status_summary = "..."
-		_update_git_status_display()
-	else:
-		git_branch = ""
-		git_status_summary = ""
-		_update_git_status_display()
-
-func _on_git_status_updated(status: Dictionary):
-	if GitManager == null or not is_inside_tree():
-		return
-	if status.has("branch"):
-		git_branch = status["branch"]
-
-	# Build status summary
-	var parts = []
-	var counts = status["counts"]
-	if counts["modified"] > 0:
-		parts.append("M" + str(counts["modified"]))
-	if counts["staged"] > 0:
-		parts.append("A" + str(counts["staged"]))
-	if counts["untracked"] > 0:
-		parts.append("?" + str(counts["untracked"]))
-	if counts["deleted"] > 0:
-		parts.append("D" + str(counts["deleted"]))
-
-	git_status_summary = " ".join(parts) if parts.size() > 0 else "✓"
-	_update_git_status_display()
-
 func _on_git_operation_started(operation: String):
 	if GitManager == null or not is_inside_tree():
 		return
@@ -129,12 +91,3 @@ func _on_git_operation_completed(_operation: String, success: bool, message: Str
 		_set_status(icon_text + "Git: %s" % message, true)
 	else:
 		_set_status(icon_text + "Git Error: %s" % message, true)
-
-func _update_git_status_display():
-	if is_git_repo and git_branch != "":
-		var git_info = "[color=#666]Git: %s [%s][/color]" % [git_branch, git_status_summary]
-		if text == default_message:
-			text = git_info + " " + default_message
-		else:
-			# Prepend git info to current message
-			text = git_info + " " + text

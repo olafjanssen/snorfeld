@@ -63,6 +63,12 @@ signal cache_cleanup_started
 @warning_ignore("unused_signal")
 signal cache_cleanup_completed(removed_count: int)
 
+# Analysis triggers
+@warning_ignore("unused_signal")
+signal run_all_analyses
+@warning_ignore("unused_signal")
+signal run_chapter_analyses
+
 # Git integration signals
 @warning_ignore("unused_signal")
 signal git_status_refresh_requested(path: String)

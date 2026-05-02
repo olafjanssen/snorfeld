@@ -9,22 +9,12 @@ var current_cache_path := ""
 func _ready() -> void:
 	# Connect to folder_opened signal to auto-create cache
 	GlobalSignals.folder_opened.connect(_on_folder_opened)
-	# Connect to file_scanned signal to create cache files
-	GlobalSignals.file_scanned.connect(_on_file_scanned)
-
 
 func _on_folder_opened(path: String) -> void:
 	print("[CacheManager] Folder opened: %s" % path)
 	current_cache_path = path.path_join(CACHE_DIR_NAME)
 	print("[CacheManager] Cache path set to: %s" % current_cache_path)
 	create_folder(current_cache_path)
-
-
-func _on_file_scanned(path: String, paragraphs: Array, file_content: String) -> void:
-	print("[CacheManager] File scanned: %s (paragraphs: %d)" % [path, paragraphs.size()])
-	# Delegate to ParagraphCache
-	ParagraphCache.queue_paragraphs_for_cache(path, paragraphs, file_content)
-
 
 # Creates a folder for the given directory
 func create_folder(base_path: String) -> bool:
