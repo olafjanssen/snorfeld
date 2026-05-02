@@ -8,11 +8,21 @@ var is_building_tree: bool = false
 
 var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
 
+var dir_check_timer: Timer
+var last_dir_state: Dictionary = {}
+
 func _ready():
 	item_selected.connect(_on_item_selected)
 	GlobalSignals.request_open_folder.connect(_on_open_folder_requested)
 	GlobalSignals.folder_opened.connect(_on_folder_opened)
 	_load_config()
+
+	# Setup directory watch timer
+	dir_check_timer = Timer.new()
+	dir_check_timer.timeout.connect(_on_dir_check_timeout)
+	dir_check_timer.wait_time = 5.0
+	add_child(dir_check_timer)
+	dir_check_timer.start()
 
 func _load_config():
 	# Use call_deferred to ensure tree is ready
@@ -146,8 +156,63 @@ func _on_dir_selected(path: String):
 
 func _on_folder_opened(path: String):
 	current_path = path
+	last_dir_state = _scan_directory_state(current_path)
 	# Use call_deferred to avoid clear() during tree processing
 	call_deferred("_setup_file_tree_deferred")
+
+func _on_dir_check_timeout():
+	if is_building_tree:
+		return
+
+	var current_state = _scan_directory_state(current_path)
+	var has_changes = false
+
+	# Check for new or modified items
+	for path in current_state:
+		if not last_dir_state.has(path) or last_dir_state[path] != current_state[path]:
+			has_changes = true
+			break
+
+	# Check for deleted items
+	for path in last_dir_state:
+		if not current_state.has(path):
+			has_changes = true
+			break
+
+	if has_changes:
+		last_dir_state = current_state
+		# Refresh only the tree, don't emit file_selected signals
+		call_deferred("_setup_file_tree_deferred")
+
+func _scan_directory_state(base_path: String) -> Dictionary:
+	var state: Dictionary = {}
+	var dir = DirAccess.open(base_path)
+	if dir == null:
+		return state
+	_dir_scan_recursive(dir, _ensure_trailing_slash(base_path), state)
+	return state
+
+func _dir_scan_recursive(dir: DirAccess, path: String, state: Dictionary):
+	dir.list_dir_begin()
+	var file_name: String
+	while true:
+		file_name = dir.get_next()
+		if file_name == "":
+			break
+		if file_name == "." or file_name == "..":
+			continue
+
+		var full_path = path + file_name
+		var is_dir = dir.current_is_dir()
+		var mod_time = FileAccess.get_modified_time(full_path)
+
+		if is_dir:
+			state[full_path] = mod_time
+			if dir.change_dir(file_name) == OK:
+				_dir_scan_recursive(dir, _ensure_trailing_slash(full_path), state)
+				dir.change_dir("..")
+		else:
+			state[full_path] = mod_time
 
 func _setup_file_tree_deferred():
 	_setup_file_tree()
