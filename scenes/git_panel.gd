@@ -102,11 +102,7 @@ func _update_file_list():
 	var all_files = status["files"].duplicate()
 
 	# Sort alphabetically by filename (not full path)
-	all_files.sort_custom(func(a, b):
-		var file_a = a["path"].get_file()
-		var file_b = b["path"].get_file()
-		return file_a.naturalnocasecmp_to(file_b)
-	)
+	all_files.sort_custom(func(a, b): return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()) < 0)
 
 	# Add all files in sorted order
 	for file_info in all_files:

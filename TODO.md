@@ -1,12 +1,4 @@
 # Development plans
-- [ ] Simple Git integration
-  - [ ] Integrate libgit2 into the project
-  - [ ] Check if project in git repo, allow to git init
-  - [ ] Show current file changes and diffs
-  - [ ] Allow staging files
-  - [ ] Allow committing files
-  - [ ] Allow push/pull/fetch
-  - [ ] Add .snorfeld to .gitignore or create one for a git project
 - [ ] World Building panel
   - [ ] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
@@ -15,10 +7,10 @@
   - [x] Show LLM status and progress in status bar
   - [x] Trigger LLM generation if user clicks paragraph without cache
   - [x] Clear cache of unused cache files (no longer in project)
+  - [x] Schedule chapter or bookwise paragraph with a button, otherwise on demand
   - [ ] Schedule chapter and bookwide LLM tasks
 - [ ] Architectural design
 	- [ ] Rearrange scenes in logical folders
-
 
 ## Features Done
 - [x] Saving files
@@ -38,3 +30,11 @@
   - [x] Status bars and header panels for the different panels
   - [x] Tree view should show root as project folder
   - [x] Tree view should add file and folder icons
+- [x] Simple Git integration
+  - [x] Integrate OS git calls
+  - [x] Check if project in git repo, allow to git init
+  - [x] Show current file changes and diffs
+  - [x] Allow staging files
+  - [x] Allow committing files
+  - [x] Allow push/pull/fetch
+  - [x] Add .snorfeld to .gitignore or create one for a git project

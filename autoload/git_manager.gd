@@ -183,7 +183,8 @@ func get_status(base_path: String = "") -> Dictionary:
 		var file_path = line.substr(3)
 
 		var change_type: String
-		var is_staged: bool = staged_char != " "
+		# Untracked files (?? ) are never staged
+		var is_staged: bool = staged_char != " " and not (staged_char == "?" and unstaged_char == "?")
 
 		if " -> " in file_path:
 			file_path = file_path.split(" -> ")[1]
