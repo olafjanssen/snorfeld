@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://dblbt20rwgkun" path="res://scenes/paragraph_check.gd" id="0"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_bhh05"]
 [ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/paneled_richtextlabel.tscn" id="4_6m5l1"]
-[ext_resource type="Script" uid="uid://8php3eqvs7vm" path="res://scenes/paneled_richtextlabel.gd" id="4_gvoeh"]
 
 [node name="ParagraphCheck" type="Control" unique_id=242299029]
 layout_mode = 3
@@ -81,10 +80,8 @@ size_flags_vertical = 3
 layout_mode = 2
 text = "Stylistic improvement:"
 
-[node name="Enhancement" type="PanelContainer" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1112195938]
+[node name="Enhancement" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1707718783 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
-script = ExtResource("4_gvoeh")
-metadata/_custom_type_script = "uid://8php3eqvs7vm"
 
 [node name="Label4" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1834282615]
 layout_mode = 2
@@ -118,10 +115,8 @@ size_flags_vertical = 3
 layout_mode = 2
 text = "Structural suggestion:"
 
-[node name="Suggestion" type="PanelContainer" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1679511026]
+[node name="Suggestion" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=269824062 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
-script = ExtResource("4_gvoeh")
-metadata/_custom_type_script = "uid://8php3eqvs7vm"
 
 [node name="Label6" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1531681234]
 layout_mode = 2
