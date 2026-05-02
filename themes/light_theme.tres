@@ -1,5 +1,8 @@
 [gd_resource type="Theme" format=3 uid="uid://o8gx2nmawf21"]
 
+[ext_resource type="FontFile" uid="uid://2a358pad3h32" path="res://fonts/Lora-VariableFont_wght.ttf" id="1_k48q0"]
+[ext_resource type="FontFile" uid="uid://c0apkxbfc16xs" path="res://fonts/Lora-Italic-VariableFont_wght.ttf" id="2_clh54"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7tebe"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7tebe"]
@@ -67,6 +70,7 @@ CodeEdit/colors/caret_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 CodeEdit/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 CodeEdit/colors/selection_color = Color(0.6784314, 0.8392157, 1, 1)
 CodeEdit/constants/wrap_offset = 0
+CodeEdit/fonts/font = ExtResource("1_k48q0")
 CodeEdit/styles/focus = SubResource("StyleBoxEmpty_7tebe")
 Label/colors/font_color = Color(0, 0, 0, 1)
 Panel/styles/panel = SubResource("StyleBoxFlat_7tebe")
@@ -78,6 +82,8 @@ RichTextLabel/font_sizes/h3_font_size = 28
 RichTextLabel/font_sizes/h4_font_size = 22
 RichTextLabel/font_sizes/h5_font_size = 22
 RichTextLabel/font_sizes/h6_font_size = 22
+RichTextLabel/fonts/italics_font = ExtResource("2_clh54")
+RichTextLabel/fonts/normal_font = ExtResource("1_k48q0")
 RichTextLabel/styles/background = SubResource("StyleBoxFlat_clh54")
 TabContainer/colors/font_selected_color = Color(0.19215687, 0.19215687, 0.19215687, 1)
 TabContainer/colors/font_unselected_color = Color(0.19215687, 0.19215687, 0.19215687, 1)
