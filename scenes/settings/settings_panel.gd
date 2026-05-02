@@ -1,15 +1,10 @@
 extends Window
 
 func _ready() -> void:
-	Window.get_focused_window().set_content_scale_factor(2.0)
 	load_llm_settings()
 	$MarginContainer/VBoxContainer/CloseButton.pressed.connect(_on_close_pressed)
 	close_requested.connect(_on_close_requested)
-
-	# Adjust window size to fit content
-	var content_size = $MarginContainer.get_combined_minimum_size()
-	size = content_size + Vector2(32, 32)
-	size = 
+	size = Vector2(1024, 760)
 
 
 func load_llm_settings() -> void:

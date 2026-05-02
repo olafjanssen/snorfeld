@@ -10,6 +10,6 @@ func _ready():
 func _on_file_selected(path: String):
 	TitleMessage.text = path.get_file() if path else ""
 
-func _on_file_changed(path: String, content: String):
+func _on_file_changed(path: String, _content: String):
 	if path:
 		TitleMessage.text = path.get_file()
