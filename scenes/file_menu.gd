@@ -3,6 +3,16 @@ extends PopupMenu
 const OPEN_FOLDER_ID: int = 0
 const SETTINGS_ID: int = 2
 
+# Git menu items
+const GIT_SHOW_PANEL_ID: int = 100
+const GIT_INIT_ID: int = 101
+const GIT_STAGE_ALL_ID: int = 102
+const GIT_COMMIT_ID: int = 103
+const GIT_PUSH_ID: int = 104
+const GIT_PULL_ID: int = 105
+const GIT_FETCH_ID: int = 106
+const GIT_REFRESH_ID: int = 107
+
 func _ready():
 	add_item("Open Folder...", OPEN_FOLDER_ID)
 	add_separator()

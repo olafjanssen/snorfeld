@@ -6,6 +6,11 @@ extends RichTextLabel
 var timer: Timer
 var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=-4.0]✲[/pulse] "
 
+# Git status tracking
+var is_git_repo: bool = false
+var git_branch: String = ""
+var git_status_summary: String = ""
+
 func _ready():
 	_connect_global_signals()
 
@@ -27,6 +32,9 @@ func _connect_global_signals():
 	GlobalSignals.cache_task_completed.connect(_on_cache_task_completed)
 	GlobalSignals.cache_cleanup_started.connect(_on_cache_cleanup_started)
 	GlobalSignals.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
+
+	# Git integration signals will be connected via GlobalSignals
+
 
 func _on_folder_opened(path: String):
 	_set_status(icon_text + "Opened folder: %s" % path)
@@ -65,3 +73,63 @@ func _set_status(message: String, persistent: bool = false):
 
 func _on_timer_timeout():
 	text = default_message
+
+
+## Git Status Integration
+
+func _on_git_repo_changed(is_repo: bool):
+	if not is_inside_tree():
+		return
+	is_git_repo = is_repo
+	if is_repo and GitManager != null:
+		# Request status update which will populate branch info
+		GitManager.refresh_status()
+		git_branch = "..."
+		git_status_summary = "..."
+		_update_git_status_display()
+	else:
+		git_branch = ""
+		git_status_summary = ""
+		_update_git_status_display()
+
+func _on_git_status_updated(status: Dictionary):
+	if GitManager == null or not is_inside_tree():
+		return
+	if status.has("branch"):
+		git_branch = status["branch"]
+
+	# Build status summary
+	var parts = []
+	if status["modified"].size() > 0:
+		parts.append("M" + str(status["modified"].size()))
+	if status["staged"].size() > 0:
+		parts.append("A" + str(status["staged"].size()))
+	if status["untracked"].size() > 0:
+		parts.append("?" + str(status["untracked"].size()))
+	if status["deleted"].size() > 0:
+		parts.append("D" + str(status["deleted"].size()))
+
+	git_status_summary = " ".join(parts) if parts.size() > 0 else "✓"
+	_update_git_status_display()
+
+func _on_git_operation_started(operation: String):
+	if GitManager == null or not is_inside_tree():
+		return
+	_set_status(icon_text + "Git: %s..." % operation, true)
+
+func _on_git_operation_completed(operation: String, success: bool, message: String):
+	if GitManager == null or not is_inside_tree():
+		return
+	if success:
+		_set_status(icon_text + "Git: %s" % message, true)
+	else:
+		_set_status(icon_text + "Git Error: %s" % message, true)
+
+func _update_git_status_display():
+	if is_git_repo and git_branch != "":
+		var git_info = "[color=#666]Git: %s [%s][/color]" % [git_branch, git_status_summary]
+		if text == default_message:
+			text = git_info + " " + default_message
+		else:
+			# Prepend git info to current message
+			text = git_info + " " + text

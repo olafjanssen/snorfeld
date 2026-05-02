@@ -1,6 +1,7 @@
 extends Control
 
 func _ready():
-	Window.get_focused_window().set_content_scale_factor(2.0)
 	await get_tree().process_frame
 	$VBoxContainer.offset_top = $MenuBar.size.y
+
+	$VBoxContainer/HSplitContainer.split_offsets = PackedInt32Array([200, 800, 1600])

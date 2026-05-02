@@ -25,6 +25,7 @@ TextAnalyzer="*res://autoload/text_analyzer.gd"
 SettingsManager="*res://autoload/settings_manager.gd"
 SettingsHandler="*res://autoload/settings_handler.gd"
 FileSaver="*res://autoload/file_saver.gd"
+GitManager="*res://autoload/git_manager.gd"
 
 [display]
 
@@ -32,6 +33,7 @@ window/size/viewport_width=1920
 window/size/viewport_height=980
 window/subwindows/embed_subwindows=false
 window/stretch/aspect="expand"
+window/stretch/scale=2.0
 window/stretch/scale_mode="integer"
 window/per_pixel_transparency/allowed=true
 

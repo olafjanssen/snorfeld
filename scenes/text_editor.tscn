@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bi62sfsesemnm" path="res://scenes/code_edit.gd" id="1_sdthn"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1_ytqh7"]
-[ext_resource type="Script" path="res://scenes/text_editor.gd" id="2"]
+[ext_resource type="Script" uid="uid://brc6ty777qmfu" path="res://scenes/text_editor.gd" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
