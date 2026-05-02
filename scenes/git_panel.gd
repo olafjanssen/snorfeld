@@ -48,10 +48,6 @@ func _ready():
 		GitManager.git_operation_started.connect(_on_git_operation_started)
 		GitManager.git_operation_completed.connect(_on_git_operation_completed)
 
-	# Setup file list
-	file_list.columns = 2
-	file_list.column_titles_visible = false
-
 	# Initial update
 	if GitManager != null:
 		_on_git_repo_changed(GitManager.is_git_repo_cached)
@@ -101,38 +97,39 @@ func _update_file_list():
 		return
 	file_list.clear()
 
+	# Create a root item (will be hidden due to hide_root = true)
+	var root = file_list.create_item()
+
 	var status = GitManager.get_status()
 	if status.has("error"):
 		return
 
 	# Add modified files
 	for file_path in status["modified"]:
-		_add_file_to_list(file_path, "modified")
+		_add_file_to_list(root, file_path, "modified")
 
 	# Add staged files
 	for file_path in status["staged"]:
-		_add_file_to_list(file_path, "staged")
+		_add_file_to_list(root, file_path, "staged")
 
 	# Add untracked files
 	for file_path in status["untracked"]:
-		_add_file_to_list(file_path, "untracked")
+		_add_file_to_list(root, file_path, "untracked")
 
 	# Add deleted files
 	for file_path in status["deleted"]:
-		_add_file_to_list(file_path, "deleted")
+		_add_file_to_list(root, file_path, "deleted")
 
-func _add_file_to_list(file_path: String, status: String):
-	var item = file_list.create_item()
+func _add_file_to_list(parent_item, file_path: String, status: String):
+	print("Adding: ", file_path, " ", status)
+	var item = file_list.create_item(parent_item)
 	var file_name = file_path.get_file()
 	item.set_text(0, file_name)
 	item.set_metadata(0, {"path": file_path, "status": status})
 
-	# Set file icon
-	item.set_icon(0, load("res://icons/file.svg"))
-
-	# Set status icon
+	# Set status icon in first column
 	if status_icons.has(status):
-		item.set_icon(1, status_icons[status])
+		item.set_icon(0, status_icons[status])
 
 func _on_file_selected():
 	selected_files.clear()

@@ -1,10 +1,10 @@
-[gd_scene format=3 uid="uid://git_panel"]
+[gd_scene format=3 uid="uid://bkg70qtikji0p"]
 
-[ext_resource type="Script" uid="uid://git_panel_script" path="res://scenes/git_panel.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/git_panel.gd" id="1"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2"]
 
 [node name="GitPanel" type="PanelContainer" unique_id=1329163321]
-layout_mode = 1
+custom_minimum_size = Vector2(250, 0)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -12,9 +12,8 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_minimum_size = Vector2(250, 0)
-script = ExtResource("1")
 theme = ExtResource("2")
+script = ExtResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
 layout_mode = 2
@@ -22,58 +21,60 @@ size_flags_vertical = 3
 theme = ExtResource("2")
 
 [node name="StatusHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=16594385]
-layout_mode = 0
+layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
 [node name="StatusLabel" type="RichTextLabel" parent="VBoxContainer/StatusHBox" unique_id=1344205732]
-layout_mode = 0
+layout_mode = 2
 size_flags_horizontal = 3
 theme = ExtResource("2")
-text = "Git Status"
 bbcode_enabled = true
+text = "Git Status"
 
 [node name="BranchLabel" type="RichTextLabel" parent="VBoxContainer/StatusHBox" unique_id=1751899859]
-layout_mode = 0
+layout_mode = 2
 size_flags_horizontal = 3
 theme = ExtResource("2")
-text = "Branch: main"
 bbcode_enabled = true
+text = "Branch: main"
 
 [node name="FileTree" type="Tree" parent="VBoxContainer" unique_id=282338753]
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2")
+hide_root = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
+icon_max_width = 16
 
 [node name="ActionHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1412264399]
-layout_mode = 0
+layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
 [node name="RefreshButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772968]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Refresh"
 
 [node name="StageButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772969]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Stage"
 
 [node name="StageAllButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772970]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Stage All"
 
 [node name="UnstageButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772971]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Unstage"
 
 [node name="CommitHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1536772972]
-layout_mode = 0
+layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
@@ -84,26 +85,26 @@ theme = ExtResource("2")
 placeholder_text = "Enter commit message..."
 
 [node name="CommitButton" type="Button" parent="VBoxContainer/CommitHBox" unique_id=1536772974]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Commit"
 
 [node name="RemoteHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1536772975]
-layout_mode = 0
+layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
 [node name="PushButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772976]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Push"
 
 [node name="PullButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772977]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Pull"
 
 [node name="FetchButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772978]
-layout_mode = 0
+layout_mode = 2
 theme = ExtResource("2")
 text = "Fetch"
