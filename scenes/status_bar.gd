@@ -33,7 +33,12 @@ func _connect_global_signals():
 	GlobalSignals.cache_cleanup_started.connect(_on_cache_cleanup_started)
 	GlobalSignals.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
 
-	# Git integration signals will be connected via GlobalSignals
+	# Git integration
+	if GitManager != null:
+		GitManager.git_repo_changed.connect(_on_git_repo_changed)
+		GitManager.git_status_updated.connect(_on_git_status_updated)
+		GitManager.git_operation_started.connect(_on_git_operation_started)
+		GitManager.git_operation_completed.connect(_on_git_operation_completed)
 
 
 func _on_folder_opened(path: String):
