@@ -46,8 +46,8 @@ func _ready():
 	# Connect GitManager signals
 	if GitManager != null:
 		print("GitPanel: Connecting GitManager signals")
-		GitManager.git_repo_changed.connect(_on_git_repo_changed)
-		GitManager.git_status_updated.connect(_on_git_status_updated)
+		GlobalSignals.git_repo_changed.connect(_on_git_repo_changed)
+		GlobalSignals.git_status_updated.connect(_on_git_status_updated)
 
 	# Setup file list - 1 column: status icon+filename+button, hide root
 	file_list.columns = 1

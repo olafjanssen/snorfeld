@@ -2,14 +2,6 @@ extends Node
 ## GitManager - Core git operations using OS.execute()
 ## Uses 'which' (Unix) or 'where' (Windows) to locate Git executable.
 
-# --- Signals ---
-signal git_status_updated(status: Dictionary)
-signal git_diff_available(file_path: String, diff: String)
-signal git_operation_started(operation: String)
-signal git_operation_completed(operation: String, success: bool, message: String)
-signal git_repo_changed(is_git_repo: bool)
-signal file_status_changed(file_path: String, status: String)
-
 # --- State ---
 var git_root: String = ""
 var is_git_repo_cached: bool = false
@@ -137,27 +129,27 @@ func _execute_git_command_simple(args: Array, cwd: String = "") -> bool:
 
 func init_git_repo(path: String) -> bool:
 	if git_executable == "":
-		git_operation_completed.emit("init", false, "Git executable not found")
+		GlobalSignals.git_operation_completed.emit("init", false, "Git executable not found")
 		return false
 
-	git_operation_started.emit("init")
+	GlobalSignals.git_operation_started.emit("init")
 
 	if is_git_repo(path):
 		git_root = find_git_root(path)
 		is_git_repo_cached = true
-		git_operation_completed.emit("init", true, "Already a git repository")
-		git_repo_changed.emit(true)
+		GlobalSignals.git_operation_completed.emit("init", true, "Already a git repository")
+		GlobalSignals.git_repo_changed.emit(true)
 		return true
 
 	if not _execute_git_command_simple(["init"], path):
-		git_operation_completed.emit("init", false, "Failed to initialize git repo")
+		GlobalSignals.git_operation_completed.emit("init", false, "Failed to initialize git repo")
 		return false
 
 	git_root = path
 	is_git_repo_cached = true
 	ensure_snorfeld_in_gitignore()
-	git_operation_completed.emit("init", true, "Git repository initialized")
-	git_repo_changed.emit(true)
+	GlobalSignals.git_operation_completed.emit("init", true, "Git repository initialized")
+	GlobalSignals.git_repo_changed.emit(true)
 	return true
 
 func get_status(base_path: String = "") -> Dictionary:
@@ -256,11 +248,11 @@ func refresh_status(base_path: String = "") -> void:
 	print("GitManager: refresh_status() - status result: ", status)
 	if not status.has("error"):
 		print("GitManager: Emitting git_status_updated with: ", status)
-		git_status_updated.emit(status)
+		GlobalSignals.git_status_updated.emit(status)
 		file_status_cache.clear()
 		for file_info in status["files"]:
 			file_status_cache[file_info["path"]] = file_info["change_type"]
-			file_status_changed.emit(file_info["path"], file_info["change_type"])
+			GlobalSignals.file_status_changed.emit(file_info["path"], file_info["change_type"])
 
 ### Diff Operations
 
@@ -282,121 +274,121 @@ func get_diff_head(file_path: String) -> String:
 
 func stage_file(file_path: String) -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("stage", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("stage", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("stage")
+	GlobalSignals.git_operation_started.emit("stage")
 	var relative_path = _make_path_relative(file_path)
 	if not _execute_git_command_simple(["add", relative_path], git_root):
-		git_operation_completed.emit("stage", false, "Failed to stage file")
+		GlobalSignals.git_operation_completed.emit("stage", false, "Failed to stage file")
 		return false
 
 	file_status_cache.erase(file_path)
 	refresh_status()
-	git_operation_completed.emit("stage", true, "File staged")
+	GlobalSignals.git_operation_completed.emit("stage", true, "File staged")
 	return true
 
 func stage_all() -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("stage_all", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("stage_all", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("stage_all")
+	GlobalSignals.git_operation_started.emit("stage_all")
 	if not _execute_git_command_simple(["add", "-A"], git_root):
-		git_operation_completed.emit("stage_all", false, "Failed to stage all files")
+		GlobalSignals.git_operation_completed.emit("stage_all", false, "Failed to stage all files")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	git_operation_completed.emit("stage_all", true, "All files staged")
+	GlobalSignals.git_operation_completed.emit("stage_all", true, "All files staged")
 	return true
 
 func unstage_file(file_path: String) -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("unstage", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("unstage", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("unstage")
+	GlobalSignals.git_operation_started.emit("unstage")
 	var relative_path = _make_path_relative(file_path)
 	var success = (_execute_git_command_simple(["reset", "HEAD", "--", relative_path], git_root) or
 		_execute_git_command_simple(["restore", "--staged", "--", relative_path], git_root))
 
 	if not success:
-		git_operation_completed.emit("unstage", false, "Failed to unstage file")
+		GlobalSignals.git_operation_completed.emit("unstage", false, "Failed to unstage file")
 		return false
 
 	file_status_cache.erase(file_path)
 	refresh_status()
-	git_operation_completed.emit("unstage", true, "File unstaged")
+	GlobalSignals.git_operation_completed.emit("unstage", true, "File unstaged")
 	return true
 
 ### Commit Operations
 
 func commit(message: String) -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("commit", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("commit", false, "Not a git repository")
 		return false
 	if message == "":
-		git_operation_completed.emit("commit", false, "Empty commit message")
+		GlobalSignals.git_operation_completed.emit("commit", false, "Empty commit message")
 		return false
 
-	git_operation_started.emit("commit")
+	GlobalSignals.git_operation_started.emit("commit")
 	if not _execute_git_command_simple(["commit", "-m", message], git_root):
-		git_operation_completed.emit("commit", false, "Failed to commit")
+		GlobalSignals.git_operation_completed.emit("commit", false, "Failed to commit")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	git_operation_completed.emit("commit", true, "Commit successful")
+	GlobalSignals.git_operation_completed.emit("commit", true, "Commit successful")
 	return true
 
 ### Push/Pull/Fetch Operations
 
 func push(remote: String = "origin", branch: String = "") -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("push", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("push", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("push")
+	GlobalSignals.git_operation_started.emit("push")
 	var args = ["push", remote]
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
-		git_operation_completed.emit("push", false, "Failed to push")
+		GlobalSignals.git_operation_completed.emit("push", false, "Failed to push")
 		return false
 
-	git_operation_completed.emit("push", true, "Push successful")
+	GlobalSignals.git_operation_completed.emit("push", true, "Push successful")
 	return true
 
 func pull(remote: String = "origin", branch: String = "") -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("pull", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("pull", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("pull")
+	GlobalSignals.git_operation_started.emit("pull")
 	var args = ["pull", remote]
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
-		git_operation_completed.emit("pull", false, "Failed to pull")
+		GlobalSignals.git_operation_completed.emit("pull", false, "Failed to pull")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	git_operation_completed.emit("pull", true, "Pull successful")
+	GlobalSignals.git_operation_completed.emit("pull", true, "Pull successful")
 	return true
 
 func fetch(remote: String = "origin") -> bool:
 	if not git_executable or not git_root:
-		git_operation_completed.emit("fetch", false, "Not a git repository")
+		GlobalSignals.git_operation_completed.emit("fetch", false, "Not a git repository")
 		return false
 
-	git_operation_started.emit("fetch")
+	GlobalSignals.git_operation_started.emit("fetch")
 	if not _execute_git_command_simple(["fetch", remote], git_root):
-		git_operation_completed.emit("fetch", false, "Failed to fetch")
+		GlobalSignals.git_operation_completed.emit("fetch", false, "Failed to fetch")
 		return false
 
-	git_operation_completed.emit("fetch", true, "Fetch successful")
+	GlobalSignals.git_operation_completed.emit("fetch", true, "Fetch successful")
 	return true
 
 ### .gitignore Management
@@ -444,7 +436,7 @@ func _on_folder_opened(path: String):
 	git_root = find_git_root(path)
 	print("GitManager: git_root found: ", git_root)
 	is_git_repo_cached = git_root != ""
-	git_repo_changed.emit(is_git_repo_cached)
+	GlobalSignals.git_repo_changed.emit(is_git_repo_cached)
 	if is_git_repo_cached:
 		print("GitManager: Git repo detected, refreshing status")
 		refresh_status(path)
