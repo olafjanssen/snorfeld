@@ -8,6 +8,9 @@ var paragraph_current_hashes := {}
 
 var last_text_hash: String = ""
 
+var last_modified_time: float = 0.0
+var file_check_timer: Timer
+
 func _ready():
 	var highlighter = load("res://scripts/markdown_highlighter.gd").new()
 	syntax_highlighter = highlighter
@@ -18,10 +21,45 @@ func _ready():
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
 
+	# Setup timer to check for external file changes
+	file_check_timer = Timer.new()
+	file_check_timer.timeout.connect(_on_file_check_timeout)
+	file_check_timer.wait_time = 5.0  # Check every 5 seconds
+	add_child(file_check_timer)
+	file_check_timer.start()
+
 func _on_request_save_all_files():
 	# Emit final file_changed with current content before shutdown
 	if current_file_path != "" and FileAccess.file_exists(current_file_path):
 		GlobalSignals.file_changed.emit(current_file_path, get_text())
+
+func _on_file_check_timeout():
+	if current_file_path == "":
+		return
+
+	if FileAccess.file_exists(current_file_path):
+		var current_mod_time = FileAccess.get_modified_time(current_file_path)
+		if current_mod_time > last_modified_time:
+			# File was modified externally - save cursor position
+			var cursor_line = get_caret_line()
+			var cursor_column = get_caret_column()
+			var scroll_pos = get_v_scroll_bar().value
+
+			last_modified_time = current_mod_time
+
+			# Reload the file
+			var content: String = FileAccess.get_file_as_string(current_file_path)
+			set_text(content)
+			last_text_hash = _hash_text(content)
+			paragraph_original_hashes = {}
+			paragraph_current_hashes = {}
+
+			# Restore cursor position
+			if cursor_line >= 0:
+				set_caret_line(cursor_line)
+				var line_length = get_line(cursor_line).length()
+				set_caret_column(min(cursor_column, line_length))
+			get_v_scroll_bar().value = scroll_pos
 
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
@@ -38,6 +76,7 @@ func _on_file_selected(path: String):
 		var content: String = FileAccess.get_file_as_string(path)
 		set_text(content)
 		last_text_hash = _hash_text(content)
+		last_modified_time = FileAccess.get_modified_time(path)
 
 func _on_cursor_changed():
 	var cursor_line := get_caret_line()
