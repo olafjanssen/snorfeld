@@ -179,9 +179,8 @@ func get_status(base_path: String = "") -> Dictionary:
 		return {"error": output[1]}
 
 	var status = {
-		"modified": [], "staged": [], "untracked": [],
-		"deleted": [], "renamed": [], "conflicted": [],
-		"file_status": {}  # Maps file_path -> actual status (modified/untracked/deleted)
+		"files": [],  # Array of {path, change_type, staged}
+		"counts": {"modified": 0, "staged": 0, "untracked": 0, "deleted": 0}
 	}
 
 	for line in output[0].split("\n"):
@@ -189,49 +188,35 @@ func get_status(base_path: String = "") -> Dictionary:
 			continue
 		var staged_char = line[0]
 		var unstaged_char = line[1]
-		var rest = line.substr(3)
+		var file_path = line.substr(3)
 
-		if " -> " in rest:
-			var new_path = rest.split(" -> ")[1]
-			status["renamed"].append(new_path)
-			status["file_status"][new_path] = "renamed"
+		var change_type: String
+		var is_staged: bool = staged_char != " "
+
+		if " -> " in file_path:
+			file_path = file_path.split(" -> ")[1]
+			change_type = "renamed"
 		elif staged_char == "?" and unstaged_char == "?":
-			status["untracked"].append(rest)
-			status["file_status"][rest] = "untracked"
+			change_type = "untracked"
 		elif staged_char == "D" or unstaged_char == "D":
-			status["deleted"].append(rest)
-			status["file_status"][rest] = "deleted"
+			change_type = "deleted"
 		elif staged_char == "U" or unstaged_char == "U":
-			status["conflicted"].append(rest)
-			status["file_status"][rest] = "conflicted"
+			change_type = "conflicted"
+		elif unstaged_char == "M" or (unstaged_char == " " and staged_char == "M"):
+			change_type = "modified"
+		elif unstaged_char == "A" or (unstaged_char == " " and staged_char == "A"):
+			change_type = "staged"  # New file added to git
 		else:
-			if staged_char != " ":
-				status["staged"].append(rest)
-			if unstaged_char != " ":
-				status["modified"].append(rest)
-			# Store the actual file status for icon display
-			# Priority: unstaged status first, then staged status
-			if unstaged_char == "M":
-				status["file_status"][rest] = "modified"
-			elif unstaged_char == "D":
-				status["file_status"][rest] = "deleted"
-			elif unstaged_char == "?":
-				status["file_status"][rest] = "untracked"
-			elif unstaged_char == "A":
-				status["file_status"][rest] = "staged"
-			elif staged_char == "M":
-				status["file_status"][rest] = "modified"
-			elif staged_char == "A":
-				status["file_status"][rest] = "staged"
-			elif staged_char == "D":
-				status["file_status"][rest] = "deleted"
-			elif staged_char == "?":
-				status["file_status"][rest] = "untracked"
+			change_type = "modified"  # Default fallback
+
+		status["files"].append({"path": file_path, "change_type": change_type, "staged": is_staged})
+		status["counts"][change_type] += 1
+		if is_staged:
+			status["counts"]["staged"] += 1
 
 	var branch_output = _execute_git_command(["branch", "--show-current"], repo_path)
 	status["branch"] = branch_output[0].strip_edges() if branch_output[0] else "unknown"
-	status["is_clean"] = (status["modified"].size() + status["staged"].size() +
-			status["untracked"].size() + status["deleted"].size()) == 0
+	status["is_clean"] = status["files"].size() == 0
 	return status
 
 func get_file_status(file_path: String) -> String:
@@ -245,10 +230,10 @@ func get_file_status(file_path: String) -> String:
 	if status.has("error"):
 		return "error"
 
-	for key in ["untracked", "deleted", "staged", "modified"]:
-		if file_path in status[key]:
-			file_status_cache[file_path] = key
-			return key
+	for file_info in status["files"]:
+		if file_info["path"] == file_path:
+			file_status_cache[file_path] = file_info["change_type"]
+			return file_info["change_type"]
 
 	file_status_cache[file_path] = "clean"
 	return "clean"
@@ -273,10 +258,9 @@ func refresh_status(base_path: String = "") -> void:
 		print("GitManager: Emitting git_status_updated with: ", status)
 		git_status_updated.emit(status)
 		file_status_cache.clear()
-		for key in ["modified", "staged", "untracked"]:
-			for file_path in status[key]:
-				file_status_cache[file_path] = key
-				file_status_changed.emit(file_path, key)
+		for file_info in status["files"]:
+			file_status_cache[file_info["path"]] = file_info["change_type"]
+			file_status_changed.emit(file_info["path"], file_info["change_type"])
 
 ### Diff Operations
 

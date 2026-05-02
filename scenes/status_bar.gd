@@ -105,14 +105,15 @@ func _on_git_status_updated(status: Dictionary):
 
 	# Build status summary
 	var parts = []
-	if status["modified"].size() > 0:
-		parts.append("M" + str(status["modified"].size()))
-	if status["staged"].size() > 0:
-		parts.append("A" + str(status["staged"].size()))
-	if status["untracked"].size() > 0:
-		parts.append("?" + str(status["untracked"].size()))
-	if status["deleted"].size() > 0:
-		parts.append("D" + str(status["deleted"].size()))
+	var counts = status["counts"]
+	if counts["modified"] > 0:
+		parts.append("M" + str(counts["modified"]))
+	if counts["staged"] > 0:
+		parts.append("A" + str(counts["staged"]))
+	if counts["untracked"] > 0:
+		parts.append("?" + str(counts["untracked"]))
+	if counts["deleted"] > 0:
+		parts.append("D" + str(counts["deleted"]))
 
 	git_status_summary = " ".join(parts) if parts.size() > 0 else "✓"
 	_update_git_status_display()

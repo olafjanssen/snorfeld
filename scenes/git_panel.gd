@@ -3,8 +3,6 @@ extends PanelContainer
 
 signal panel_closed
 
-@onready var status_label: RichTextLabel = $VBoxContainer/StatusHBox/StatusLabel
-@onready var branch_label: RichTextLabel = $VBoxContainer/StatusHBox/BranchLabel
 @onready var file_list: Tree = $VBoxContainer/FileTree
 @onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/CommitMessage
 @onready var commit_button: Button = $VBoxContainer/CommitHBox/CommitButton
@@ -18,7 +16,9 @@ signal panel_closed
 var status_icons: Dictionary = {
 	"modified": load("res://icons/git-modified.svg"),
 	"untracked": load("res://icons/git-untracked.svg"),
-	"deleted": load("res://icons/git-deleted.svg")
+	"deleted": load("res://icons/git-deleted.svg"),
+	"renamed": load("res://icons/git-renamed.svg"),
+	"staged": load("res://icons/git-staged.svg")
 }
 
 # Checkbox icons
@@ -49,8 +49,6 @@ func _ready():
 	if GitManager != null:
 		GitManager.git_repo_changed.connect(_on_git_repo_changed)
 		GitManager.git_status_updated.connect(_on_git_status_updated)
-		GitManager.git_operation_started.connect(_on_git_operation_started)
-		GitManager.git_operation_completed.connect(_on_git_operation_completed)
 
 	# Setup file list - 2 columns: status icon+filename (col 0), checkbox (col 1), hide root
 	file_list.columns = 2
@@ -68,38 +66,15 @@ func _on_git_repo_changed(is_git_repo: bool):
 	if GitManager == null or not is_inside_tree():
 		return
 	if is_git_repo:
-		status_label.text = "Git repository detected"
-		branch_label.text = "Branch: " + GitManager.get_status().get("branch", "unknown")
 		_update_file_list()
 		_set_buttons_enabled(true)
 	else:
-		status_label.text = "Not a git repository"
-		branch_label.text = ""
 		file_list.clear()
 		_set_buttons_enabled(false)
 
 func _on_git_status_updated(status: Dictionary):
 	if GitManager == null or not is_inside_tree():
 		return
-	# Update branch label
-	if status.has("branch"):
-		branch_label.text = "Branch: " + status["branch"]
-
-	# Update status summary
-	var summary_parts = []
-	if status["modified"].size() > 0:
-		summary_parts.append(str(status["modified"].size()) + " modified")
-	if status["staged"].size() > 0:
-		summary_parts.append(str(status["staged"].size()) + " staged")
-	if status["untracked"].size() > 0:
-		summary_parts.append(str(status["untracked"].size()) + " untracked")
-	if status["deleted"].size() > 0:
-		summary_parts.append(str(status["deleted"].size()) + " deleted")
-
-	if summary_parts.size() > 0:
-		status_label.text = " ".join(summary_parts)
-	else:
-		status_label.text = "Clean"
 
 	# Update file list
 	_update_file_list()
@@ -116,53 +91,30 @@ func _update_file_list():
 	if status.has("error"):
 		return
 
-	# Collect all files with their status and sort alphabetically
-	var all_files: Array = []
-
-	# Use file_status to get all unique files and their actual status
-	if status.has("file_status"):
-		for file_path in status["file_status"]:
-			var file_status = status["file_status"][file_path]
-			all_files.append({"path": file_path, "status": file_status})
-	else:
-		# Fallback to old method
-		for file_path in status["modified"]:
-			all_files.append({"path": file_path, "status": "modified"})
-		for file_path in status["staged"]:
-			all_files.append({"path": file_path, "status": "staged"})
-		for file_path in status["untracked"]:
-			all_files.append({"path": file_path, "status": "untracked"})
-		for file_path in status["deleted"]:
-			all_files.append({"path": file_path, "status": "deleted"})
+	# Collect all files and sort alphabetically
+	var all_files = status["files"].duplicate()
 
 	# Sort alphabetically by filename (not full path)
 	all_files.sort_custom(func(a, b): return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()))
-
+	
 	# Add all files in sorted order
 	for file_info in all_files:
-		_add_file_to_list(root, file_info["path"], file_info["status"])
+		_add_file_to_list(root, file_info["path"], file_info["change_type"], file_info["staged"])
 
-func _add_file_to_list(parent_item, file_path: String, status: String):
-	print("Adding: ", file_path, " ", status)
+func _add_file_to_list(parent_item, file_path: String, change_type: String, is_staged: bool):
+	print("Adding: ", file_path, " ", change_type, " staged:", is_staged)
 	var item = file_list.create_item(parent_item)
 	var file_name = file_path.get_file()
 
 	# Combine status icon and filename in column 0
 	item.set_text(0, file_name)
-	item.set_metadata(0, {"path": file_path, "status": status})
+	item.set_metadata(0, {"path": file_path, "change_type": change_type, "staged": is_staged})
 
-	# Get the actual file status (not staged status) for the icon
-	var git_status = GitManager.get_status()
-	var actual_status = status
-	if git_status.has("file_status") and git_status["file_status"].has(file_path):
-		actual_status = git_status["file_status"][file_path]
+	# Set status icon in column 0 based on change type
+	if status_icons.has(change_type):
+		item.set_icon(0, status_icons[change_type])
 
-	# Set status icon in column 0 based on actual file status
-	if status_icons.has(actual_status):
-		item.set_icon(0, status_icons[actual_status])
-
-	# Set checkbox in column 1 - default to checked if already staged
-	var is_staged = git_status.get("staged", []).has(file_path)
+	# Set checkbox in column 1 based on staged state
 	file_staged_state[file_path] = is_staged
 	item.set_icon(1, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
 
@@ -260,19 +212,6 @@ func _set_buttons_enabled(enabled: bool):
 	push_button.disabled = not enabled
 	pull_button.disabled = not enabled
 	fetch_button.disabled = not enabled
-
-func _on_git_operation_started(operation: String):
-	if GitManager == null or not is_inside_tree():
-		return
-	status_label.text = "Performing: " + operation + "..."
-
-func _on_git_operation_completed(operation: String, success: bool, message: String):
-	if GitManager == null or not is_inside_tree():
-		return
-	if success:
-		status_label.text = message
-	else:
-		status_label.text = "Error: " + message
 
 func _show_error(message: String):
 	var dialog = AcceptDialog.new()
