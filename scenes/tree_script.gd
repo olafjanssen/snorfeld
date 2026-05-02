@@ -28,6 +28,10 @@ func _save_config():
 	config.set_value("general", "last_folder", current_path)
 	config.save(CONFIG_FILE)
 
+func _save_last_file(file_path: String):
+	config.set_value("general", "last_file", file_path)
+	config.save(CONFIG_FILE)
+
 func _ensure_trailing_slash(path: String) -> String:
 	if not path.ends_with("/") and not path.ends_with("://"):
 		return path + "/"
@@ -48,6 +52,8 @@ func _setup_file_tree():
 	root_item.set_metadata(0, {"path": current_path, "is_dir": true})
 	_refresh_files(root_item, _ensure_trailing_slash(current_path))
 
+	# Select first text file after building tree
+	call_deferred("_select_first_text_file")
 	is_building_tree = false
 
 func _refresh_files(parent_item: TreeItem, path: String):
@@ -121,6 +127,7 @@ func _on_item_selected():
 		_save_config()
 	else:
 		GlobalSignals.file_selected.emit(path)
+		_save_last_file(path)
 
 func _on_open_folder_requested():
 	var dialog: FileDialog = FileDialog.new()
@@ -144,31 +151,53 @@ func _on_folder_opened(path: String):
 
 func _setup_file_tree_deferred():
 	_setup_file_tree()
-	# Select the first text file in the folder
-	_select_first_text_file()
 
 func _select_first_text_file():
-	await get_tree().process_frame  # Wait for tree to be populated
-	# Start from root's first child (skip the root itself)
-	var root = get_root()
-	if root != null and root.get_child_count() > 0:
-		var first_text_item = _find_first_text_file_item(root.get_child(0))
-		if first_text_item != null:
-			first_text_item.select(0)
-			_on_item_selected()
+	# Try to select the last opened file first
+	var last_file = ""
+	if config.load(CONFIG_FILE) == OK:
+		last_file = config.get_value("general", "last_file", "")
 
-func _find_first_text_file_item(parent: TreeItem) -> TreeItem:
+	if last_file != "" and FileAccess.file_exists(last_file):
+		# Try to find the last opened file in the tree
+		var found = _find_tree_item_by_path(get_root(), last_file)
+		if found != null:
+			found.select(0)
+			return
+
+	# Fall back to first text file in the entire tree
+	var root = get_root()
+	if root == null:
+		return
+
+	# Use a simple iterative approach
+	var stack = [root]
+	while stack.size() > 0:
+		var parent = stack.pop_back()
+		for i in range(parent.get_child_count()):
+			var child = parent.get_child(i)
+			var info = child.get_metadata(0)
+			if info != null:
+				var path = info["path"]
+				var is_dir = info["is_dir"]
+				if not is_dir and _is_text_file(path):
+					child.select(0)
+					return
+				if is_dir:
+					stack.append(child)
+
+func _find_tree_item_by_path(parent: TreeItem, target_path: String) -> TreeItem:
+	if parent == null:
+		return null
+
+	var info = parent.get_metadata(0)
+	if info != null and info["path"] == target_path:
+		return parent
+
 	for i in range(parent.get_child_count()):
 		var child = parent.get_child(i)
-		var info = child.get_metadata(0)
-		if info != null:
-			var path = info["path"]
-			var is_dir = info["is_dir"]
-			if not is_dir and _is_text_file(path):
-				return child
-			# Recursively check subdirectories
-			if is_dir:
-				var found = _find_first_text_file_item(child)
-				if found != null:
-					return found
+		var found = _find_tree_item_by_path(child, target_path)
+		if found != null:
+			return found
+
 	return null

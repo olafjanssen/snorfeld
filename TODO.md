@@ -9,8 +9,10 @@
   - [ ] Add .snorfeld to .gitignore or create one for a git project
 - [ ] UI improvements
   - [ ] Decent settings menu styling
-  - [ ] Better tab panel styling for the editing assistant
-  - [ ] Status bars and header panels for the different panels
+  - [x] Better tab panel styling for the editing assistant
+  - [x] Status bars and header panels for the different panels
+  - [x] Tree view should show root as project folder
+  - [x] Tree view should add file and folder icons
 - [ ] World Building panel
   - [ ] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
@@ -23,7 +25,10 @@
   - [ ] Schedule chapter and bookwide LLM tasks
 - [ ] Usability updates
   - [x] Automatically open first file of project when opening
-  - [ ] Pick a slimmer font for the interface and a more elegant font for the text
+  - [x] Automatically open the last opened file of the project when opening
+  - [x] Pick a slimmer font for the interface and a more elegant font
+  - [ ] When the direction changes outside the app the tree must be updated
+  - [ ] When the opened file is changed outside the app, the text editor must be updated
 - [ ] Architectural design
 	- [ ] Rearrange scenes in logical folders
 

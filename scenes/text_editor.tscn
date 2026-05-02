@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bi62sfsesemnm" path="res://scenes/code_edit.gd" id="1_sdthn"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1_ytqh7"]
+[ext_resource type="Script" path="res://scenes/text_editor.gd" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
@@ -15,6 +16,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("2")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=3943721]
 layout_mode = 1
