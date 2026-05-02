@@ -25,7 +25,6 @@ theme = ExtResource("2")
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2")
-columns = 2
 hide_root = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
@@ -45,19 +44,37 @@ layout_mode = 2
 theme = ExtResource("2")
 text = "Stage All"
 
-[node name="CommitHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1536772970]
+[node name="CommitHBox" type="Control" parent="VBoxContainer" unique_id=1772730317]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
 [node name="CommitMessage" type="TextEdit" parent="VBoxContainer/CommitHBox" unique_id=1536772973]
-layout_mode = 2
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 theme = ExtResource("2")
 placeholder_text = "Enter commit message..."
 
 [node name="CommitButton" type="Button" parent="VBoxContainer/CommitHBox" unique_id=1536772974]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -70.0
+offset_top = -34.0
+offset_right = -3.0
+offset_bottom = -6.0
+grow_horizontal = 0
+grow_vertical = 0
 theme = ExtResource("2")
 text = "Commit"
 

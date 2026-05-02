@@ -43,8 +43,15 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_clh54"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b2586"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2586"]
 bg_color = Color(0.8745098, 0.8745098, 0.8784314, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_clh54"]
+bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3rr8x"]
 bg_color = Color(0.7921569, 0.7921569, 0.7921569, 1)
@@ -95,8 +102,10 @@ TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_t7qon")
 TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_xu2q4")
 TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_x03xt")
 TabContainer/styles/tabbar_background = SubResource("StyleBoxFlat_fo6du")
+Tree/colors/custom_button_font_highlight = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_color = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_hovered_color = Color(0, 0.47058824, 0.83137256, 1)
+Tree/colors/font_hovered_dimmed_color = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_hovered_selected_color = Color(0, 0.47058824, 0.83137256, 1)
 Tree/colors/font_selected_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
 Tree/constants/draw_guides = 0
@@ -105,7 +114,10 @@ Tree/constants/scrollbar_margin_bottom = 4
 Tree/constants/scrollbar_margin_right = 4
 Tree/constants/scrollbar_margin_top = 4
 Tree/font_sizes/font_size = 14
+Tree/styles/button_hover = SubResource("StyleBoxEmpty_clh54")
+Tree/styles/button_pressed = SubResource("StyleBoxEmpty_b2586")
 Tree/styles/hovered = SubResource("StyleBoxFlat_b2586")
+Tree/styles/hovered_dimmed = SubResource("StyleBoxFlat_clh54")
 Tree/styles/hovered_selected = SubResource("StyleBoxFlat_3rr8x")
 Tree/styles/panel = SubResource("StyleBoxFlat_k48q0")
 Tree/styles/selected = SubResource("StyleBoxFlat_0a83b")

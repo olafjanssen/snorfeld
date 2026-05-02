@@ -29,6 +29,7 @@ var checkbox_icons: Dictionary = {
 
 # Track staged state per file
 var file_staged_state: Dictionary = {}
+var next_button_id: int = 0
 
 # Track selected files
 var selected_files: Array = []
@@ -50,13 +51,13 @@ func _ready():
 		GitManager.git_repo_changed.connect(_on_git_repo_changed)
 		GitManager.git_status_updated.connect(_on_git_status_updated)
 
-	# Setup file list - 2 columns: status icon+filename (col 0), checkbox (col 1), hide root
-	file_list.columns = 2
+	# Setup file list - 1 column: status icon+filename+button, hide root
+	file_list.columns = 1
 	file_list.column_titles_visible = false
 	file_list.hide_root = true
 
-	# Connect tree signals for checkbox toggles
-	file_list.gui_input.connect(_on_tree_gui_input)
+	# Connect tree button clicked signal for staging
+	file_list.button_clicked.connect(_on_stage_button_clicked)
 
 	# Initial update
 	if GitManager != null:
@@ -106,17 +107,19 @@ func _add_file_to_list(parent_item, file_path: String, change_type: String, is_s
 	var item = file_list.create_item(parent_item)
 	var file_name = file_path.get_file()
 
-	# Combine status icon and filename in column 0
+	# Set text and icon in column 0
 	item.set_text(0, file_name)
 	item.set_metadata(0, {"path": file_path, "change_type": change_type, "staged": is_staged})
 
-	# Set status icon in column 0 based on change type
+	# Set status icon based on change type
 	if status_icons.has(change_type):
 		item.set_icon(0, status_icons[change_type])
 
-	# Set checkbox in column 1 based on staged state
+	# Add stage button with unique ID
+	var button_icon = checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"]
+	item.add_button(0, button_icon, next_button_id, false, "Toggle staging")
 	file_staged_state[file_path] = is_staged
-	item.set_icon(1, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
+	next_button_id += 1
 
 func _on_file_selected():
 	selected_files.clear()
@@ -126,29 +129,22 @@ func _on_file_selected():
 		if metadata:
 			selected_files.append(metadata["path"])
 
-func _on_tree_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_pos = event.position
-		var item = file_list.get_item_at_position(mouse_pos)
-		if item:
-			# Check if click was in the checkbox column (column 1)
-			var col = file_list.get_column_at_position(mouse_pos)
-			if col == 1:
-				var metadata = item.get_metadata(0)
-				if metadata:
-					_on_checkbox_clicked(item, metadata["path"])
-
-func _on_checkbox_clicked(item, file_path: String) -> void:
-	# Toggle staged state
-	file_staged_state[file_path] = not file_staged_state[file_path]
-	var is_staged = file_staged_state[file_path]
-	item.set_icon(1, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
-
-	# Stage/unstage the file
-	if is_staged:
-		GitManager.stage_file(file_path)
-	else:
-		GitManager.unstage_file(file_path)
+func _on_stage_button_clicked(item: TreeItem, column: int, button_index: int, id: int) -> void:
+	var metadata = item.get_metadata(0)
+	if metadata:
+		var file_path = metadata["path"]
+		# Toggle staged state
+		var is_staged = not file_staged_state[file_path]
+		file_staged_state[file_path] = is_staged
+		
+		# Update button icon (button is always at index 0)
+		item.set_button(0, 0, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
+		
+		# Stage/unstage the file
+		if is_staged:
+			GitManager.stage_file(file_path)
+		else:
+			GitManager.unstage_file(file_path)
 
 func _on_file_activated():
 	# Double-click to show diff
