@@ -9,7 +9,6 @@
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
 [ext_resource type="Script" uid="uid://dkksr2nukxj3c" path="res://scenes/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/git_panel.tscn" id="9"]
-[ext_resource type="Script" path="res://scenes/git_menu.gd" id="10"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
@@ -45,10 +44,6 @@ theme = ExtResource("4")
 [node name="File" type="PopupMenu" parent="MenuBar" unique_id=1344205732]
 theme = ExtResource("4")
 script = ExtResource("2")
-
-[node name="Git" type="PopupMenu" parent="MenuBar" unique_id=1751899859]
-theme = ExtResource("4")
-script = ExtResource("10")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
 layout_mode = 1
