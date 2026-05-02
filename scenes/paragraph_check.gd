@@ -1,11 +1,11 @@
 extends Control
 
 @onready var Correction: PaneledRichTextLabel = $TabContainer/Grammar/MarginContainer/VBoxContainer/Correction
-@onready var GrammarExplanation: RichTextLabel = $TabContainer/Grammar/MarginContainer/VBoxContainer/GrammarExplanation
+@onready var GrammarExplanation: Label = $TabContainer/Grammar/MarginContainer/VBoxContainer/GrammarExplanation
 @onready var Enhancement: PaneledRichTextLabel = $TabContainer/Style/MarginContainer/VBoxContainer/Enhancement
-@onready var StyleExplanation: RichTextLabel = $TabContainer/Style/MarginContainer/VBoxContainer/StyleExplanation
+@onready var StyleExplanation: Label = $TabContainer/Style/MarginContainer/VBoxContainer/StyleExplanation
 @onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
-@onready var StructureExplanation: RichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
+@onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 
 # Store current context for patch application
 var current_paragraph_original_hash: String = ""
