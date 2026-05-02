@@ -9,9 +9,7 @@ signal panel_closed
 @onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/CommitMessage
 @onready var commit_button: Button = $VBoxContainer/CommitHBox/CommitButton
 @onready var refresh_button: Button = $VBoxContainer/ActionHBox/RefreshButton
-@onready var stage_button: Button = $VBoxContainer/ActionHBox/StageButton
 @onready var stage_all_button: Button = $VBoxContainer/ActionHBox/StageAllButton
-@onready var unstage_button: Button = $VBoxContainer/ActionHBox/UnstageButton
 @onready var push_button: Button = $VBoxContainer/RemoteHBox/PushButton
 @onready var pull_button: Button = $VBoxContainer/RemoteHBox/PullButton
 @onready var fetch_button: Button = $VBoxContainer/RemoteHBox/FetchButton
@@ -19,10 +17,18 @@ signal panel_closed
 # Git status icons
 var status_icons: Dictionary = {
 	"modified": load("res://icons/git-modified.svg"),
-	"staged": load("res://icons/git-staged.svg"),
 	"untracked": load("res://icons/git-untracked.svg"),
 	"deleted": load("res://icons/git-deleted.svg")
 }
+
+# Checkbox icons
+var checkbox_icons: Dictionary = {
+	"checked": load("res://icons/checkbox-checked.svg"),
+	"unchecked": load("res://icons/checkbox-unchecked.svg")
+}
+
+# Track staged state per file
+var file_staged_state: Dictionary = {}
 
 # Track selected files
 var selected_files: Array = []
@@ -34,9 +40,7 @@ func _ready():
 
 	commit_button.pressed.connect(_on_commit_pressed)
 	refresh_button.pressed.connect(_on_refresh_pressed)
-	stage_button.pressed.connect(_on_stage_pressed)
 	stage_all_button.pressed.connect(_on_stage_all_pressed)
-	unstage_button.pressed.connect(_on_unstage_pressed)
 	push_button.pressed.connect(_on_push_pressed)
 	pull_button.pressed.connect(_on_pull_pressed)
 	fetch_button.pressed.connect(_on_fetch_pressed)
@@ -47,6 +51,14 @@ func _ready():
 		GitManager.git_status_updated.connect(_on_git_status_updated)
 		GitManager.git_operation_started.connect(_on_git_operation_started)
 		GitManager.git_operation_completed.connect(_on_git_operation_completed)
+
+	# Setup file list - 2 columns: status icon+filename (col 0), checkbox (col 1), hide root
+	file_list.columns = 2
+	file_list.column_titles_visible = false
+	file_list.hide_root = true
+
+	# Connect tree signals for checkbox toggles
+	file_list.gui_input.connect(_on_tree_gui_input)
 
 	# Initial update
 	if GitManager != null:
@@ -104,32 +116,55 @@ func _update_file_list():
 	if status.has("error"):
 		return
 
-	# Add modified files
-	for file_path in status["modified"]:
-		_add_file_to_list(root, file_path, "modified")
+	# Collect all files with their status and sort alphabetically
+	var all_files: Array = []
 
-	# Add staged files
-	for file_path in status["staged"]:
-		_add_file_to_list(root, file_path, "staged")
+	# Use file_status to get all unique files and their actual status
+	if status.has("file_status"):
+		for file_path in status["file_status"]:
+			var file_status = status["file_status"][file_path]
+			all_files.append({"path": file_path, "status": file_status})
+	else:
+		# Fallback to old method
+		for file_path in status["modified"]:
+			all_files.append({"path": file_path, "status": "modified"})
+		for file_path in status["staged"]:
+			all_files.append({"path": file_path, "status": "staged"})
+		for file_path in status["untracked"]:
+			all_files.append({"path": file_path, "status": "untracked"})
+		for file_path in status["deleted"]:
+			all_files.append({"path": file_path, "status": "deleted"})
 
-	# Add untracked files
-	for file_path in status["untracked"]:
-		_add_file_to_list(root, file_path, "untracked")
+	# Sort alphabetically by filename (not full path)
+	all_files.sort_custom(func(a, b): return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()))
 
-	# Add deleted files
-	for file_path in status["deleted"]:
-		_add_file_to_list(root, file_path, "deleted")
+	# Add all files in sorted order
+	for file_info in all_files:
+		_add_file_to_list(root, file_info["path"], file_info["status"])
 
 func _add_file_to_list(parent_item, file_path: String, status: String):
 	print("Adding: ", file_path, " ", status)
 	var item = file_list.create_item(parent_item)
 	var file_name = file_path.get_file()
+
+	# Combine status icon and filename in column 0
 	item.set_text(0, file_name)
 	item.set_metadata(0, {"path": file_path, "status": status})
 
-	# Set status icon in first column
-	if status_icons.has(status):
-		item.set_icon(0, status_icons[status])
+	# Get the actual file status (not staged status) for the icon
+	var git_status = GitManager.get_status()
+	var actual_status = status
+	if git_status.has("file_status") and git_status["file_status"].has(file_path):
+		actual_status = git_status["file_status"][file_path]
+
+	# Set status icon in column 0 based on actual file status
+	if status_icons.has(actual_status):
+		item.set_icon(0, status_icons[actual_status])
+
+	# Set checkbox in column 1 - default to checked if already staged
+	var is_staged = git_status.get("staged", []).has(file_path)
+	file_staged_state[file_path] = is_staged
+	item.set_icon(1, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
 
 func _on_file_selected():
 	selected_files.clear()
@@ -138,6 +173,30 @@ func _on_file_selected():
 		var metadata = item.get_metadata(0)
 		if metadata:
 			selected_files.append(metadata["path"])
+
+func _on_tree_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var mouse_pos = event.position
+		var item = file_list.get_item_at_position(mouse_pos)
+		if item:
+			# Check if click was in the checkbox column (column 1)
+			var col = file_list.get_column_at_position(mouse_pos)
+			if col == 1:
+				var metadata = item.get_metadata(0)
+				if metadata:
+					_on_checkbox_clicked(item, metadata["path"])
+
+func _on_checkbox_clicked(item, file_path: String) -> void:
+	# Toggle staged state
+	file_staged_state[file_path] = not file_staged_state[file_path]
+	var is_staged = file_staged_state[file_path]
+	item.set_icon(1, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
+
+	# Stage/unstage the file
+	if is_staged:
+		GitManager.stage_file(file_path)
+	else:
+		GitManager.unstage_file(file_path)
 
 func _on_file_activated():
 	# Double-click to show diff
@@ -181,16 +240,9 @@ func _on_commit_pressed():
 func _on_refresh_pressed():
 	GitManager.refresh_status()
 
-func _on_stage_pressed():
-	for file_path in selected_files:
-		GitManager.stage_file(file_path)
-
 func _on_stage_all_pressed():
+	# Simply call stage_all - the status update will refresh the tree via git_status_updated signal
 	GitManager.stage_all()
-
-func _on_unstage_pressed():
-	for file_path in selected_files:
-		GitManager.unstage_file(file_path)
 
 func _on_push_pressed():
 	GitManager.push()
@@ -204,9 +256,7 @@ func _on_fetch_pressed():
 func _set_buttons_enabled(enabled: bool):
 	commit_button.disabled = not enabled
 	refresh_button.disabled = not enabled
-	stage_button.disabled = not enabled
 	stage_all_button.disabled = not enabled
-	unstage_button.disabled = not enabled
 	push_button.disabled = not enabled
 	pull_button.disabled = not enabled
 	fetch_button.disabled = not enabled

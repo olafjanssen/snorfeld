@@ -43,10 +43,10 @@ text = "Branch: main"
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2")
+columns = 2
 hide_root = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
-icon_max_width = 16
 
 [node name="ActionHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1412264399]
 layout_mode = 2
@@ -58,22 +58,12 @@ layout_mode = 2
 theme = ExtResource("2")
 text = "Refresh"
 
-[node name="StageButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772969]
-layout_mode = 2
-theme = ExtResource("2")
-text = "Stage"
-
-[node name="StageAllButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772970]
+[node name="StageAllButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772969]
 layout_mode = 2
 theme = ExtResource("2")
 text = "Stage All"
 
-[node name="UnstageButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772971]
-layout_mode = 2
-theme = ExtResource("2")
-text = "Unstage"
-
-[node name="CommitHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1536772972]
+[node name="CommitHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=1536772970]
 layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")

@@ -180,7 +180,8 @@ func get_status(base_path: String = "") -> Dictionary:
 
 	var status = {
 		"modified": [], "staged": [], "untracked": [],
-		"deleted": [], "renamed": [], "conflicted": []
+		"deleted": [], "renamed": [], "conflicted": [],
+		"file_status": {}  # Maps file_path -> actual status (modified/untracked/deleted)
 	}
 
 	for line in output[0].split("\n"):
@@ -191,18 +192,41 @@ func get_status(base_path: String = "") -> Dictionary:
 		var rest = line.substr(3)
 
 		if " -> " in rest:
-			status["renamed"].append(rest.split(" -> ")[1])
+			var new_path = rest.split(" -> ")[1]
+			status["renamed"].append(new_path)
+			status["file_status"][new_path] = "renamed"
 		elif staged_char == "?" and unstaged_char == "?":
 			status["untracked"].append(rest)
+			status["file_status"][rest] = "untracked"
 		elif staged_char == "D" or unstaged_char == "D":
 			status["deleted"].append(rest)
+			status["file_status"][rest] = "deleted"
 		elif staged_char == "U" or unstaged_char == "U":
 			status["conflicted"].append(rest)
+			status["file_status"][rest] = "conflicted"
 		else:
 			if staged_char != " ":
 				status["staged"].append(rest)
 			if unstaged_char != " ":
 				status["modified"].append(rest)
+			# Store the actual file status for icon display
+			# Priority: unstaged status first, then staged status
+			if unstaged_char == "M":
+				status["file_status"][rest] = "modified"
+			elif unstaged_char == "D":
+				status["file_status"][rest] = "deleted"
+			elif unstaged_char == "?":
+				status["file_status"][rest] = "untracked"
+			elif unstaged_char == "A":
+				status["file_status"][rest] = "staged"
+			elif staged_char == "M":
+				status["file_status"][rest] = "modified"
+			elif staged_char == "A":
+				status["file_status"][rest] = "staged"
+			elif staged_char == "D":
+				status["file_status"][rest] = "deleted"
+			elif staged_char == "?":
+				status["file_status"][rest] = "untracked"
 
 	var branch_output = _execute_git_command(["branch", "--show-current"], repo_path)
 	status["branch"] = branch_output[0].strip_edges() if branch_output[0] else "unknown"
