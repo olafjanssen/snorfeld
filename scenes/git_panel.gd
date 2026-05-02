@@ -165,21 +165,7 @@ func _on_file_activated():
 				_show_diff_popup(file_path, diff)
 
 func _show_diff_popup(file_path: String, diff: String):
-	var popup = AcceptDialog.new()
-	popup.title = "Diff: " + file_path.get_file()
-	popup.dialog_text = "Git diff for this file:"
-
-	var text_edit = TextEdit.new()
-	text_edit.text = diff
-	text_edit.editable = false
-	text_edit.readonly = true
-	text_edit.size = Vector2(600, 400)
-
-	popup.add_child(text_edit)
-	popup.size = Vector2(620, 450)
-
-	get_parent().add_child(popup)
-	popup.popup_centered()
+	GlobalSignals.show_git_diff.emit(file_path, diff)
 
 func _on_commit_pressed():
 	var message = commit_message.text.strip_edges()
