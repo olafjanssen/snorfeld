@@ -8,7 +8,7 @@ var task_queue := []
 var queue_mutex := Mutex.new()
 var processing := false
 
-func connect_signals() -> void:
+func _ready() -> void:
 	GlobalSignals.request_priority_cache.connect(_on_priority_cache_requested)
 	GlobalSignals.folder_opened.connect(_on_folder_opened)
 

@@ -82,7 +82,7 @@ func _on_file_selected(path: String):
 		set_text(content)
 		last_text_hash = _hash_text(content)
 		last_modified_time = FileAccess.get_modified_time(path)
-		
+
 	# Make sure panel is visible
 	visible = true
 
@@ -112,6 +112,11 @@ func _on_cursor_changed():
 
 			# Update current hash
 			paragraph_current_hashes[cursor_line] = current_hash
+
+			# Check if cache exists for this paragraph, if not request caching
+			var cache = ParagraphCache.get_paragraph_cache(current_hash, current_file_path)
+			if cache.is_empty():
+				GlobalSignals.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
 
 			# Emit signal with original hash for this line
 			GlobalSignals.paragraph_selected.emit(
