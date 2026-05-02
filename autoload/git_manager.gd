@@ -232,12 +232,7 @@ func get_file_status(file_path: String) -> String:
 
 func refresh_status(base_path: String = "") -> void:
 	print("GitManager: refresh_status() called with base_path: ", base_path)
-	var current_time = Time.get_ticks_msec() / 1000.0
-	if current_time - last_status_refresh < STATUS_REFRESH_COOLDOWN:
-		print("GitManager: refresh_status() - cooldown active, skipping")
-		return
 
-	last_status_refresh = current_time
 	var repo_path = base_path if base_path else git_root
 	print("GitManager: refresh_status() - repo_path: ", repo_path)
 	if not repo_path:

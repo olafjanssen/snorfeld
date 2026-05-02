@@ -50,21 +50,25 @@ theme = ExtResource("2")
 alignment = 1
 
 [node name="PushButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772976]
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 theme = ExtResource("2")
 text = "Push"
 
 [node name="PullButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772977]
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 theme = ExtResource("2")
 text = "Pull"
 
 [node name="FetchButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772978]
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 theme = ExtResource("2")
 text = "Fetch"
 
 [node name="StageAllButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772968]
+custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 theme = ExtResource("2")
 text = "Stage All"

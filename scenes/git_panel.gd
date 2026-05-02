@@ -31,6 +31,9 @@ var next_button_id: int = 0
 # Track selected files
 var selected_files: Array = []
 
+# Auto-refresh timer
+var refresh_timer: Timer
+
 func _ready():
 	print("GitPanel: _ready() called, GitManager:", GitManager)
 	# Connect signals
@@ -49,13 +52,15 @@ func _ready():
 		GlobalSignals.git_repo_changed.connect(_on_git_repo_changed)
 		GlobalSignals.git_status_updated.connect(_on_git_status_updated)
 
-	# Setup file list - 1 column: status icon+filename+button, hide root
-	file_list.columns = 1
-	file_list.column_titles_visible = false
-	file_list.hide_root = true
-
 	# Connect tree button clicked signal for staging
 	file_list.button_clicked.connect(_on_stage_button_clicked)
+
+	# Setup auto-refresh timer
+	refresh_timer = Timer.new()
+	refresh_timer.wait_time = 10.0
+	refresh_timer.timeout.connect(_on_refresh_timeout)
+	add_child(refresh_timer)
+	refresh_timer.start()
 
 	# Initial update
 	if GitManager != null:
@@ -185,9 +190,11 @@ func _on_commit_pressed():
 	var success = GitManager.commit(message)
 	if success:
 		commit_message.text = ""
+		_update_file_list()
+
 
 func _on_refresh_timeout():
-	GitManager.refresh_status()
+	_update_file_list()
 
 func _on_stage_all_pressed():
 	# Simply call stage_all - the status update will refresh the tree via git_status_updated signal
@@ -195,12 +202,15 @@ func _on_stage_all_pressed():
 
 func _on_push_pressed():
 	GitManager.push()
+	_update_file_list()
 
 func _on_pull_pressed():
 	GitManager.pull()
+	_update_file_list()
 
 func _on_fetch_pressed():
 	GitManager.fetch()
+	_update_file_list()
 
 func _set_buttons_enabled(enabled: bool):
 	commit_button.disabled = not enabled
