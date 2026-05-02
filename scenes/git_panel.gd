@@ -1,12 +1,10 @@
-extends PanelContainer
+extends Control
 ## GitPanel - UI for git operations
 
-signal panel_closed
-
 @onready var file_list: Tree = $VBoxContainer/FileTree
-@onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/CommitMessage
+@onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/PanelContainer/MarginContainer/CommitMessage
 @onready var commit_button: Button = $VBoxContainer/CommitHBox/CommitButton
-@onready var stage_all_button: Button = $VBoxContainer/ActionHBox/StageAllButton
+@onready var stage_all_button: Button = $VBoxContainer/RemoteHBox/StageAllButton
 @onready var push_button: Button = $VBoxContainer/RemoteHBox/PushButton
 @onready var pull_button: Button = $VBoxContainer/RemoteHBox/PullButton
 @onready var fetch_button: Button = $VBoxContainer/RemoteHBox/FetchButton
@@ -34,6 +32,7 @@ var next_button_id: int = 0
 var selected_files: Array = []
 
 func _ready():
+	print("GitPanel: _ready() called, GitManager:", GitManager)
 	# Connect signals
 	file_list.item_selected.connect(_on_file_selected)
 	file_list.item_activated.connect(_on_file_activated)
@@ -46,6 +45,7 @@ func _ready():
 
 	# Connect GitManager signals
 	if GitManager != null:
+		print("GitPanel: Connecting GitManager signals")
 		GitManager.git_repo_changed.connect(_on_git_repo_changed)
 		GitManager.git_status_updated.connect(_on_git_status_updated)
 
@@ -62,6 +62,7 @@ func _ready():
 		_on_git_repo_changed(GitManager.is_git_repo_cached)
 
 func _on_git_repo_changed(is_git_repo: bool):
+	print("GitPanel: _on_git_repo_changed:", is_git_repo)
 	if GitManager == null or not is_inside_tree():
 		return
 	if is_git_repo:
@@ -72,7 +73,9 @@ func _on_git_repo_changed(is_git_repo: bool):
 		_set_buttons_enabled(false)
 
 func _on_git_status_updated(status: Dictionary):
+	print("GitPanel: git_status_updated received, files:", status.get("files", []).size(), " is_inside_tree:", is_inside_tree())
 	if GitManager == null or not is_inside_tree():
+		print("GitPanel: Skipping update - not in tree")
 		return
 
 	# Update file list
@@ -95,7 +98,7 @@ func _update_file_list():
 
 	# Sort alphabetically by filename (not full path)
 	all_files.sort_custom(func(a, b): return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()))
-	
+
 	# Add all files in sorted order
 	for file_info in all_files:
 		_add_file_to_list(root, file_info["path"], file_info["change_type"], file_info["staged"])
@@ -127,17 +130,17 @@ func _on_file_selected():
 		if metadata:
 			selected_files.append(metadata["path"])
 
-func _on_stage_button_clicked(item: TreeItem, column: int, button_index: int, id: int) -> void:
+func _on_stage_button_clicked(item: TreeItem, _column: int, _button_index: int, _id: int) -> void:
 	var metadata = item.get_metadata(0)
 	if metadata:
 		var file_path = metadata["path"]
 		# Toggle staged state
 		var is_staged = not file_staged_state[file_path]
 		file_staged_state[file_path] = is_staged
-		
+
 		# Update button icon (button is always at index 0)
 		item.set_button(0, 0, checkbox_icons["checked"] if is_staged else checkbox_icons["unchecked"])
-		
+
 		# Stage/unstage the file
 		if is_staged:
 			GitManager.stage_file(file_path)

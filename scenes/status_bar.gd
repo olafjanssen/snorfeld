@@ -123,7 +123,7 @@ func _on_git_operation_started(operation: String):
 		return
 	_set_status(icon_text + "Git: %s..." % operation, true)
 
-func _on_git_operation_completed(operation: String, success: bool, message: String):
+func _on_git_operation_completed(_operation: String, success: bool, message: String):
 	if GitManager == null or not is_inside_tree():
 		return
 	if success:

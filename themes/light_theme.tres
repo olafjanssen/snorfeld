@@ -3,6 +3,41 @@
 [ext_resource type="FontFile" uid="uid://2a358pad3h32" path="res://fonts/Lora-VariableFont_wght.ttf" id="1_k48q0"]
 [ext_resource type="FontFile" uid="uid://c0apkxbfc16xs" path="res://fonts/Lora-Italic-VariableFont_wght.ttf" id="2_clh54"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1qid6"]
+bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ldnbf"]
+bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jv7rp"]
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7tebe"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7tebe"]
@@ -74,11 +109,20 @@ border_width_bottom = 1
 border_color = Color(0.019607844, 0.53333336, 0.9411765, 1)
 
 [resource]
+Button/colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+Button/colors/font_hover_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+Button/colors/font_hover_pressed_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+Button/colors/font_pressed_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+Button/font_sizes/font_size = 12
+Button/styles/hover = SubResource("StyleBoxFlat_1qid6")
+Button/styles/normal = SubResource("StyleBoxFlat_ldnbf")
+Button/styles/pressed = SubResource("StyleBoxFlat_jv7rp")
 CodeEdit/colors/background_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
 CodeEdit/colors/caret_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 CodeEdit/colors/font_color = Color(0.11764706, 0.11764706, 0.11764706, 1)
 CodeEdit/colors/selection_color = Color(0.6784314, 0.8392157, 1, 1)
 CodeEdit/constants/wrap_offset = 0
+CodeEdit/font_sizes/font_size = 16
 CodeEdit/fonts/font = ExtResource("1_k48q0")
 CodeEdit/styles/focus = SubResource("StyleBoxEmpty_7tebe")
 Label/colors/font_color = Color(0.19215687, 0.19215687, 0.19215687, 1)
