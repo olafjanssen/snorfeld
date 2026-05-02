@@ -34,12 +34,7 @@ layout_mode = 2
 size_flags_vertical = 0
 theme = ExtResource("2")
 
-[node name="RefreshButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772968]
-layout_mode = 2
-theme = ExtResource("2")
-text = "Refresh"
-
-[node name="StageAllButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772969]
+[node name="StageAllButton" type="Button" parent="VBoxContainer/ActionHBox" unique_id=1536772968]
 layout_mode = 2
 theme = ExtResource("2")
 text = "Stage All"

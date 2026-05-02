@@ -6,7 +6,6 @@ signal panel_closed
 @onready var file_list: Tree = $VBoxContainer/FileTree
 @onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/CommitMessage
 @onready var commit_button: Button = $VBoxContainer/CommitHBox/CommitButton
-@onready var refresh_button: Button = $VBoxContainer/ActionHBox/RefreshButton
 @onready var stage_all_button: Button = $VBoxContainer/ActionHBox/StageAllButton
 @onready var push_button: Button = $VBoxContainer/RemoteHBox/PushButton
 @onready var pull_button: Button = $VBoxContainer/RemoteHBox/PullButton
@@ -40,7 +39,6 @@ func _ready():
 	file_list.item_activated.connect(_on_file_activated)
 
 	commit_button.pressed.connect(_on_commit_pressed)
-	refresh_button.pressed.connect(_on_refresh_pressed)
 	stage_all_button.pressed.connect(_on_stage_all_pressed)
 	push_button.pressed.connect(_on_push_pressed)
 	pull_button.pressed.connect(_on_pull_pressed)
@@ -185,7 +183,7 @@ func _on_commit_pressed():
 	if success:
 		commit_message.text = ""
 
-func _on_refresh_pressed():
+func _on_refresh_timeout():
 	GitManager.refresh_status()
 
 func _on_stage_all_pressed():
@@ -203,7 +201,6 @@ func _on_fetch_pressed():
 
 func _set_buttons_enabled(enabled: bool):
 	commit_button.disabled = not enabled
-	refresh_button.disabled = not enabled
 	stage_all_button.disabled = not enabled
 	push_button.disabled = not enabled
 	pull_button.disabled = not enabled

@@ -43,6 +43,9 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76oi6"]
+bg_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_clh54"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b2586"]
@@ -102,6 +105,10 @@ TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_t7qon")
 TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_xu2q4")
 TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_x03xt")
 TabContainer/styles/tabbar_background = SubResource("StyleBoxFlat_fo6du")
+TextEdit/colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+TextEdit/colors/font_placeholder_color = Color(0.49411765, 0.5019608, 0.5254902, 1)
+TextEdit/font_sizes/font_size = 12
+TextEdit/styles/normal = SubResource("StyleBoxFlat_76oi6")
 Tree/colors/custom_button_font_highlight = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_color = Color(0.34509805, 0.34509805, 0.3529412, 1)
 Tree/colors/font_hovered_color = Color(0, 0.47058824, 0.83137256, 1)
