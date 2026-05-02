@@ -30,6 +30,11 @@ func _ready():
 		_detect_git_executable()
 		print("GitManager: git_executable after detection: ", git_executable)
 
+	# Connect to folder opened signal
+	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	GlobalSignals.file_saved.connect(_on_file_saved)
+	GlobalSignals.file_changed.connect(_on_file_changed)
+
 ### Configuration
 
 func _load_git_config() -> void:
@@ -85,7 +90,8 @@ func _detect_git_executable() -> bool:
 ### Repository Detection
 
 func is_git_repo(path: String) -> bool:
-	return DirAccess.dir_exists_absolute(path.get_base_dir().path_join(".git"))
+	# Check if the path or any parent contains a .git directory
+	return find_git_root(path) != ""
 
 func find_git_root(path: String) -> String:
 	var current = path.get_base_dir()
@@ -109,7 +115,6 @@ func _execute_git_command(args: Array, cwd: String = "") -> Array:
 		return ["", "Git executable not configured"]
 
 	var full_args = args.duplicate()
-	full_args.insert(0, git_executable)
 	if cwd != "":
 		full_args.insert(0, cwd)
 		full_args.insert(0, '-C')
@@ -435,6 +440,8 @@ func _on_folder_opened(path: String):
 	if is_git_repo_cached:
 		print("GitManager: Git repo detected, refreshing status")
 		refresh_status(path)
+	else:
+		print("GitManager: Not a git repository")
 
 func _on_file_saved(path: String):
 	if is_git_repo_cached:
