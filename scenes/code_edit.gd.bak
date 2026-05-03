@@ -68,44 +68,46 @@ func _on_show_git_diff(_path: String, _diff: String):
 	visible = false
 
 func _on_navigate_to_line(file_path: String, line_number: int):
+	# If this is the current file, just navigate to the line
 	if current_file_path == file_path:
+		# Clamp line number to valid range
 		var line_count = get_line_count()
 		var target_line = clamp(line_number - 1, 0, line_count - 1)
-		_set_caret_to_line(target_line)
+		set_caret_line(target_line)
+		# Scroll to make the caret visible
+		var scroll_bar = get_v_scroll_bar()
+		if scroll_bar:
+			var scroll_pos = (target_line / max(line_count - 1, 1)) * (scroll_bar.max_value - scroll_bar.min_value)
+			scroll_bar.value = scroll_pos
+		grab_focus()
 	else:
+		# Switch to the file first, then navigate
 		current_file_path = file_path
 		paragraph_original_hashes = {}
 		paragraph_current_hashes = {}
 		last_text_hash = ""
 		if FileAccess.file_exists(file_path):
 			var content: String = FileAccess.get_file_as_string(file_path)
+			set_text(content)
 			last_text_hash = _hash_text(content)
 			last_modified_time = FileAccess.get_modified_time(file_path)
-			call_deferred("_load_file_and_navigate", file_path, content, line_number)
+
+		# Navigate to the line after loading
+		var line_count = get_line_count()
+		var target_line = clamp(line_number - 1, 0, line_count - 1)
+		call_deferred("set_caret_line", target_line)
+		call_deferred("_scroll_to_line", target_line)
+		call_deferred("grab_focus")
+
 		visible = true
 
-func _load_file_and_navigate(file_path: String, content: String, line_number: int):
-	set_text(content)
-	current_file_path = file_path
-	# Use call_deferred to ensure set_text is complete
-	call_deferred("_finalize_navigate", file_path, line_number)
-
-func _finalize_navigate(file_path: String, line_number: int):
-	current_file_path = file_path
-	var line_count = get_line_count()
-	var target_line = clamp(line_number - 1, 0, line_count - 1)
-	_set_caret_to_line(target_line)
-
-func _set_caret_to_line(line_number: int):
-	set_caret_line(line_number)
-	set_caret_column(0)
+func _scroll_to_line(line_number: int):
 	var scroll_bar = get_v_scroll_bar()
 	if scroll_bar:
 		var line_count = get_line_count()
-		if line_count > 0:
-			var scroll_pos = (line_number / line_count) * scroll_bar.max_value
-			scroll_bar.value = scroll_pos
-	grab_focus()
+		var scroll_pos = (line_number / max(line_count - 1, 1)) * (scroll_bar.max_value - scroll_bar.min_value)
+		scroll_bar.value = scroll_pos
+
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:

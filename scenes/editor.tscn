@@ -9,6 +9,7 @@
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
 [ext_resource type="Script" uid="uid://dkksr2nukxj3c" path="res://scenes/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/git_panel.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/outline_panel.tscn" id="10"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
@@ -70,6 +71,7 @@ layout_mode = 2
 current_tab = 0
 tab_0/title = "Files"
 tab_1/title = "Git"
+tab_2/title = "Outline"
 
 [node name="FileBrowser" type="Tree" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=282338753]
 clip_contents = false
@@ -89,6 +91,13 @@ custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 metadata/_tab_index = 1
 metadata/_tab_name = "Git"
+
+[node name="OutlinePanel" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=242299031 instance=ExtResource("10")]
+visible = false
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 2
+metadata/_tab_index = 2
+metadata/_tab_name = "Outline"
 
 [node name="TextEditor" parent="VBoxContainer/HSplitContainer" unique_id=1652980615 instance=ExtResource("6_eqbpn")]
 custom_minimum_size = Vector2(200, 0)

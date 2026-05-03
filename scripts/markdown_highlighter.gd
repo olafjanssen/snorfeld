@@ -22,7 +22,7 @@ func _get_token_color(index: int) -> Color:
 func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var text: String = get_text_edit().get_line(line)
 	var length : int = len(text)
-	
+
 	var tokens = {}
 	var pos: int = 0
 	var in_bold: bool = false
@@ -33,17 +33,21 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 		# Check for headers at start of line
 		if pos == 0:
 			for i in range(6, 0, -1):
-				if pos + i < length and text.substr(pos, i) == "#".repeat(i) and text[pos + i] == " ":
-					tokens[pos] = {"color": _get_token_color(TOKEN_HEADER)}
+				if pos + i <= length and text.substr(pos, i) == "#".repeat(i) and (pos + i < length and text[pos + i] == " "):
+					for j in range(i):
+						tokens[pos + j] = {"color": _get_token_color(TOKEN_HEADER)}
 					pos += i + 1
 					break
+			# If we reached end of line after header, continue to next iteration
+			if pos >= length:
+				continue
 
 		# Check for bold
 		if pos + 1 < length and text.substr(pos, 2) == "**":
 			in_bold = !in_bold
-			if in_bold: 
+			if in_bold:
 				tokens[pos] = {"color": _get_token_color(TOKEN_BOLD)}
-			else: 
+			else:
 				tokens[pos] = {"color": _get_token_color(TOKEN_NORMAL)}
 			pos += 2
 			continue
@@ -51,9 +55,9 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 		# Check for italic
 		if text[pos] == "*" or text[pos] == "_":
 			in_italic = !in_italic
-			if in_italic: 
+			if in_italic:
 				tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC)}
-			else: 
+			else:
 				tokens[pos] = {"color": _get_token_color(TOKEN_NORMAL)}
 			pos += 1
 			continue
@@ -61,13 +65,13 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 		# Check for dialog
 		if text[pos] == "\"":
 			in_dialog = !in_dialog
-			if in_dialog: 
+			if in_dialog and pos + 1 < length:
 				tokens[pos+1] = {"color": _get_token_color(TOKEN_DIALOG)}
-			else: 
+			elif not in_dialog and pos - 1 >= 0:
 				tokens[pos-1] = {"color": _get_token_color(TOKEN_NORMAL)}
 			pos += 1
 			continue
-		
+
 		pos += 1
 
 	return tokens
