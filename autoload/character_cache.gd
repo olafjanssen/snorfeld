@@ -349,8 +349,10 @@ For each character that appears in this chapter, return their complete profile:
 - archetypes: Array of their character archetype(s) - use consistent, standard terms
 - traits: Array of their personality traits - use consistent, standard terms, no duplicates
 - relationships: Object of {character_name: relationship_description}
-- aliases: Array of other names they're called in this chapter
+- aliases: Array of OTHER NAMES they are LITERALLY called in this chapter text (only if the exact alias string appears as a name in the chapter)
 - notes: Brief description of their appearance/role in THIS chapter
+
+IMPORTANT: Only include an alias if that exact string is used as a name for the character in this chapter. Do NOT include descriptive phrases, roles, pronouns, or empty strings as aliases.
 
 Respond with a JSON object:
 {
@@ -410,32 +412,35 @@ func _find_matching_character_file(char_name: String, cache_path: String) -> Str
 	var file_name = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".json"):
-			var existing_name: String = file_name.get_basename().replace("_", " ")
-			var score := _calculate_similarity(char_name, existing_name)
-			if score > best_score:
-				best_score = score
-				best_match = cache_path.path_join(file_name)
-
-			# Also check aliases in the file
-			var file := FileAccess.open(cache_path.path_join(file_name), FileAccess.READ)
+			var file_path := cache_path.path_join(file_name)
+			var file := FileAccess.open(file_path, FileAccess.READ)
 			if file:
 				var content := file.get_as_text()
 				file.close()
 				var json := JSON.new()
 				if json.parse(content) == OK:
 					var data: Dictionary = json.get_data()
+					var existing_name: String = data.get("name", "")
+
+					# Compare against the actual character name
+					var score := _calculate_similarity(char_name, existing_name)
+					if score > best_score:
+						best_score = score
+						best_match = file_path
+
+					# Also check aliases
 					var aliases: Array = data.get("aliases", [])
 					for alias in aliases:
 						var alias_score := _calculate_similarity(char_name, alias)
 						if alias_score > best_score:
 							best_score = alias_score
-							best_match = cache_path.path_join(file_name)
+							best_match = file_path
 						if alias_score > 80:
 							break
 					if best_score > 80:
 						break
-			if best_score > 80:
-				break
+				if best_score > 80:
+					break
 		file_name = dir.get_next()
 	dir.list_dir_end()
 

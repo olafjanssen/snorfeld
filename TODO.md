@@ -9,6 +9,11 @@
   - [x] Clear cache of unused cache files (no longer in project)
   - [x] Schedule chapter or bookwise paragraph with a button, otherwise on demand
   - [ ] Schedule chapter and bookwide LLM tasks
+- [ ] Usability improvements
+	- [x] Create an outline tab showing the chapter outline instead of files
+- [ ] Styling and UI improvement
+	- [x] Detect screen pixel density to scale the UI with
+	- [ ] File menu is not always available. Consider switching to naked window and arrange buttons ourselves.
 - [ ] Architectural design
 	- [ ] Rearrange scenes in logical folders
 
