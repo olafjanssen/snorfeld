@@ -1,4 +1,4 @@
-# Snorfeld - The Harsh AI Writing Companion
+# Snorfeld - A Reluctant AI Writing Companion
 
 ## Description
 

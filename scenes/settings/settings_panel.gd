@@ -6,6 +6,13 @@ func _ready() -> void:
 	close_requested.connect(_on_close_requested)
 	size = Vector2(1024, 760)
 
+	# Detect screen DPI and set appropriate scale
+	var dpi := DisplayServer.screen_get_dpi(0)
+
+	# Use 2.0 for high-DPI (Retina/4K), 1.0 for standard
+	var ui_scale := 2.0 if dpi > 144 else 1.0
+	set_content_scale_factor(ui_scale)
+
 
 func load_llm_settings() -> void:
 	$MarginContainer/VBoxContainer/EndpointLineEdit.text = SettingsManager.get_llm_endpoint()

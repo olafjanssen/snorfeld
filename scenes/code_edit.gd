@@ -19,6 +19,7 @@ func _ready():
 	GlobalSignals.apply_diff_patch.connect(_on_apply_diff_patch)
 	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
 	GlobalSignals.show_git_diff.connect(_on_show_git_diff)
+	GlobalSignals.navigate_to_line.connect(_on_navigate_to_line)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
@@ -66,6 +67,33 @@ func _on_file_check_timeout():
 func _on_show_git_diff(_path: String, _diff: String):
 	visible = false
 
+func _on_navigate_to_line(file_path: String, line_number: int):
+	if current_file_path == file_path:
+		var line_count = get_line_count()
+		var target_line = clamp(line_number - 1, 0, line_count - 1)
+		call_deferred("_set_caret_and_center", target_line)
+		grab_focus()
+	else:
+		current_file_path = file_path
+		paragraph_original_hashes = {}
+		paragraph_current_hashes = {}
+		last_text_hash = ""
+		if FileAccess.file_exists(file_path):
+			var content: String = FileAccess.get_file_as_string(file_path)
+			last_text_hash = _hash_text(content)
+			last_modified_time = FileAccess.get_modified_time(file_path)
+			set_text(content)
+			var line_count = get_line_count()
+			var target_line = clamp(line_number - 1, 0, line_count - 1)
+			call_deferred("_set_caret_and_center", target_line)
+			grab_focus()
+		visible = true
+
+func _set_caret_and_center(line_number: int):
+	set_caret_column(0)
+	set_caret_line(line_number)
+	center_viewport_to_caret()
+		
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:

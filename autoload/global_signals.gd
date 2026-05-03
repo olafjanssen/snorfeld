@@ -12,6 +12,8 @@ signal folder_opened(path: String)
 signal file_selected(path: String)
 @warning_ignore("unused_signal")
 signal request_open_folder
+@warning_ignore("unused_signal")
+signal navigate_to_line(file_path: String, line_number: int)
 
 func _on_folder_opened(path: String):
 	current_path = path
