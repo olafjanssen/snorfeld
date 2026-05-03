@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/paragraph_check.tscn" id="7_5lcyj"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
 [ext_resource type="Script" uid="uid://dkksr2nukxj3c" path="res://scenes/status_bar.gd" id="8"]
-[ext_resource type="PackedScene" path="res://scenes/git_panel.tscn" id="9"]
+[ext_resource type="PackedScene" uid="uid://bkg70qtikji0p" path="res://scenes/git_panel.tscn" id="9"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 

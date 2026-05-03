@@ -69,6 +69,20 @@ signal run_all_analyses
 @warning_ignore("unused_signal")
 signal run_chapter_analyses
 
+# Character cache progress
+@warning_ignore("unused_signal")
+signal character_cache_queue_updated(queued: int, processing: bool)
+@warning_ignore("unused_signal")
+signal character_cache_task_started(remaining: int)
+@warning_ignore("unused_signal")
+signal character_cache_task_completed(remaining: int)
+@warning_ignore("unused_signal")
+signal request_priority_character_cache(file_path: String, file_content: String)
+@warning_ignore("unused_signal")
+signal run_all_character_analyses
+@warning_ignore("unused_signal")
+signal run_chapter_character_analyses
+
 # Git integration signals
 @warning_ignore("unused_signal")
 signal git_status_refresh_requested(path: String)

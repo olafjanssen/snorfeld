@@ -26,6 +26,7 @@ SettingsManager="*res://autoload/settings_manager.gd"
 SettingsHandler="*res://autoload/settings_handler.gd"
 FileSaver="*res://autoload/file_saver.gd"
 GitManager="*res://autoload/git_manager.gd"
+CharacterCache="*res://autoload/character_cache.gd"
 
 [display]
 
