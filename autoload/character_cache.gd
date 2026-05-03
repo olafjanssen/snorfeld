@@ -158,14 +158,31 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 		if char_name == "":
 			continue
 
-		# Use MD5 hash of character name for filename (like paragraphs)
-		var char_hash: String = _hash_character_name(char_name)
-		var char_file_path: String = cache_path.path_join("%s.json" % char_hash)
-
-		# Check for fuzzy matches with existing character files
+		# Check for fuzzy matches with existing character files FIRST
+		# This handles cases where LLM returns "Alex (past)" but we already have "Alex"
 		var existing_file_path: String = _find_matching_character_file(char_name, cache_path)
+		var canonical_name: String = char_name
+
 		if existing_file_path != "":
-			char_file_path = existing_file_path
+			# Use the existing file's canonical name for hashing
+			var file := FileAccess.open(existing_file_path, FileAccess.READ)
+			if file:
+				var content := file.get_as_text()
+				file.close()
+				var json := JSON.new()
+				if json.parse(content) == OK:
+					var existing_data: Dictionary = json.get_data()
+					canonical_name = existing_data.get("name", char_name)
+					# Also add the new alias to the existing character
+					if not existing_data.get("aliases", []).has(char_name):
+						var aliases: Array = char_data.get("aliases", [])
+						if not aliases.has(char_name):
+							aliases.append(char_name)
+							char_data["aliases"] = aliases
+
+		# Use MD5 hash of the CANONICAL character name for filename
+		var char_hash: String = _hash_character_name(canonical_name)
+		var char_file_path: String = cache_path.path_join("%s.json" % char_hash)
 
 		# Load existing data if file exists
 		var existing_data: Dictionary = {}
@@ -210,7 +227,21 @@ func _load_existing_characters_json(cache_path: String) -> String:
 					file.close()
 					var json := JSON.new()
 					if json.parse(content) == OK:
-						existing_chars.append(json.get_data())
+						var char_data: Dictionary = json.get_data()
+						# Create a clean version without bookkeeping fields
+						var clean_char: Dictionary = {}
+						clean_char["name"] = char_data.get("name", "")
+						if char_data.has("plot_roles"):
+							clean_char["plot_roles"] = char_data["plot_roles"]
+						if char_data.has("archetypes"):
+							clean_char["archetypes"] = char_data["archetypes"]
+						if char_data.has("traits"):
+							clean_char["traits"] = char_data["traits"]
+						if char_data.has("relationships"):
+							clean_char["relationships"] = char_data["relationships"]
+						if char_data.has("aliases"):
+							clean_char["aliases"] = char_data["aliases"]
+						existing_chars.append(clean_char)
 			file_name = dir.get_next()
 		dir.list_dir_end()
 
@@ -254,12 +285,6 @@ func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary,
 	if new_char_data.has("name"):
 		updated_data["name"] = new_char_data["name"]
 
-	# Size - overwrite with new value
-	if new_char_data.has("size"):
-		updated_data["size"] = new_char_data["size"]
-	else:
-		updated_data["size"] = existing_data.get("size", "minor")
-
 	# Merge plot_roles
 	updated_data["plot_roles"] = _merge_arrays(existing_data.get("plot_roles", []), new_char_data.get("plot_roles", []))
 
@@ -302,12 +327,12 @@ func _extract_characters_from_text(text: String, chapter_id: String, existing_ch
 	var prompt := """
 You are a helpful writing assistant specializing in character analysis for a novel. Analyze the following chapter text.
 
-Your task is to identify all characters that appear in this chapter and provide their complete, consistent profiles. Use the existing character database to maintain consistency.
+Your task is to identify the characters that appear in this chapter and provide their complete, consistent profiles. Use the existing character database to maintain consistency.
 
 IMPORTANT GUIDELINES:
 - Be CONSISTENT: Use the EXACT same character names from existing characters when they reappear
 - Be COMPACT: Use concise, standardized traits, archetypes, and roles - avoid synonyms and duplicates
-- Be SELECTIVE: Focus on actual named characters, ignore background figures and generic descriptions
+- Be SELECTIVE: Focus on actual named characters, ignore background figures, mentions of people, and generic descriptions of characters
 - Be COMPLETE: Include all relevant information revealed in this chapter
 
 Existing characters for reference:
@@ -320,7 +345,6 @@ Chapter Text:
 
 For each character that appears in this chapter, return their complete profile:
 - name: EXACT match with existing characters if they exist
-- size: "major", "minor", or "figurant"
 - plot_roles: Array of their role(s) in the story
 - archetypes: Array of their character archetype(s) - use consistent, standard terms
 - traits: Array of their personality traits - use consistent, standard terms, no duplicates
@@ -333,7 +357,6 @@ Respond with a JSON object:
   "characters": [
     {
       "name": "Character Name",
-      "size": "major",
       "plot_roles": ["protagonist"],
       "archetypes": ["hero"],
       "traits": ["brave", "determined"],
@@ -355,7 +378,21 @@ Respond with a JSON object:
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
 	else:
-		push_error("[CharacterCache] Failed to parse character extraction response")
+		# Retry up to 3 times on failure
+		var max_retries := 3
+		for retry in range(max_retries):
+			# Check if we hit token limit - increase tokens for retry
+			if llm_response.get("done", false) == false:
+				options["max_tokens"] = options.get("max_tokens", SettingsManager.get_llm_max_tokens()) * 2
+				print("[CharacterCache] Token limit reached, retrying %d/%d with max_tokens: %d" % [retry + 1, max_retries, options["max_tokens"]])
+			else:
+				print("[CharacterCache] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
+
+			llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+			if llm_response.get("parsed_json", null) != null:
+				return llm_response["parsed_json"]
+
+		push_error("[CharacterCache] Failed to parse character extraction response after %d retries" % max_retries)
 		print(llm_response)
 		return {"characters": []}
 
