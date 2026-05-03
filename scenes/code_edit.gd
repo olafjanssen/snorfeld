@@ -71,7 +71,8 @@ func _on_navigate_to_line(file_path: String, line_number: int):
 	if current_file_path == file_path:
 		var line_count = get_line_count()
 		var target_line = clamp(line_number - 1, 0, line_count - 1)
-		_set_caret_to_line(target_line)
+		call_deferred("_set_caret_and_center", target_line)
+		grab_focus()
 	else:
 		current_file_path = file_path
 		paragraph_original_hashes = {}
@@ -81,31 +82,18 @@ func _on_navigate_to_line(file_path: String, line_number: int):
 			var content: String = FileAccess.get_file_as_string(file_path)
 			last_text_hash = _hash_text(content)
 			last_modified_time = FileAccess.get_modified_time(file_path)
-			call_deferred("_load_file_and_navigate", file_path, content, line_number)
+			set_text(content)
+			var line_count = get_line_count()
+			var target_line = clamp(line_number - 1, 0, line_count - 1)
+			call_deferred("_set_caret_and_center", target_line)
+			grab_focus()
 		visible = true
 
-func _load_file_and_navigate(file_path: String, content: String, line_number: int):
-	set_text(content)
-	current_file_path = file_path
-	# Use call_deferred to ensure set_text is complete
-	call_deferred("_finalize_navigate", file_path, line_number)
-
-func _finalize_navigate(file_path: String, line_number: int):
-	current_file_path = file_path
-	var line_count = get_line_count()
-	var target_line = clamp(line_number - 1, 0, line_count - 1)
-	_set_caret_to_line(target_line)
-
-func _set_caret_to_line(line_number: int):
-	set_caret_line(line_number)
+func _set_caret_and_center(line_number: int):
 	set_caret_column(0)
-	var scroll_bar = get_v_scroll_bar()
-	if scroll_bar:
-		var line_count = get_line_count()
-		if line_count > 0:
-			var scroll_pos = (line_number / line_count) * scroll_bar.max_value
-			scroll_bar.value = scroll_pos
-	grab_focus()
+	set_caret_line(line_number)
+	center_viewport_to_caret()
+		
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
