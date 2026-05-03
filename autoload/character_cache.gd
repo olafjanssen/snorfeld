@@ -165,16 +165,16 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 
 		if existing_file_path != "":
 			# Use the existing file's canonical name for hashing
-			var file := FileAccess.open(existing_file_path, FileAccess.READ)
-			if file:
-				var content := file.get_as_text()
-				file.close()
+			var read_file := FileAccess.open(existing_file_path, FileAccess.READ)
+			if read_file:
+				var content := read_file.get_as_text()
+				read_file.close()
 				var json := JSON.new()
 				if json.parse(content) == OK:
-					var existing_data: Dictionary = json.get_data()
-					canonical_name = existing_data.get("name", char_name)
+					var character_data: Dictionary = json.get_data()
+					canonical_name = character_data.get("name", char_name)
 					# Also add the new alias to the existing character
-					if not existing_data.get("aliases", []).has(char_name):
+					if not character_data.get("aliases", []).has(char_name):
 						var aliases: Array = char_data.get("aliases", [])
 						if not aliases.has(char_name):
 							aliases.append(char_name)
@@ -187,10 +187,10 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 		# Load existing data if file exists
 		var existing_data: Dictionary = {}
 		if _file_exists(char_file_path):
-			var file := FileAccess.open(char_file_path, FileAccess.READ)
-			if file:
-				var content := file.get_as_text()
-				file.close()
+			var read_file := FileAccess.open(char_file_path, FileAccess.READ)
+			if read_file:
+				var content := read_file.get_as_text()
+				read_file.close()
 				var json := JSON.new()
 				if json.parse(content) == OK:
 					existing_data = json.get_data()
@@ -297,8 +297,14 @@ func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary,
 	# Merge relationships
 	updated_data["relationships"] = _merge_relationships(existing_data.get("relationships", {}), new_char_data.get("relationships", {}))
 
-	# Merge aliases
-	updated_data["aliases"] = _merge_arrays(existing_data.get("aliases", []), new_char_data.get("aliases", []))
+	# Merge aliases - filter out any that match the canonical name
+	var merged_aliases = _merge_arrays(existing_data.get("aliases", []), new_char_data.get("aliases", []))
+	var canonical_name = updated_data.get("name", "")
+	var filtered_aliases = []
+	for alias in merged_aliases:
+		if alias != canonical_name:
+			filtered_aliases.append(alias)
+	updated_data["aliases"] = filtered_aliases
 
 	# Add/update appearances - this chapter is always added
 	var existing_appearances: Array = existing_data.get("appearances", [])

@@ -8,8 +8,6 @@ func _ready() -> void:
 
 	# Detect screen DPI and set appropriate scale
 	var dpi := DisplayServer.screen_get_dpi(0)
-
-	# Use 2.0 for high-DPI (Retina/4K), 1.0 for standard
 	var ui_scale := 2.0 if dpi > 144 else 1.0
 	set_content_scale_factor(ui_scale)
 

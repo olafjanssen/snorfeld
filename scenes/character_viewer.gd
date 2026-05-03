@@ -22,6 +22,10 @@ func _ready():
 	await get_tree().process_frame
 	_on_folder_opened(GlobalSignals.current_path)
 
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		queue_free()
+
 func _on_folder_opened(_path: String):
 	_load_characters()
 
@@ -39,13 +43,19 @@ func _build_character_tree():
 	root.set_text(0, "Characters")
 	root.set_metadata(0, {"type": "root"})
 
-	# Sort characters by name
-	characters.sort_custom(func(a, b): return a.get("name", "").naturalnocasecmp_to(b.get("name", "")) < 0)
+	# Sort characters by appearance count (descending), then by name
+	characters.sort_custom(func(a, b):
+		var a_appearances = a.get("appearances", []).size()
+		var b_appearances = b.get("appearances", []).size()
+		if a_appearances != b_appearances:
+			return a_appearances > b_appearances
+		return a.get("name", "").naturalnocasecmp_to(b.get("name", "")) < 0
+	)
 
 	for char_data in characters:
 		var item = character_tree.create_item(root)
-		var name = char_data.get("name", "Unknown")
-		item.set_text(0, name)
+		var full_name = char_data.get("name", "Unknown")
+		item.set_text(0, full_name)
 		item.set_metadata(0, {"type": "character", "data": char_data})
 
 func _on_character_selected():
@@ -62,10 +72,10 @@ func _on_character_selected():
 	_display_character_sheet(char_data)
 
 func _display_character_sheet(char_data: Dictionary):
-	var name = char_data.get("name", "Unknown")
+	var full_name = char_data.get("name", "Unknown")
 	var output = ""
 
-	output += "[b][font_size=18]%s[/font_size][/b]" % [name]
+	output += "[b][font_size=18]%s[/font_size][/b]" % [full_name]
 
 	# Aliases
 	var aliases = char_data.get("aliases", [])
