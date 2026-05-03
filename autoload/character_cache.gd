@@ -507,6 +507,14 @@ func _create_character_cache_directory(base_path: String) -> bool:
 		return true
 
 
+# Get the character cache path for the current project
+func get_cache_path() -> String:
+	var project_path := GlobalSignals.current_path
+	if project_path == "":
+		project_path = "res://"
+	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	return cache_path
+
 # Get all character files in the cache directory
 func get_all_characters(cache_path: String) -> Array:
 	var characters: Array = []
@@ -530,6 +538,11 @@ func get_all_characters(cache_path: String) -> Array:
 	dir.list_dir_end()
 
 	return characters
+
+# Get all characters for the current project
+func get_all_project_characters() -> Array:
+	var cache_path := get_cache_path()
+	return get_all_characters(cache_path)
 
 
 # Get a specific character by name
