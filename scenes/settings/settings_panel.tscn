@@ -15,7 +15,7 @@ initial_position = 2
 size = Vector2i(800, 800)
 min_size = Vector2i(800, 760)
 content_scale_aspect = 4
-content_scale_factor = 2.0
+content_scale_stretch = 1
 theme = ExtResource("1")
 script = ExtResource("0")
 
