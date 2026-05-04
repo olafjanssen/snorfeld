@@ -377,11 +377,11 @@ Respond with a JSON object:
 """ % [existing_characters_json, chapter_id, text]
 
 	var options := {
-		"temperature": SettingsManager.get_llm_temperature(),
-		"max_tokens": SettingsManager.get_llm_max_tokens()
+		"temperature": AppConfig.get_llm_temperature(),
+		"max_tokens": AppConfig.get_llm_max_tokens()
 	}
 
-	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
@@ -391,12 +391,12 @@ Respond with a JSON object:
 		for retry in range(max_retries):
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
-				options["max_tokens"] = options.get("max_tokens", SettingsManager.get_llm_max_tokens()) * 2
+				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
 				print("[CharacterCache] Token limit reached, retrying %d/%d with max_tokens: %d" % [retry + 1, max_retries, options["max_tokens"]])
 			else:
 				print("[CharacterCache] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
 
-			llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+			llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 			if llm_response.get("parsed_json", null) != null:
 				return llm_response["parsed_json"]
 

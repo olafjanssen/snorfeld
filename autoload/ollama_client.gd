@@ -25,16 +25,16 @@ func _ready() -> void:
 func generate(model: String, prompt: String, options: Dictionary = {}) -> Dictionary:
 	# Use model from settings if not provided
 	if model == "" or model == null:
-		model = SettingsManager.get_llm_model()
+		model = AppConfig.get_llm_model()
 
 	# Merge options with defaults from settings
 	if not options.has("temperature"):
-		options["temperature"] = SettingsManager.get_llm_temperature()
+		options["temperature"] = AppConfig.get_llm_temperature()
 	if not options.has("max_tokens"):
-		options["max_tokens"] = SettingsManager.get_llm_max_tokens()
+		options["max_tokens"] = AppConfig.get_llm_max_tokens()
 
 	var request_body: Dictionary = _build_request_body(model, prompt, options)
-	return await _make_api_request(SettingsManager.get_llm_endpoint(), request_body, "generate")
+	return await _make_api_request(AppConfig.get_llm_endpoint(), request_body, "generate")
 
 ## Generate JSON response from a model
 ## Sets format to "json" in the request options
@@ -141,14 +141,14 @@ func is_ollama_running() -> bool:
 	current_request_type = "check"
 	var headers: PackedStringArray = []
 
-	var request_err: int = http_request.request(SettingsManager.get_llm_check_endpoint(), headers, HTTPClient.METHOD_GET, "")
+	var request_err: int = http_request.request(AppConfig.get_llm_check_endpoint(), headers, HTTPClient.METHOD_GET, "")
 
 	if request_err != OK:
 		print("[OllamaClient] ERROR: Failed to send check request, error code: %d" % request_err)
 		current_request_type = ""
 		return false
 
-	print("[OllamaClient] Check request sent to %s, waiting for response..." % SettingsManager.get_llm_check_endpoint())
+	print("[OllamaClient] Check request sent to %s, waiting for response..." % AppConfig.get_llm_check_endpoint())
 	var running: bool = await check_complete
 	print("[OllamaClient] Ollama running: %s" % running)
 	current_request_type = ""

@@ -1,0 +1,114 @@
+extends Node
+## AppConfig - Unified application configuration management
+## Merges AppConfig (config storage) + SettingsHandler (UI management)
+
+const CONFIG_FILE := "user://settings.cfg"
+const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
+
+# Default settings
+const DEFAULT_LLM_ENDPOINT := "http://localhost:11434/api/generate"
+const DEFAULT_LLM_CHECK_ENDPOINT := "http://localhost:11434/api/tags"
+const DEFAULT_LLM_MODEL := "qwen3.5:9b"
+const DEFAULT_LLM_TEMPERATURE := 0.3
+const DEFAULT_LLM_MAX_TOKENS := 512
+
+# Cached values
+var _llm_endpoint: String
+var _llm_check_endpoint: String
+var _llm_model: String
+var _llm_temperature: float
+var _llm_max_tokens: int
+
+# UI state
+var settings_panel: Window
+
+func _ready() -> void:
+	# Connect to EventBus signals for UI
+	EventBus.open_settings.connect(_on_open_settings)
+	EventBus.settings_closed.connect(_on_settings_closed)
+
+	# Load settings
+	load_settings()
+
+# Load settings from config file
+func load_settings() -> void:
+	var config := ConfigFile.new()
+	var err := config.load(CONFIG_FILE)
+
+	if err == OK:
+		_llm_endpoint = config.get_value("llm", "endpoint", DEFAULT_LLM_ENDPOINT)
+		_llm_check_endpoint = config.get_value("llm", "check_endpoint", DEFAULT_LLM_CHECK_ENDPOINT)
+		_llm_model = config.get_value("llm", "model", DEFAULT_LLM_MODEL)
+		_llm_temperature = config.get_value("llm", "temperature", DEFAULT_LLM_TEMPERATURE)
+		_llm_max_tokens = config.get_value("llm", "max_tokens", DEFAULT_LLM_MAX_TOKENS)
+	else:
+		# Use defaults
+		_llm_endpoint = DEFAULT_LLM_ENDPOINT
+		_llm_check_endpoint = DEFAULT_LLM_CHECK_ENDPOINT
+		_llm_model = DEFAULT_LLM_MODEL
+		_llm_temperature = DEFAULT_LLM_TEMPERATURE
+		_llm_max_tokens = DEFAULT_LLM_MAX_TOKENS
+
+# Save all settings to config file
+func save_settings() -> void:
+	var config := ConfigFile.new()
+
+	config.set_value("llm", "endpoint", _llm_endpoint)
+	config.set_value("llm", "check_endpoint", _llm_check_endpoint)
+	config.set_value("llm", "model", _llm_model)
+	config.set_value("llm", "temperature", _llm_temperature)
+	config.set_value("llm", "max_tokens", _llm_max_tokens)
+
+	var err := config.save(CONFIG_FILE)
+	if err != OK:
+		push_error("Failed to save settings")
+
+# LLM configuration getters
+func get_llm_endpoint() -> String:
+	return _llm_endpoint
+
+func get_llm_check_endpoint() -> String:
+	return _llm_check_endpoint
+
+func get_llm_model() -> String:
+	return _llm_model
+
+func get_llm_temperature() -> float:
+	return _llm_temperature
+
+func get_llm_max_tokens() -> int:
+	return _llm_max_tokens
+
+# LLM configuration setters
+func set_llm_endpoint(endpoint: String) -> void:
+	_llm_endpoint = endpoint
+	save_settings()
+
+func set_llm_check_endpoint(endpoint: String) -> void:
+	_llm_check_endpoint = endpoint
+	save_settings()
+
+func set_llm_model(model: String) -> void:
+	_llm_model = model
+	save_settings()
+
+func set_llm_temperature(temperature: float) -> void:
+	_llm_temperature = temperature
+	save_settings()
+
+func set_llm_max_tokens(max_tokens: int) -> void:
+	_llm_max_tokens = max_tokens
+	save_settings()
+
+# Settings panel management
+func _on_open_settings() -> void:
+	if settings_panel:
+		settings_panel.queue_free()
+	settings_panel = SettingsPanelScene.instantiate()
+	get_tree().root.add_child(settings_panel)
+	settings_panel.popup_centered()
+
+func _on_settings_closed() -> void:
+	if settings_panel:
+		settings_panel.queue_free()
+		settings_panel = null

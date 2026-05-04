@@ -13,19 +13,19 @@ func _ready() -> void:
 
 
 func load_llm_settings() -> void:
-	$MarginContainer/VBoxContainer/EndpointLineEdit.text = SettingsManager.get_llm_endpoint()
-	$MarginContainer/VBoxContainer/CheckEndpointLineEdit.text = SettingsManager.get_llm_check_endpoint()
-	$MarginContainer/VBoxContainer/ModelLineEdit.text = SettingsManager.get_llm_model()
-	$MarginContainer/VBoxContainer/TemperatureSpinBox.value = SettingsManager.get_llm_temperature()
-	$MarginContainer/VBoxContainer/MaxTokensSpinBox.value = SettingsManager.get_llm_max_tokens()
+	$MarginContainer/VBoxContainer/EndpointLineEdit.text = AppConfig.get_llm_endpoint()
+	$MarginContainer/VBoxContainer/CheckEndpointLineEdit.text = AppConfig.get_llm_check_endpoint()
+	$MarginContainer/VBoxContainer/ModelLineEdit.text = AppConfig.get_llm_model()
+	$MarginContainer/VBoxContainer/TemperatureSpinBox.value = AppConfig.get_llm_temperature()
+	$MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
 
 
 func save_llm_settings() -> void:
-	SettingsManager.set_llm_endpoint($MarginContainer/VBoxContainer/EndpointLineEdit.text)
-	SettingsManager.set_llm_check_endpoint($MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
-	SettingsManager.set_llm_model($MarginContainer/VBoxContainer/ModelLineEdit.text)
-	SettingsManager.set_llm_temperature($MarginContainer/VBoxContainer/TemperatureSpinBox.value)
-	SettingsManager.set_llm_max_tokens(int($MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
+	AppConfig.set_llm_endpoint($MarginContainer/VBoxContainer/EndpointLineEdit.text)
+	AppConfig.set_llm_check_endpoint($MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
+	AppConfig.set_llm_model($MarginContainer/VBoxContainer/ModelLineEdit.text)
+	AppConfig.set_llm_temperature($MarginContainer/VBoxContainer/TemperatureSpinBox.value)
+	AppConfig.set_llm_max_tokens(int($MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
 
 
 func _on_close_pressed() -> void:

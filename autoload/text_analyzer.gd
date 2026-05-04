@@ -31,12 +31,12 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var corrected_text: String = paragraph
 	var explanation: String = ""
-	var model: String = SettingsManager.get_llm_model()
+	var model: String = AppConfig.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us
@@ -89,12 +89,12 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var enhanced_text: String = paragraph
 	var explanation: String = ""
-	var model: String = SettingsManager.get_llm_model()
+	var model: String = AppConfig.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
 		# The OllamaClient.generate_json already parsed the JSON for us
@@ -161,12 +161,12 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 }
 """ % [context, paragraph]
 
-	var options := {"temperature": SettingsManager.get_llm_temperature(), "max_tokens": SettingsManager.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(SettingsManager.get_llm_model(), prompt, options)
+	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var suggestion: String = ""
 	var explanation: String = ""
-	var model: String = SettingsManager.get_llm_model()
+	var model: String = AppConfig.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
 		var parsed = llm_response["parsed_json"]
