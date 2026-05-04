@@ -1,9 +1,8 @@
 [gd_scene format=3 uid="uid://qmnxby366n74"]
 
-[ext_resource type="Script" path="res://scenes/editor/code_edit.gd" id="1_sdthn"]
-[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1_ytqh7"]
-[ext_resource type="Script" path="res://scenes/editor/text_editor.gd" id="2"]
-[ext_resource type="Script" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
+[ext_resource type="Script" uid="uid://cyjdmv67nevfg" path="res://scenes/editor/code_edit.gd" id="1_sdthn"]
+[ext_resource type="Script" uid="uid://q4e3ujtx5cig" path="res://scenes/editor/text_editor.gd" id="2"]
+[ext_resource type="Script" uid="uid://b1duug47uaj00" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
@@ -35,13 +34,11 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_xyvjo")
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1866113266]
 custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
-theme = ExtResource("1_ytqh7")
 theme_override_constants/separation = 0
 alignment = 1
 
 [node name="TitleMessage" type="Label" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=265978171]
 layout_mode = 2
-theme = ExtResource("1_ytqh7")
 theme_override_colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
 theme_override_font_sizes/font_size = 14
 text = "Nothing to report!"

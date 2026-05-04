@@ -1,15 +1,14 @@
 [gd_scene format=3 uid="uid://editor"]
 
-[ext_resource type="Script" path="res://scenes/main/editor.gd" id="1"]
-[ext_resource type="Script" path="res://scenes/main/file_menu.gd" id="2"]
-[ext_resource type="Script" path="res://scenes/panels/file_explorer.gd" id="3"]
-[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="4"]
+[ext_resource type="Script" uid="uid://vgof72l4gq86" path="res://scenes/main/editor.gd" id="1"]
+[ext_resource type="Script" uid="uid://b5xbax8sh0sjm" path="res://scenes/main/file_menu.gd" id="2"]
+[ext_resource type="Script" uid="uid://dfo8qqgf0egog" path="res://scenes/panels/file_explorer.gd" id="3"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/editor/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/panels/paragraph_check.tscn" id="7_5lcyj"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
-[ext_resource type="Script" path="res://scenes/panels/status_bar.gd" id="8"]
+[ext_resource type="Script" uid="uid://blknfvy0e60k8" path="res://scenes/panels/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" uid="uid://bkg70qtikji0p" path="res://scenes/panels/git_panel.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://scenes/panels/outline_panel.tscn" id="10"]
+[ext_resource type="PackedScene" uid="uid://tau4uty5y17l" path="res://scenes/panels/outline_panel.tscn" id="10"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
@@ -34,16 +33,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("4")
 
 [node name="MenuBar" type="MenuBar" parent="." unique_id=16594385]
 layout_mode = 0
 anchor_right = 1.0
 size_flags_vertical = 0
-theme = ExtResource("4")
 
 [node name="File" type="PopupMenu" parent="MenuBar" unique_id=1344205732]
-theme = ExtResource("4")
 script = ExtResource("2")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
@@ -58,7 +54,6 @@ theme_override_constants/separation = 0
 [node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer" unique_id=1412264399]
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("4")
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
 theme_override_icons/grabber = SubResource("ImageTexture_5lcyj")
@@ -77,7 +72,6 @@ tab_2/title = "Outline"
 clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("4")
 allow_reselect = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
@@ -115,7 +109,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_5lcyj")
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772968]
 custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
-theme = ExtResource("4")
 alignment = 2
 
 [node name="StatusMessage" type="RichTextLabel" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=37567921]

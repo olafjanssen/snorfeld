@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://b6mbklwdmt1fk"]
 
-[ext_resource type="Script" path="res://scenes/panels/story_bible.gd" id="1"]
-[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2"]
+[ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="3"]
 [ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="4_isx1l"]
 
@@ -29,7 +28,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250555]
 anchors_preset = 15
@@ -37,13 +35,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2")
 theme_override_constants/separation = 0
 
 [node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer" unique_id=1412264400]
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("2")
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
 split_offsets = PackedInt32Array(250, 0)
@@ -59,7 +55,6 @@ tab_0/title = "Characters"
 clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("2")
 allow_reselect = true
 hide_root = true
 auto_tooltip = false
@@ -71,7 +66,6 @@ metadata/_tab_name = "Characters"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("2")
 theme_override_colors/default_color = Color(0.19215687, 0.19215687, 0.19215687, 1)
 theme_override_fonts/normal_font = ExtResource("3")
 theme_override_fonts/bold_font = SubResource("FontVariation_isx1l")
@@ -93,7 +87,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772969]
 custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
-theme = ExtResource("2")
 alignment = 2
 
 [node name="StatusMessage" type="RichTextLabel" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=37567922]

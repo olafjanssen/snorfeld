@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bmpto71onui3w"]
 
-[ext_resource type="Script" path="res://scenes/panels/paragraph_check.gd" id="0"]
-[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_bhh05"]
+[ext_resource type="Script" uid="uid://ccyrsq8s2bfeu" path="res://scenes/panels/paragraph_check.gd" id="0"]
 [ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/components/paneled_richtextlabel.tscn" id="4_6m5l1"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n38hu"]
@@ -22,7 +21,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2_bhh05")
 current_tab = 0
 
 [node name="Grammar" type="ScrollContainer" parent="TabContainer" unique_id=1483406397]

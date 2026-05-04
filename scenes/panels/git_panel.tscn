@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bkg70qtikji0p"]
 
-[ext_resource type="Script" path="res://scenes/panels/git_panel.gd" id="1"]
-[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2"]
+[ext_resource type="Script" uid="uid://bc45v60y7kfqi" path="res://scenes/panels/git_panel.gd" id="1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_71b4h"]
 bg_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
@@ -20,7 +19,6 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = ExtResource("2")
 script = ExtResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
@@ -31,13 +29,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
-theme = ExtResource("2")
 theme_override_constants/separation = 0
 
 [node name="FileTree" type="Tree" parent="VBoxContainer" unique_id=282338753]
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("2")
 hide_root = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
@@ -46,38 +42,32 @@ scroll_horizontal_enabled = false
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_vertical = 0
-theme = ExtResource("2")
 alignment = 1
 
 [node name="PushButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772976]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme = ExtResource("2")
 text = "Push"
 
 [node name="PullButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772977]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme = ExtResource("2")
 text = "Pull"
 
 [node name="FetchButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772978]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme = ExtResource("2")
 text = "Fetch"
 
 [node name="StageAllButton" type="Button" parent="VBoxContainer/RemoteHBox" unique_id=1536772968]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
-theme = ExtResource("2")
 text = "Stage All"
 
 [node name="CommitHBox" type="Control" parent="VBoxContainer" unique_id=1755517458]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 0
-theme = ExtResource("2")
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/CommitHBox" unique_id=1621376670]
 layout_mode = 1
@@ -98,7 +88,6 @@ theme_override_constants/margin_bottom = 0
 [node name="CommitMessage" type="TextEdit" parent="VBoxContainer/CommitHBox/PanelContainer/MarginContainer" unique_id=1536772973]
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("2")
 placeholder_text = "Enter commit message..."
 
 [node name="CommitButton" type="Button" parent="VBoxContainer/CommitHBox" unique_id=1536772974]
@@ -114,5 +103,4 @@ offset_right = -4.0
 offset_bottom = -4.0
 grow_horizontal = 0
 grow_vertical = 0
-theme = ExtResource("2")
 text = "Commit"
