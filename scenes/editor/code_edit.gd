@@ -31,6 +31,13 @@ func _ready():
 	add_child(file_check_timer)
 	file_check_timer.start()
 
+func _exit_tree():
+	# Clean up timers
+	if file_check_timer:
+		file_check_timer.queue_free()
+		file_check_timer = null
+	# Note: syntax_highlighter is a RefCounted object and is managed automatically
+
 func _on_request_save_all_files():
 	# Emit final file_changed with current content before shutdown
 	if current_file_path != "" and FileAccess.file_exists(current_file_path):

@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://editor"]
 
-[ext_resource type="Script" uid="uid://vnm4h83qahvi" path="res://scenes/main/editor.gd" id="1"]
-[ext_resource type="Script" uid="uid://b27fo8eesubll" path="res://scenes/main/file_menu.gd" id="2"]
-[ext_resource type="Script" uid="uid://cggewxv0plvcs" path="res://scenes/panels/file_explorer.gd" id="3"]
+[ext_resource type="Script" path="res://scenes/main/editor.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/main/file_menu.gd" id="2"]
+[ext_resource type="Script" path="res://scenes/panels/file_explorer.gd" id="3"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="4"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/editor/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/panels/paragraph_check.tscn" id="7_5lcyj"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
-[ext_resource type="Script" uid="uid://dkksr2nukxj3c" path="res://scenes/panels/status_bar.gd" id="8"]
+[ext_resource type="Script" path="res://scenes/panels/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" uid="uid://bkg70qtikji0p" path="res://scenes/panels/git_panel.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/panels/outline_panel.tscn" id="10"]
 

@@ -167,7 +167,6 @@ func _process_next_queued_request() -> void:
 		await get_tree().process_frame
 
 	print("[LLMClient] Request received response")
-	var response = current_completion["response"]
 	current_completion = {}
 	processing_request = false
 	_process_next_queued_request()

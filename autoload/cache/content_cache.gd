@@ -21,7 +21,7 @@ func _get_cache_subdir() -> String:
 	return CACHE_DIR_NAME
 
 # Process a single task (implement in subclass)
-func _process_task(_task: Dictionary) -> void:
+func _process_task(_task: Dictionary):
 	pass
 
 # Get cache queue updated signal name

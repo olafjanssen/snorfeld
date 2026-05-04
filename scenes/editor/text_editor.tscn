@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://qmnxby366n74"]
 
-[ext_resource type="Script" uid="uid://bi62sfsesemnm" path="res://scenes/editor/code_edit.gd" id="1_sdthn"]
+[ext_resource type="Script" path="res://scenes/editor/code_edit.gd" id="1_sdthn"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1_ytqh7"]
-[ext_resource type="Script" uid="uid://brc6ty777qmfu" path="res://scenes/editor/text_editor.gd" id="2"]
-[ext_resource type="Script" uid="uid://bnb26pl4q2pvc" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
+[ext_resource type="Script" path="res://scenes/editor/text_editor.gd" id="2"]
+[ext_resource type="Script" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)

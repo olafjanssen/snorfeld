@@ -17,7 +17,7 @@ func _get_cache_subdir() -> String:
 
 
 # Override: Process a single task
-func _process_task(task: Dictionary) -> void:
+func _process_task(task: Dictionary):
 	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
 	if not _file_exists(cache_file_path):
 		var paragraph = task.get("paragraph", "")

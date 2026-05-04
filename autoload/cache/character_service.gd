@@ -28,7 +28,7 @@ func _on_folder_opened(path: String) -> void:
 
 
 # Override: Process a single task
-func _process_task(task: Dictionary) -> void:
+func _process_task(task: Dictionary):
 	var cache_path: String = task["cache_path"]
 	var file_path: String = task["file_path"]
 	var file_content: String = task["file_content"]

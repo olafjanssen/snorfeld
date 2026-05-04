@@ -29,6 +29,15 @@ func _ready():
 	var root = get_tree().root
 	root.connect("tree_exiting", _on_tree_exiting)
 
+func _exit_tree():
+	# Clean up all pending timers
+	for timer in pending_saves.values():
+		if timer:
+			timer.stop()
+			timer.queue_free()
+	pending_saves.clear()
+	file_contents.clear()
+
 func _on_request_save_file(path: String):
 	# Cancel any pending debounced save for this file
 	if pending_saves.has(path):
@@ -46,7 +55,10 @@ func _on_file_changed(path: String, content: String):
 	# Store content for later save
 	file_contents[path] = content
 
-	# Debounce the save - reset timer
+	# Debounce the save - reset timer (skip during shutdown)
+	if not is_inside_tree():
+		return
+
 	if pending_saves.has(path):
 		pending_saves[path].stop()
 		pending_saves[path].start(SAVE_DEBOUNCE_SECONDS)
