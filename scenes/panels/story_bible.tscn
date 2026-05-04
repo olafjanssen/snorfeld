@@ -1,20 +1,6 @@
 [gd_scene format=3 uid="uid://b6mbklwdmt1fk"]
 
 [ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
-[ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="3"]
-[ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="4_isx1l"]
-
-[sub_resource type="FontVariation" id="FontVariation_isx1l"]
-variation_opentype = {
-1869640570: 14,
-2003265652: 600
-}
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_storybible_panel"]
-bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
-border_width_top = 1
-border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
-
 [node name="StoryBible" type="Window" unique_id=1329163322]
 oversampling_override = 1.0
 title = "Story Bible"
@@ -66,22 +52,14 @@ metadata/_tab_name = "Characters"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_fonts/normal_font = ExtResource("3")
-theme_override_fonts/bold_font = SubResource("FontVariation_isx1l")
-theme_override_fonts/bold_italics_font = ExtResource("4_isx1l")
-theme_override_fonts/italics_font = ExtResource("4_isx1l")
-theme_override_font_sizes/normal_font_size = 14
-theme_override_font_sizes/bold_font_size = 14
-theme_override_font_sizes/bold_italics_font_size = 14
-theme_override_font_sizes/italics_font_size = 14
-theme_override_font_sizes/mono_font_size = 14
+theme_type_variation = &"StoryBibleCharacterSheet"
 bbcode_enabled = true
 meta_underlined = false
 hint_underlined = false
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1364190976]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_storybible_panel")
+theme_type_variation = &"StoryBiblePanel"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772969]
 custom_minimum_size = Vector2(0, 22)
@@ -90,8 +68,7 @@ alignment = 2
 
 [node name="StatusMessage" type="RichTextLabel" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=37567922]
 layout_mode = 2
-theme_override_fonts/normal_font = ExtResource("3")
-theme_override_font_sizes/normal_font_size = 12
+theme_type_variation = &"StoryBibleStatusMessage"
 bbcode_enabled = true
 text = "Ready"
 fit_content = true

@@ -3,20 +3,8 @@
 [ext_resource type="Script" path="res://scripts/utilities/clickable_label.gd" id="1_3y3hr"]
 [ext_resource type="Script" path="res://scenes/components/paneled_richtextlabel.gd" id="1_bi6yx"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_paneled_label"]
-bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
 [node name="PanelContainer" type="PanelContainer" unique_id=1890990576]
-theme_override_styles/panel = SubResource("StyleBoxFlat_paneled_label")
+theme_type_variation = &"PaneledLabel"
 script = ExtResource("1_bi6yx")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=393265088]

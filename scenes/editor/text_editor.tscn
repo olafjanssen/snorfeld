@@ -29,7 +29,7 @@ theme_override_constants/separation = 0
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=465978657]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_texteditor_panel")
+theme_type_variation = &"TextEditorPanel"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1866113266]
 custom_minimum_size = Vector2(0, 26)
@@ -39,7 +39,7 @@ alignment = 1
 
 [node name="TitleMessage" type="Label" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=265978171]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"TextEditorTitleMessage"
 text = "Nothing to report!"
 horizontal_alignment = 1
 

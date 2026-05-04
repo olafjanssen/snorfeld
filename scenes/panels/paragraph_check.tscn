@@ -46,26 +46,26 @@ layout_mode = 2
 text = "Grammar and spelling:"
 
 [node name="SmallSpacer" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=218160566]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Correction" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1890990576 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
 
 [node name="MediumSpacer" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=851547136]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 12
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Label2" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1053352535]
 layout_mode = 2
 text = "Explanation:"
 
 [node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=312884757]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="GrammarExplanation" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1903933999]
 custom_minimum_size = Vector2(10, 10)
@@ -97,26 +97,26 @@ layout_mode = 2
 text = "Stylistic improvement:"
 
 [node name="SmallSpacer" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1714459914]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Enhancement" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1707718783 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
 
 [node name="MediumSpacer" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1287211675]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 12
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Label4" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1834282615]
 layout_mode = 2
 text = "Explanation:"
 
 [node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=941074112]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="StyleExplanation" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=416670761]
 custom_minimum_size = Vector2(10, 10)
@@ -148,26 +148,26 @@ layout_mode = 2
 text = "Structural suggestion:"
 
 [node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=26302085]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Suggestion" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=269824062 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
 
 [node name="MediumSpacer" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1616199656]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 12
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="Label6" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1531681234]
 layout_mode = 2
 text = "Explanation:"
 
 [node name="SmallSpacer" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=504151169]
+theme_type_variation = &"HSeparator"
 layout_mode = 2
 theme_override_constants/separation = 4
-theme_override_styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
 
 [node name="StructureExplanation" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=834381664]
 custom_minimum_size = Vector2(10, 10)

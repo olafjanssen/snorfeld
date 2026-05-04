@@ -2,6 +2,8 @@
 
 [ext_resource type="FontFile" uid="uid://2a358pad3h32" path="res://fonts/Lora-VariableFont_wght.ttf" id="1_k48q0"]
 [ext_resource type="FontFile" uid="uid://c0apkxbfc16xs" path="res://fonts/Lora-Italic-VariableFont_wght.ttf" id="2_clh54"]
+[ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="3_5tm2q"]
+[ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="4_isx1l"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
 bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
@@ -39,6 +41,11 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_codeedit_focus"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_clh54"]
+bg_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
+border_width_top = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_codeedit"]
 bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
@@ -108,6 +115,38 @@ border_width_top = 1
 border_width_bottom = 1
 border_color = Color(0.019607844, 0.53333336, 0.9411765, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_panel"]
+bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_storybible_panel"]
+bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
+border_width_top = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_paneled_label"]
+bg_color = Color(0.9529412, 0.9529412, 0.9529412, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statusbar"]
+bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
+border_width_top = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_texteditor_panel"]
+bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_paragraph_separator"]
+
 [resource]
 Button/colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
 Button/colors/font_hover_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
@@ -125,6 +164,8 @@ CodeEdit/constants/wrap_offset = 0
 CodeEdit/font_sizes/font_size = 16
 CodeEdit/fonts/font = ExtResource("1_k48q0")
 CodeEdit/styles/focus = SubResource("StyleBoxEmpty_codeedit_focus")
+GitCommitPanel/base_type = &"Panel"
+GitCommitPanel/styles/panel = SubResource("StyleBoxFlat_clh54")
 Label/colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
 Label/font_sizes/font_size = 14
 Panel/styles/panel = SubResource("StyleBoxFlat_panel_codeedit")
@@ -173,3 +214,37 @@ Tree/styles/hovered_dimmed = SubResource("StyleBoxFlat_tree_hovered_dimmed")
 Tree/styles/hovered_selected = SubResource("StyleBoxFlat_tree_hovered_selected")
 Tree/styles/panel = SubResource("StyleBoxFlat_tree_panel")
 Tree/styles/selected = SubResource("StyleBoxFlat_tree_selected")
+SettingsPanel/base_type = &"Panel"
+SettingsPanel/styles/panel = SubResource("StyleBoxFlat_settings_panel")
+StoryBiblePanel/base_type = &"Panel"
+StoryBiblePanel/styles/panel = SubResource("StyleBoxFlat_storybible_panel")
+PaneledLabel/base_type = &"Panel"
+PaneledLabel/styles/panel = SubResource("StyleBoxFlat_paneled_label")
+StatusBar/base_type = &"Panel"
+StatusBar/styles/panel = SubResource("StyleBoxFlat_statusbar")
+TextEditorPanel/base_type = &"Panel"
+TextEditorPanel/styles/panel = SubResource("StyleBoxFlat_texteditor_panel")
+HSeparator/base_type = &"HSeparator"
+HSeparator/styles/separator = SubResource("StyleBoxEmpty_paragraph_separator")
+StoryBibleCharacterSheet/base_type = &"RichTextLabel"
+StoryBibleCharacterSheet/fonts/normal_font = ExtResource("3_5tm2q")
+StoryBibleCharacterSheet/fonts/bold_font = ExtResource("3_5tm2q")
+StoryBibleCharacterSheet/fonts/bold_italics_font = ExtResource("4_isx1l")
+StoryBibleCharacterSheet/fonts/italics_font = ExtResource("4_isx1l")
+StoryBibleCharacterSheet/fonts/mono_font = ExtResource("3_5tm2q")
+StoryBibleCharacterSheet/font_sizes/normal_font_size = 14
+StoryBibleCharacterSheet/font_sizes/bold_font_size = 14
+StoryBibleCharacterSheet/font_sizes/bold_italics_font_size = 14
+StoryBibleCharacterSheet/font_sizes/italics_font_size = 14
+StoryBibleCharacterSheet/font_sizes/mono_font_size = 14
+
+StoryBibleStatusMessage/base_type = &"RichTextLabel"
+StoryBibleStatusMessage/fonts/normal_font = ExtResource("3_5tm2q")
+StoryBibleStatusMessage/font_sizes/normal_font_size = 12
+
+EditorStatusMessage/base_type = &"RichTextLabel"
+EditorStatusMessage/fonts/normal_font = ExtResource("3_5tm2q")
+EditorStatusMessage/font_sizes/normal_font_size = 12
+
+TextEditorTitleMessage/base_type = &"Label"
+TextEditorTitleMessage/font_sizes/font_size = 14

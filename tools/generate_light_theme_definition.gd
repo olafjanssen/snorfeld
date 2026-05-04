@@ -25,6 +25,7 @@ func _run():
 
 	# Set styles
 	def.styles = {
+		# Original theme styles
 		"StyleBoxFlat_button_hover": {
 			"type": "StyleBoxFlat",
 			"bg_color": "bg_primary",
@@ -129,17 +130,89 @@ func _run():
 			"border_color": "border_accent",
 			"border_width_top": 1,
 			"border_width_bottom": 1
+		},
+		# Scene-specific styles
+		"StyleBoxFlat_settings_panel": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_secondary"
+		},
+		"StyleBoxFlat_storybible_panel": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_primary",
+			"border_color": "border_primary",
+			"border_width_top": 1
+		},
+		"StyleBoxFlat_git_panel": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_lightest",
+			"border_color": "border_primary",
+			"border_width_top": 1
+		},
+		"StyleBoxFlat_paneled_label": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_lighter",
+			"border_color": "border_primary",
+			"border_width_all": 1,
+			"corner_radius_all": 6
+		},
+		"StyleBoxFlat_statusbar": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_primary",
+			"border_color": "border_primary",
+			"border_width_top": 1
+		},
+		"StyleBoxFlat_texteditor_panel": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_secondary",
+			"border_color": "border_primary",
+			"border_width_bottom": 1
+		},
+		"StyleBoxEmpty_paragraph_separator": {
+			"type": "StyleBoxEmpty"
 		}
 	}
 
-	# Set external resources
+	# Set external resources (Lora and Inter font families)
 	def.external_resources = [
 		{"type": "FontFile", "path": "res://fonts/Lora-VariableFont_wght.ttf"},
-		{"type": "FontFile", "path": "res://fonts/Lora-Italic-VariableFont_wght.ttf"}
+		{"type": "FontFile", "path": "res://fonts/Lora-Italic-VariableFont_wght.ttf"},
+		{"type": "FontFile", "path": "res://fonts/Inter-VariableFont_opsz,wght.ttf"},
+		{"type": "FontFile", "path": "res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf"}
 	]
+
+	# Define fonts (including variations)
+	# Inter Bold variation: weight=600, opsz=14
+	# Axis tags: 'wght' = 2003265652, 'opsz' = 1869640570
+	def.fonts = {
+		"Inter_Regular": {
+			"type": "FontFile",
+			"index": 2
+		},
+		"Inter_Italic": {
+			"type": "FontFile",
+			"index": 3
+		},
+		"Inter_Bold": {
+			"type": "FontVariation",
+			"base_font": 2,
+			"variation_opentype": {
+				1869640570: 14,  # opsz
+				2003265652: 600   # wght
+			}
+		},
+		"Lora_Regular": {
+			"type": "FontFile",
+			"index": 0
+		},
+		"Lora_Italic": {
+			"type": "FontFile",
+			"index": 1
+		}
+	}
 
 	# Set control overrides
 	def.control_overrides = {
+		# === Base control types ===
 		"Button": {
 			"colors": {
 				"font_color": "text_secondary",
@@ -270,6 +343,80 @@ func _run():
 				"hovered_selected": "StyleBoxFlat_tree_hovered_selected",
 				"panel": "StyleBoxFlat_tree_panel",
 				"selected": "StyleBoxFlat_tree_selected"
+			}
+		},
+		# === Custom control types for scene-specific styling ===
+		"SettingsPanel": {
+			"styles": {
+				"panel": "StyleBoxFlat_settings_panel"
+			}
+		},
+		"StoryBiblePanel": {
+			"styles": {
+				"panel": "StyleBoxFlat_storybible_panel"
+			}
+		},
+		"GitCommitPanel": {
+			"styles": {
+				"panel": "StyleBoxFlat_git_panel"
+			}
+		},
+		"PaneledLabel": {
+			"styles": {
+				"panel": "StyleBoxFlat_paneled_label"
+			}
+		},
+		"StatusBar": {
+			"styles": {
+				"panel": "StyleBoxFlat_statusbar"
+			}
+		},
+		"TextEditorPanel": {
+			"styles": {
+				"panel": "StyleBoxFlat_texteditor_panel"
+			}
+		},
+		"HSeparator": {
+			"styles": {
+				"separator": "StyleBoxEmpty_paragraph_separator"
+			}
+		},
+		# === Scene-specific control types with Font overrides ===
+		"StoryBibleCharacterSheet": {
+			"fonts": {
+				"normal_font": "Inter_Regular",
+				"bold_font": "Inter_Bold",
+				"bold_italics_font": "Inter_Italic",
+				"italics_font": "Inter_Italic",
+				"mono_font": "Inter_Regular"
+			},
+			"font_sizes": {
+				"normal_font_size": 14,
+				"bold_font_size": 14,
+				"bold_italics_font_size": 14,
+				"italics_font_size": 14,
+				"mono_font_size": 14
+			}
+		},
+		"StoryBibleStatusMessage": {
+			"fonts": {
+				"normal_font": "Inter_Regular"
+			},
+			"font_sizes": {
+				"normal_font_size": 12
+			}
+		},
+		"EditorStatusMessage": {
+			"fonts": {
+				"normal_font": "Inter_Regular"
+			},
+			"font_sizes": {
+				"normal_font_size": 12
+			}
+		},
+		"TextEditorTitleMessage": {
+			"font_sizes": {
+				"font_size": 14
 			}
 		}
 	}

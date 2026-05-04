@@ -62,9 +62,16 @@ func _compile_all_themes() -> bool:
 				push_error("Could not load ThemeDefinition: %s" % def_path)
 				success = false
 			else:
+				print("  Loaded ThemeDefinition, control_overrides type:", typeof(def.control_overrides))
+				print("  control_overrides size:", def.control_overrides.size())
+				if def.control_overrides.size() > 0:
+					print("  Keys:", def.control_overrides.keys())
+				else:
+					print("  WARNING: control_overrides is EMPTY")
+
 				var theme = _compile_theme(def)
 				if theme != null:
-					var err = ResourceSaver.save(theme, output_path)
+					var err = ResourceSaver.save(theme, output_path, ResourceSaver.FLAG_BUNDLE_RESOURCES)
 					if err != OK:
 						push_error("Failed to save compiled theme: %s" % output_path)
 						success = false
@@ -120,16 +127,56 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 		else:
 			push_error("Failed to load external resource: %s" % ext_res["path"])
 
+	# Create font resources from definitions
+	var created_fonts: Dictionary = {}
+	for font_name in def.fonts:
+		var font_def = def.fonts[font_name]
+		var font_type = font_def.get("type", "")
+
+		if font_type == "FontFile":
+			var font_idx = font_def.get("index", 0)
+			if font_idx >= 0 and font_idx < ext_resources.size():
+				var font_file = ext_resources[font_idx]
+				if font_file is FontFile:
+					# Create a Font resource from the FontFile
+					var font = FontFile.new()
+					# Actually, we can just use the FontFile directly
+					created_fonts[font_name] = font_file
+				else:
+					push_error("Resource at index %d is not a FontFile" % font_idx)
+			else:
+				push_error("Invalid font index for %s: %d" % [font_name, font_idx])
+
+		elif font_type == "FontVariation":
+			var base_font_idx = font_def.get("base_font", 0)
+			var variation = font_def.get("variation_opentype", {})
+			if base_font_idx >= 0 and base_font_idx < ext_resources.size():
+				var base_font_file = ext_resources[base_font_idx]
+				if base_font_file is FontFile:
+					# Use the base FontFile directly and set variation
+					# FontFile inherits from Font, which has variation_opentype
+					var font = base_font_file
+					if variation.size() > 0:
+						for axis_tag in variation:
+							font.variation_opentype[axis_tag] = variation[axis_tag]
+					created_fonts[font_name] = font
+				else:
+					push_error("Base resource at index %d is not a FontFile" % base_font_idx)
+			else:
+				push_error("Invalid base_font index for %s: %d" % [font_name, base_font_idx])
+		else:
+			push_error("Unknown font type: %s for font: %s" % [font_type, font_name])
+
 	# Apply control-specific theme overrides
 	for control_type in def.control_overrides:
 		var overrides = def.control_overrides[control_type]
-		_apply_control_overrides(theme, control_type, overrides, def, ext_resources, created_styles)
+		_apply_control_overrides(theme, control_type, overrides, def, ext_resources, created_styles, created_fonts)
 
 	return theme
 
 
 ## Apply all overrides for a specific control type
-func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary) -> void:
+func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary, created_fonts: Dictionary) -> void:
 	# Apply colors
 	if overrides.has("colors"):
 		for color_name in overrides["colors"]:
@@ -153,18 +200,34 @@ func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dic
 	# Apply fonts
 	if overrides.has("fonts"):
 		for font_name in overrides["fonts"]:
-			var font_idx = overrides["fonts"][font_name]
-			if font_idx is int and font_idx >= 0 and font_idx < ext_resources.size():
-				var font_resource = ext_resources[font_idx]
-				# FontFile extends Font, so we can use it directly
-				if font_resource is FontFile:
-					theme.set_font(font_name, control_type, font_resource)
-				elif font_resource is Font:
-					theme.set_font(font_name, control_type, font_resource)
+			var font_ref = overrides["fonts"][font_name]
+
+			# Can be an integer index into created_fonts or external_resources
+			if font_ref is int:
+				# Try created_fonts first
+				if created_fonts.size() > font_ref and created_fonts.has(str(font_ref)):
+					var font = created_fonts[str(font_ref)]
+					if font is Font:
+						theme.set_font(font_name, control_type, font)
+					else:
+						push_error("Font reference %d is not a Font" % font_ref)
+				elif font_ref >= 0 and font_ref < ext_resources.size():
+					var font_resource = ext_resources[font_ref]
+					if font_resource is FontFile or font_resource is Font:
+						theme.set_font(font_name, control_type, font_resource)
+					else:
+						push_error("Font resource %d is not a Font or FontFile" % font_ref)
 				else:
-					push_error("Invalid font resource type for %s/%s" % [control_type, font_name])
+					push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_ref])
+			# Can be a string name referencing created_fonts
+			elif font_ref is String and created_fonts.has(font_ref):
+				var font = created_fonts[font_ref]
+				if font is Font:
+					theme.set_font(font_name, control_type, font)
+				else:
+					push_error("Font reference '%s' is not a Font" % font_ref)
 			else:
-				push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_idx])
+				push_error("Invalid font reference for %s/%s: %s" % [control_type, font_name, font_ref])
 
 	# Apply constants
 	if overrides.has("constants"):

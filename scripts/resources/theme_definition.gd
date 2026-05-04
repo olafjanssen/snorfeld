@@ -58,6 +58,11 @@ extends Resource
 ## Each entry: {"type": String, "path": String}
 @export var external_resources: Array = []
 
+## Font definitions: font_name -> {"type": String, "base_font": int, "variation_opentype": Dictionary}
+## For FontFile: {"type": "FontFile", "index": int}
+## For FontVariation: {"type": "FontVariation", "base_font": int, "variation_opentype": {axis_tag: value}}
+@export var fonts: Dictionary = {}
+
 ## Control-specific theme overrides
 ## Structure: {"ControlType": {"colors": {...}, "font_sizes": {...}, "fonts": {...}, "constants": {...}, "styles": {...}}}
 @export var control_overrides: Dictionary = {}

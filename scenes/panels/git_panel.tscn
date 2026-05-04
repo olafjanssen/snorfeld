@@ -2,11 +2,6 @@
 
 [ext_resource type="Script" uid="uid://bc45v60y7kfqi" path="res://scenes/panels/git_panel.gd" id="1"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_git_panel"]
-bg_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
-border_width_top = 1
-border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
-
 [node name="GitPanel" type="Control" unique_id=431570014]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 3
@@ -76,7 +71,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_git_panel")
+theme_type_variation = &"GitCommitPanel"
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CommitHBox/PanelContainer" unique_id=451723676]
 layout_mode = 2
