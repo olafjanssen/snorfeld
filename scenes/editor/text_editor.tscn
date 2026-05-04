@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://qmnxby366n74"]
+
+[ext_resource type="Script" uid="uid://bi62sfsesemnm" path="res://scenes/editor/code_edit.gd" id="1_sdthn"]
+[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="1_ytqh7"]
+[ext_resource type="Script" uid="uid://brc6ty777qmfu" path="res://scenes/editor/text_editor.gd" id="2"]
+[ext_resource type="Script" uid="uid://bnb26pl4q2pvc" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
+bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
+border_width_bottom = 1
+border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
+
+[node name="TextEditor" type="Control" unique_id=1652980615]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=3943721]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=465978657]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xyvjo")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1866113266]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+theme = ExtResource("1_ytqh7")
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="TitleMessage" type="Label" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=265978171]
+layout_mode = 2
+theme = ExtResource("1_ytqh7")
+theme_override_colors/font_color = Color(0.14117648, 0.14509805, 0.16078432, 1)
+theme_override_font_sizes/font_size = 14
+text = "Nothing to report!"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer" unique_id=325234074]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 4
+
+[node name="CodeEdit" type="CodeEdit" parent="VBoxContainer/MarginContainer" unique_id=266735972]
+layout_mode = 2
+context_menu_enabled = false
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
+wrap_mode = 1
+scroll_past_end_of_file = true
+caret_blink = true
+line_length_guidelines = Array[int]([20])
+script = ExtResource("1_sdthn")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="VBoxContainer/MarginContainer" unique_id=1069037849]
+visible = false
+layout_mode = 2
+bbcode_enabled = true
+meta_underlined = false
+hint_underlined = false
+script = ExtResource("4_4sqaq")

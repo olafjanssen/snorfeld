@@ -1,0 +1,256 @@
+extends CodeEdit
+
+var current_file_path: String = ""
+# Map from line number to original hash for that paragraph
+var paragraph_original_hashes := {}
+# Map from line number to current hash for that paragraph
+var paragraph_current_hashes := {}
+
+var last_text_hash: String = ""
+
+var last_modified_time: float = 0.0
+var file_check_timer: Timer
+
+func _ready():
+	var highlighter = load("res://scripts/utilities/syntax_highlighter.gd").new()
+	syntax_highlighter = highlighter
+
+	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.apply_diff_patch.connect(_on_apply_diff_patch)
+	EventBus.request_save_all_files.connect(_on_request_save_all_files)
+	EventBus.show_git_diff.connect(_on_show_git_diff)
+	EventBus.navigate_to_line.connect(_on_navigate_to_line)
+
+	caret_changed.connect(_on_cursor_changed)
+	text_changed.connect(_on_text_changed)
+
+	# Setup timer to check for external file changes
+	file_check_timer = Timer.new()
+	file_check_timer.timeout.connect(_on_file_check_timeout)
+	file_check_timer.wait_time = 5.0  # Check every 5 seconds
+	add_child(file_check_timer)
+	file_check_timer.start()
+
+func _on_request_save_all_files():
+	# Emit final file_changed with current content before shutdown
+	if current_file_path != "" and FileAccess.file_exists(current_file_path):
+		EventBus.file_changed.emit(current_file_path, get_text())
+
+func _on_file_check_timeout():
+	if current_file_path == "":
+		return
+
+	if FileAccess.file_exists(current_file_path):
+		var current_mod_time = FileAccess.get_modified_time(current_file_path)
+		if current_mod_time > last_modified_time:
+			# File was modified externally - save cursor position
+			var cursor_line = get_caret_line()
+			var cursor_column = get_caret_column()
+			var scroll_pos = get_v_scroll_bar().value
+
+			last_modified_time = current_mod_time
+
+			# Reload the file
+			var content: String = FileAccess.get_file_as_string(current_file_path)
+			set_text(content)
+			last_text_hash = _hash_text(content)
+			paragraph_original_hashes = {}
+			paragraph_current_hashes = {}
+
+			# Restore cursor position
+			if cursor_line >= 0:
+				set_caret_line(cursor_line)
+				var line_length = get_line(cursor_line).length()
+				set_caret_column(min(cursor_column, line_length))
+			get_v_scroll_bar().value = scroll_pos
+
+func _on_show_git_diff(_path: String, _diff: String):
+	visible = false
+
+func _on_navigate_to_line(file_path: String, line_number: int):
+	if current_file_path == file_path:
+		var line_count = get_line_count()
+		var target_line = clamp(line_number - 1, 0, line_count - 1)
+		call_deferred("_set_caret_and_center", target_line)
+		grab_focus()
+	else:
+		current_file_path = file_path
+		paragraph_original_hashes = {}
+		paragraph_current_hashes = {}
+		last_text_hash = ""
+		if FileAccess.file_exists(file_path):
+			var content: String = FileAccess.get_file_as_string(file_path)
+			last_text_hash = _hash_text(content)
+			last_modified_time = FileAccess.get_modified_time(file_path)
+			set_text(content)
+			var line_count = get_line_count()
+			var target_line = clamp(line_number - 1, 0, line_count - 1)
+			call_deferred("_set_caret_and_center", target_line)
+			grab_focus()
+		visible = true
+
+func _set_caret_and_center(line_number: int):
+	set_caret_column(0)
+	set_caret_line(line_number)
+	center_viewport_to_caret()
+
+func _on_file_selected(path: String):
+	# Save current file before switching - emit file_changed with current content
+	if current_file_path != "" and current_file_path != path:
+		var current_content = get_text()
+		EventBus.file_changed.emit(current_file_path, current_content)
+		EventBus.request_save_file.emit(current_file_path)
+
+	current_file_path = path
+	paragraph_original_hashes = {}
+	paragraph_current_hashes = {}
+	last_text_hash = ""
+	if FileAccess.file_exists(path):
+		var content: String = FileAccess.get_file_as_string(path)
+		set_text(content)
+		last_text_hash = _hash_text(content)
+		last_modified_time = FileAccess.get_modified_time(path)
+
+	# Make sure panel is visible
+	visible = true
+
+func _on_cursor_changed():
+	var cursor_line := get_caret_line()
+	var full_text := get_text()
+	var lines := full_text.split("\n")
+	if cursor_line >= 0 and cursor_line < lines.size():
+		var paragraph := lines[cursor_line]
+		# Only process non-empty paragraphs
+		if paragraph.length() > 0:
+			var current_hash := _hash_paragraph(paragraph)
+
+			# Check if this line has an original hash
+			if paragraph_original_hashes.has(cursor_line):
+				# If current hash doesn't match current hash, user made manual edit
+				if paragraph_current_hashes.has(cursor_line) and current_hash != paragraph_current_hashes[cursor_line]:
+					# User manually edited - invalidate original hash
+					paragraph_original_hashes.erase(cursor_line)
+					paragraph_current_hashes.erase(cursor_line)
+					# Set new original hash to current
+					paragraph_original_hashes[cursor_line] = current_hash
+
+			# If this line doesn't have an original hash yet, set it
+			if not paragraph_original_hashes.has(cursor_line):
+				paragraph_original_hashes[cursor_line] = current_hash
+
+			# Update current hash
+			paragraph_current_hashes[cursor_line] = current_hash
+
+			# Check if cache exists for this paragraph, if not request caching
+			var cache = ParagraphService.get_paragraph_cache(current_hash, current_file_path)
+			if cache.is_empty():
+				EventBus.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
+
+			# Emit signal with original hash for this line
+			EventBus.paragraph_selected.emit(
+				paragraph_original_hashes[cursor_line],
+				current_file_path,
+				paragraph
+			)
+
+func _hash_paragraph(paragraph: String) -> String:
+	var hash_ctx := HashingContext.new()
+	hash_ctx.start(HashingContext.HASH_MD5)
+	hash_ctx.update(paragraph.to_utf8_buffer())
+	var hash_bytes := hash_ctx.finish()
+	return hash_bytes.hex_encode()
+
+func _on_text_changed():
+	# Emit file_changed signal when text changes
+	var current_text = get_text()
+	var current_hash = _hash_text(current_text)
+	if current_hash != last_text_hash:
+		last_text_hash = current_hash
+		EventBus.file_changed.emit(current_file_path, current_text)
+
+func _hash_text(full_text: String) -> String:
+	var hash_ctx := HashingContext.new()
+	hash_ctx.start(HashingContext.HASH_MD5)
+	hash_ctx.update(full_text.to_utf8_buffer())
+	var hash_bytes := hash_ctx.finish()
+	return hash_bytes.hex_encode()
+
+func _on_apply_diff_patch(original_hash: String, file_path: String, operation: String, word_index: int, new_text: String):
+	# Only apply if this is the current file
+	if current_file_path != file_path:
+		return
+
+	# Store current cursor position and scroll position
+	var cursor_line := get_caret_line()
+	var cursor_column := get_caret_column()
+	var scroll_pos := get_v_scroll_bar().value
+	var full_text := get_text()
+	var lines := full_text.split("\n")
+
+	if cursor_line < 0 or cursor_line >= lines.size():
+		return
+
+	# Verify this is the paragraph we expect (original hash matches)
+	if not paragraph_original_hashes.has(cursor_line) or paragraph_original_hashes[cursor_line] != original_hash:
+		return
+
+	var current_paragraph = lines[cursor_line]
+	var words := current_paragraph.split(" ")
+
+	# Apply the patch
+	if operation == "delete":
+		# Remove words starting at word_index
+		# new_text contains the words to delete (from the diff)
+		var delete_words := new_text.split(" ")
+		if word_index >= 0 and word_index + delete_words.size() <= words.size():
+			# Verify the words match what we expect to delete
+			var words_match = true
+			for k in range(delete_words.size()):
+				if words[word_index + k] != delete_words[k]:
+					words_match = false
+					break
+			if words_match:
+				# Remove multiple words starting at word_index
+				for _k in range(delete_words.size()):
+					words.remove_at(word_index)
+				current_paragraph = " ".join(words)
+	elif operation == "insert":
+		# Insert new_text at word_index
+		if word_index >= 0 and word_index <= words.size():
+			words.insert(word_index, new_text)
+			current_paragraph = " ".join(words)
+	elif operation == "change":
+		# Replace words starting at word_index with new_text
+		# new_text contains the replacement words
+		var new_words_list := new_text.split(" ")
+		# For change, we replace the same number of words as in new_text
+		if word_index >= 0 and word_index + new_words_list.size() <= words.size():
+			for k in range(new_words_list.size()):
+				words[word_index + k] = new_words_list[k]
+			current_paragraph = " ".join(words)
+
+	# Update the line in the editor
+	if current_paragraph != lines[cursor_line]:
+		lines[cursor_line] = current_paragraph
+		var new_text_full = "\n".join(lines)
+
+		# Store cursor line before set_text (which may reset cursor)
+		var target_line = cursor_line
+
+		set_text(new_text_full)
+
+		# Restore scroll position first
+		get_v_scroll_bar().value = scroll_pos
+
+		# Restore cursor to the same line
+		set_caret_line(target_line)
+		# Try to restore column, but clamp to line length
+		var line_length = lines[target_line].length()
+		set_caret_column(min(cursor_column, line_length))
+
+		# Update current hash but keep original hash (so more patches can be applied)
+		paragraph_current_hashes[target_line] = _hash_paragraph(current_paragraph)
+		# Re-trigger paragraph selection to update diff display (with same original hash)
+		EventBus.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
+		# Emit file_changed signal since text was modified
+		EventBus.file_changed.emit(current_file_path, get_text())

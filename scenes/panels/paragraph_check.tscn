@@ -1,0 +1,178 @@
+[gd_scene format=3 uid="uid://bmpto71onui3w"]
+
+[ext_resource type="Script" uid="uid://dblbt20rwgkun" path="res://scenes/panels/paragraph_check.gd" id="0"]
+[ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2_bhh05"]
+[ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/components/paneled_richtextlabel.tscn" id="4_6m5l1"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n38hu"]
+
+[node name="ParagraphCheck" type="Control" unique_id=242299029]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("0")
+
+[node name="TabContainer" type="TabContainer" parent="." unique_id=1091084477]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_bhh05")
+current_tab = 0
+
+[node name="Grammar" type="ScrollContainer" parent="TabContainer" unique_id=1483406397]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Grammar" unique_id=1023878382]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Grammar/MarginContainer" unique_id=811769730]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=631995457]
+layout_mode = 2
+text = "Grammar and spelling:"
+
+[node name="SmallSpacer" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=218160566]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Correction" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1890990576 instance=ExtResource("4_6m5l1")]
+layout_mode = 2
+
+[node name="MediumSpacer" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=851547136]
+layout_mode = 2
+theme_override_constants/separation = 12
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Label2" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1053352535]
+layout_mode = 2
+text = "Explanation:"
+
+[node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=312884757]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="GrammarExplanation" type="Label" parent="TabContainer/Grammar/MarginContainer/VBoxContainer" unique_id=1903933999]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "Grammar explanation"
+autowrap_mode = 3
+
+[node name="Style" type="ScrollContainer" parent="TabContainer" unique_id=1376358239]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Style" unique_id=1522542152]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Style/MarginContainer" unique_id=2043842199]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label3" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=678994030]
+layout_mode = 2
+text = "Stylistic improvement:"
+
+[node name="SmallSpacer" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1714459914]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Enhancement" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1707718783 instance=ExtResource("4_6m5l1")]
+layout_mode = 2
+
+[node name="MediumSpacer" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1287211675]
+layout_mode = 2
+theme_override_constants/separation = 12
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Label4" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=1834282615]
+layout_mode = 2
+text = "Explanation:"
+
+[node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=941074112]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="StyleExplanation" type="Label" parent="TabContainer/Style/MarginContainer/VBoxContainer" unique_id=416670761]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "Style explanation"
+autowrap_mode = 3
+
+[node name="Structure" type="ScrollContainer" parent="TabContainer" unique_id=161645132]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Structure" unique_id=89750897]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Structure/MarginContainer" unique_id=221391888]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label5" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=800771274]
+layout_mode = 2
+text = "Structural suggestion:"
+
+[node name="SmallSpacer2" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=26302085]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Suggestion" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=269824062 instance=ExtResource("4_6m5l1")]
+layout_mode = 2
+
+[node name="MediumSpacer" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1616199656]
+layout_mode = 2
+theme_override_constants/separation = 12
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="Label6" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=1531681234]
+layout_mode = 2
+text = "Explanation:"
+
+[node name="SmallSpacer" type="HSeparator" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=504151169]
+layout_mode = 2
+theme_override_constants/separation = 4
+theme_override_styles/separator = SubResource("StyleBoxEmpty_n38hu")
+
+[node name="StructureExplanation" type="Label" parent="TabContainer/Structure/MarginContainer/VBoxContainer" unique_id=834381664]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "Structure explanation"
+autowrap_mode = 3

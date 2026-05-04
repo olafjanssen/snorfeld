@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="snorfeld"
-run/main_scene="res://scenes/editor.tscn"
+run/main_scene="res://scenes/main/editor.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -19,15 +19,15 @@ config/icon="res://icon.svg"
 
 EventBus="*res://autoload/event_bus.gd"
 ProjectState="*res://autoload/project_state.gd"
-AppConfig="*res://autoload/app_config.gd"
-ContentCache="*res://autoload/content_cache.gd"
-LLMClient="*res://autoload/llm_client.gd"
-AnalysisService="*res://autoload/analysis_service.gd"
-GitService="*res://autoload/git_service.gd"
-StorageService="*res://autoload/storage_service.gd"
-ParagraphService="*res://autoload/paragraph_service.gd"
-FileService="*res://autoload/file_service.gd"
-CharacterService="*res://autoload/character_service.gd"
+AppConfig="*res://autoload/config/app_config.gd"
+ContentCache="*res://autoload/cache/content_cache.gd"
+LLMClient="*res://autoload/services/llm_client.gd"
+AnalysisService="*res://autoload/services/analysis_service.gd"
+GitService="*res://autoload/services/git_service.gd"
+StorageService="*res://autoload/managers/storage_service.gd"
+ParagraphService="*res://autoload/cache/paragraph_service.gd"
+FileService="*res://autoload/managers/file_service.gd"
+CharacterService="*res://autoload/cache/character_service.gd"
 
 [display]
 
