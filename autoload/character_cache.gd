@@ -13,10 +13,10 @@ var current_character_file_path: String = ""
 var current_character_file_content: String = ""
 
 func _ready() -> void:
-	GlobalSignals.request_priority_character_cache.connect(_on_priority_character_cache_requested)
-	GlobalSignals.run_all_character_analyses.connect(_on_run_all_character_analyses)
-	GlobalSignals.run_chapter_character_analyses.connect(_on_run_chapter_character_analyses)
-	GlobalSignals.file_selected.connect(_on_file_selected)
+	EventBus.request_priority_character_cache.connect(_on_priority_character_cache_requested)
+	EventBus.run_all_character_analyses.connect(_on_run_all_character_analyses)
+	EventBus.run_chapter_character_analyses.connect(_on_run_chapter_character_analyses)
+	EventBus.file_selected.connect(_on_file_selected)
 
 
 # Handle file scanned event - queue characters for caching
@@ -31,7 +31,7 @@ func queue_characters_for_cache(file_path: String, file_content: String = "") ->
 
 	# Extract characters from the file content using LLM
 	_queue_character_extraction_task(cache_path, file_path, file_content)
-	GlobalSignals.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
+	EventBus.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
 
 	# Start processing if not already running
 	if not character_processing:
@@ -47,7 +47,7 @@ func _queue_character_extraction_task(cache_path: String, file_path: String, fil
 	else:
 		character_task_queue.append(task)
 	character_queue_mutex.unlock()
-	GlobalSignals.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
+	EventBus.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
 
 	# If already processing, just return - the thread will pick up new tasks
 	if character_processing:
@@ -67,7 +67,7 @@ func _on_priority_character_cache_requested(file_path: String, file_content: Str
 
 func _on_run_all_character_analyses() -> void:
 	# Queue all text files in the project for character analysis
-	var project_path := GlobalSignals.current_path
+	var project_path := EventBus.current_path
 	if project_path == "":
 		return
 	var text_files: Array = _get_all_text_files(project_path)
@@ -110,13 +110,13 @@ func _process_next_character_task() -> void:
 	if character_task_queue.is_empty():
 		character_queue_mutex.unlock()
 		character_processing = false
-		GlobalSignals.character_cache_queue_updated.emit(0, false)
+		EventBus.character_cache_queue_updated.emit(0, false)
 		return
 
 	var task: Dictionary = character_task_queue.pop_front()
 	var remaining := character_task_queue.size()
 	character_queue_mutex.unlock()
-	GlobalSignals.character_cache_task_started.emit(remaining)
+	EventBus.character_cache_task_started.emit(remaining)
 
 	# Process the task - extract characters and create/update cache files
 	var cache_path: String = task["cache_path"]
@@ -130,7 +130,7 @@ func _process_next_character_task() -> void:
 func _create_character_cache_files_and_continue(cache_path: String, file_path: String, file_content: String, remaining: int) -> void:
 	var _success := await _extract_and_cache_characters(cache_path, file_path, file_content)
 	# Process next task
-	GlobalSignals.character_cache_task_completed.emit(remaining)
+	EventBus.character_cache_task_completed.emit(remaining)
 	call_deferred("_process_next_character_task")
 
 
@@ -515,7 +515,7 @@ func _create_character_cache_directory(base_path: String) -> bool:
 
 # Get the character cache path for the current project
 func get_cache_path() -> String:
-	var project_path := GlobalSignals.current_path
+	var project_path := EventBus.current_path
 	if project_path == "":
 		project_path = "res://"
 	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)

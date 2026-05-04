@@ -49,8 +49,8 @@ func _ready():
 	# Connect GitManager signals
 	if GitManager != null:
 		print("GitPanel: Connecting GitManager signals")
-		GlobalSignals.git_repo_changed.connect(_on_git_repo_changed)
-		GlobalSignals.git_status_updated.connect(_on_git_status_updated)
+		EventBus.git_repo_changed.connect(_on_git_repo_changed)
+		EventBus.git_status_updated.connect(_on_git_status_updated)
 
 	# Connect tree button clicked signal for staging
 	file_list.button_clicked.connect(_on_stage_button_clicked)
@@ -186,7 +186,7 @@ func _show_git_diff(file_path: String):
 		print("Calculating diff...")
 		var diff_bbcode = diff_utility.calculate_diff(git_content, current_content)
 		print("Diff calculated, length: ", diff_bbcode.length())
-		GlobalSignals.show_git_diff.emit(file_path, diff_bbcode)
+		EventBus.show_git_diff.emit(file_path, diff_bbcode)
 	else:
 		print("Skipping diff - git_content empty:", git_content == "", " current_content empty:", current_content == "")
 

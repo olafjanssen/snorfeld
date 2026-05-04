@@ -8,7 +8,7 @@ var characters: Array = []
 
 func _ready():
 	character_tree.item_selected.connect(_on_character_selected)
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	EventBus.folder_opened.connect(_on_folder_opened)
 
 	# Set initial position next to main editor
 	position = Vector2(820, 0)
@@ -20,7 +20,7 @@ func _ready():
 
 	# Load characters immediately
 	await get_tree().process_frame
-	_on_folder_opened(GlobalSignals.current_path)
+	_on_folder_opened(EventBus.current_path)
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

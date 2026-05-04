@@ -24,9 +24,9 @@ var last_dir_state: Dictionary = {}
 
 func _ready():
 	item_selected.connect(_on_item_selected)
-	GlobalSignals.request_open_folder.connect(_on_open_folder_requested)
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
-	GlobalSignals.git_file_status_changed.connect(_on_git_file_status_changed)
+	EventBus.request_open_folder.connect(_on_open_folder_requested)
+	EventBus.folder_opened.connect(_on_folder_opened)
+	EventBus.git_file_status_changed.connect(_on_git_file_status_changed)
 
 	_load_config()
 
@@ -43,9 +43,9 @@ func _load_config():
 
 func _load_config_deferred():
 	if config.load(CONFIG_FILE) != OK:
-		GlobalSignals.folder_opened.emit("res://")
+		EventBus.folder_opened.emit("res://")
 	else:
-		GlobalSignals.folder_opened.emit(config.get_value("general", "last_folder", "res://"))
+		EventBus.folder_opened.emit(config.get_value("general", "last_folder", "res://"))
 
 func _save_config():
 	config.set_value("general", "last_folder", current_path)
@@ -134,7 +134,7 @@ func _scan_file_and_emit(file_path: String) -> void:
 		var paragraphs := content.split("\n\n")
 
 		# Emit file_scanned signal with paragraphs and full content for context
-		GlobalSignals.file_scanned.emit(file_path, paragraphs, content)
+		EventBus.file_scanned.emit(file_path, paragraphs, content)
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()
@@ -148,10 +148,10 @@ func _on_item_selected():
 
 	if is_dir:
 		current_path = path
-		GlobalSignals.folder_opened.emit(path)
+		EventBus.folder_opened.emit(path)
 		_save_config()
 	else:
-		GlobalSignals.file_selected.emit(path)
+		EventBus.file_selected.emit(path)
 		_save_last_file(path)
 
 func _on_open_folder_requested():
@@ -166,7 +166,7 @@ func _on_open_folder_requested():
 
 func _on_dir_selected(path: String):
 	current_path = _ensure_trailing_slash(path)
-	GlobalSignals.folder_opened.emit(current_path)
+	EventBus.folder_opened.emit(current_path)
 	_save_config()
 
 func _on_folder_opened(path: String):

@@ -13,11 +13,11 @@ var current_file_path: String = ""
 var current_file_content: String = ""
 
 func _ready() -> void:
-	GlobalSignals.request_priority_cache.connect(_on_priority_cache_requested)
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
-	GlobalSignals.run_all_analyses.connect(_on_run_all_analyses)
-	GlobalSignals.run_chapter_analyses.connect(_on_run_chapter_analyses)
-	GlobalSignals.file_selected.connect(_on_file_selected)
+	EventBus.request_priority_cache.connect(_on_priority_cache_requested)
+	EventBus.folder_opened.connect(_on_folder_opened)
+	EventBus.run_all_analyses.connect(_on_run_all_analyses)
+	EventBus.run_chapter_analyses.connect(_on_run_chapter_analyses)
+	EventBus.file_selected.connect(_on_file_selected)
 
 
 # Handle file scanned event - queue paragraphs for caching
@@ -39,7 +39,7 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_conte
 		if not _file_exists(cache_file_path):
 			# Pass file_content as full_chapter for structure analysis
 			_queue_task(cache_path, paragraph_hash, paragraph, file_content)
-			GlobalSignals.cache_queue_updated.emit(task_queue.size(), processing)
+			EventBus.cache_queue_updated.emit(task_queue.size(), processing)
 	# Start processing if not already running
 	if not processing:
 		_processing_start()
@@ -54,7 +54,7 @@ func _queue_task(cache_path: String, paragraph_hash: String, paragraph: String, 
 	else:
 		task_queue.append(task)
 	queue_mutex.unlock()
-	GlobalSignals.cache_queue_updated.emit(task_queue.size(), processing)
+	EventBus.cache_queue_updated.emit(task_queue.size(), processing)
 
 	# If already processing, just return - the thread will pick up new tasks
 	if processing:
@@ -75,14 +75,14 @@ func _on_priority_cache_requested(paragraph_hash: String, file_path: String, par
 func _on_folder_opened(path: String) -> void:
 	var cache_path := path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
 	if DirAccess.dir_exists_absolute(cache_path):
-		GlobalSignals.cache_cleanup_started.emit()
+		EventBus.cache_cleanup_started.emit()
 		var removed_count := _cleanup_unused_cache_files(cache_path, path)
-		GlobalSignals.cache_cleanup_completed.emit(removed_count)
+		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
 func _on_run_all_analyses() -> void:
 	# Queue all paragraphs from all text files in the project
-	var project_path := GlobalSignals.current_path
+	var project_path := EventBus.current_path
 	if project_path == "":
 		return
 	var text_files := _get_all_text_files(project_path)
@@ -125,20 +125,20 @@ func _process_next_task() -> void:
 	if task_queue.is_empty():
 		queue_mutex.unlock()
 		processing = false
-		GlobalSignals.cache_queue_updated.emit(0, false)
+		EventBus.cache_queue_updated.emit(0, false)
 		return
 
 	var task: Dictionary = task_queue.pop_front()
 	var remaining := task_queue.size()
 	queue_mutex.unlock()
-	GlobalSignals.cache_task_started.emit(remaining)
+	EventBus.cache_task_started.emit(remaining)
 
 	# Process the task - create cache file
 	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
 	if not _file_exists(cache_file_path):
 		_create_cache_file_and_continue(cache_file_path, task["paragraph"], task.get("file_content", ""), remaining)
 	else:
-		GlobalSignals.cache_task_completed.emit(remaining)
+		EventBus.cache_task_completed.emit(remaining)
 		call_deferred("_process_next_task")
 
 
@@ -146,7 +146,7 @@ func _process_next_task() -> void:
 func _create_cache_file_and_continue(cache_file_path: String, paragraph: String, file_content: String, remaining: int) -> void:
 	var _success := await _create_cache_file(cache_file_path, paragraph, file_content)
 	# Process next task
-	GlobalSignals.cache_task_completed.emit(remaining)
+	EventBus.cache_task_completed.emit(remaining)
 	call_deferred("_process_next_task")
 
 

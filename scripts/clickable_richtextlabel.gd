@@ -16,7 +16,7 @@ func _on_meta_clicked(meta: Variant):
 			var operation = parts[0]
 			var word_index = int(parts[1])
 			var full_text = _url_decode(parts[2])
-			GlobalSignals.diff_span_clicked.emit(operation, word_index, full_text)
+			EventBus.diff_span_clicked.emit(operation, word_index, full_text)
 
 func _url_decode(encoded: String) -> String:
 	# URL decoding for our use case

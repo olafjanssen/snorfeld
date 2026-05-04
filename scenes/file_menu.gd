@@ -24,16 +24,16 @@ func _ready():
 
 func _on_item_pressed(id: int):
 	if id == OPEN_FOLDER_ID:
-		GlobalSignals.request_open_folder.emit()
+		EventBus.request_open_folder.emit()
 	elif id == SETTINGS_ID:
-		GlobalSignals.open_settings.emit()
+		EventBus.open_settings.emit()
 	elif id == RUN_ALL_ANALYSES_ID:
-		GlobalSignals.run_all_analyses.emit()
+		EventBus.run_all_analyses.emit()
 	elif id == RUN_CHAPTER_ANALYSES_ID:
-		GlobalSignals.run_chapter_analyses.emit()
+		EventBus.run_chapter_analyses.emit()
 	elif id == RUN_ALL_CHARACTER_ANALYSES_ID:
-		GlobalSignals.run_all_character_analyses.emit()
+		EventBus.run_all_character_analyses.emit()
 	elif id == RUN_CHAPTER_CHARACTER_ANALYSES_ID:
-		GlobalSignals.run_chapter_character_analyses.emit()
+		EventBus.run_chapter_character_analyses.emit()
 	elif id == 1:
 		get_tree().quit()

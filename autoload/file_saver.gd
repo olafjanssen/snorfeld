@@ -19,11 +19,11 @@ var file_contents := {}
 
 func _ready():
 	# Connect to global signals
-	GlobalSignals.request_save_file.connect(_on_request_save_file)
-	GlobalSignals.file_changed.connect(_on_file_changed)
-	GlobalSignals.request_close_file.connect(_on_request_close_file)
-	GlobalSignals.file_selected.connect(_on_file_selected)
-	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
+	EventBus.request_save_file.connect(_on_request_save_file)
+	EventBus.file_changed.connect(_on_file_changed)
+	EventBus.request_close_file.connect(_on_request_close_file)
+	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.request_save_all_files.connect(_on_request_save_all_files)
 
 	# Connect to tree signals for application close
 	var root = get_tree().root
@@ -81,7 +81,7 @@ func _on_request_save_all_files():
 
 func _on_tree_exiting():
 	# Request all editors to emit their final content
-	GlobalSignals.request_save_all_files.emit()
+	EventBus.request_save_all_files.emit()
 	# Then save all files that have pending changes
 	for path in file_contents.keys():
 		_save_file(path)
@@ -121,7 +121,7 @@ func _save_file(path: String):
 
 	has_unsaved_changes = false
 	file_contents.erase(path)
-	GlobalSignals.file_saved.emit(path)
+	EventBus.file_saved.emit(path)
 
 	print("Saved: ", path)
 

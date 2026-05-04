@@ -13,12 +13,12 @@ var current_file_path: String = ""
 var current_paragraph_text: String = ""
 
 func _ready():
-	GlobalSignals.paragraph_selected.connect(_on_paragraph_selected)
-	GlobalSignals.diff_span_clicked.connect(_on_diff_span_clicked)
+	EventBus.paragraph_selected.connect(_on_paragraph_selected)
+	EventBus.diff_span_clicked.connect(_on_diff_span_clicked)
 
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
 	# Emit signal to apply the patch to the editor
-	GlobalSignals.apply_diff_patch.emit(
+	EventBus.apply_diff_patch.emit(
 		current_paragraph_original_hash,
 		current_file_path,
 		operation,
@@ -80,4 +80,4 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 			file.close()
 			# Queue with priority - insert at front of queue
 			var paragraph_hash := ParagraphCache._hash_paragraph_md5(paragraph_text)
-			GlobalSignals.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)
+			EventBus.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)

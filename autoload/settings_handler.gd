@@ -7,8 +7,8 @@ var settings_panel: Window
 
 
 func _ready() -> void:
-	GlobalSignals.open_settings.connect(_on_open_settings)
-	GlobalSignals.settings_closed.connect(_on_settings_closed)
+	EventBus.open_settings.connect(_on_open_settings)
+	EventBus.settings_closed.connect(_on_settings_closed)
 
 
 func _on_open_settings() -> void:

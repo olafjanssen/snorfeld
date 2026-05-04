@@ -15,11 +15,11 @@ func _ready():
 	var highlighter = load("res://scripts/markdown_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
-	GlobalSignals.file_selected.connect(_on_file_selected)
-	GlobalSignals.apply_diff_patch.connect(_on_apply_diff_patch)
-	GlobalSignals.request_save_all_files.connect(_on_request_save_all_files)
-	GlobalSignals.show_git_diff.connect(_on_show_git_diff)
-	GlobalSignals.navigate_to_line.connect(_on_navigate_to_line)
+	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.apply_diff_patch.connect(_on_apply_diff_patch)
+	EventBus.request_save_all_files.connect(_on_request_save_all_files)
+	EventBus.show_git_diff.connect(_on_show_git_diff)
+	EventBus.navigate_to_line.connect(_on_navigate_to_line)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
@@ -34,7 +34,7 @@ func _ready():
 func _on_request_save_all_files():
 	# Emit final file_changed with current content before shutdown
 	if current_file_path != "" and FileAccess.file_exists(current_file_path):
-		GlobalSignals.file_changed.emit(current_file_path, get_text())
+		EventBus.file_changed.emit(current_file_path, get_text())
 
 func _on_file_check_timeout():
 	if current_file_path == "":
@@ -98,8 +98,8 @@ func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
 		var current_content = get_text()
-		GlobalSignals.file_changed.emit(current_file_path, current_content)
-		GlobalSignals.request_save_file.emit(current_file_path)
+		EventBus.file_changed.emit(current_file_path, current_content)
+		EventBus.request_save_file.emit(current_file_path)
 
 	current_file_path = path
 	paragraph_original_hashes = {}
@@ -144,10 +144,10 @@ func _on_cursor_changed():
 			# Check if cache exists for this paragraph, if not request caching
 			var cache = ParagraphCache.get_paragraph_cache(current_hash, current_file_path)
 			if cache.is_empty():
-				GlobalSignals.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
+				EventBus.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
 
 			# Emit signal with original hash for this line
-			GlobalSignals.paragraph_selected.emit(
+			EventBus.paragraph_selected.emit(
 				paragraph_original_hashes[cursor_line],
 				current_file_path,
 				paragraph
@@ -166,7 +166,7 @@ func _on_text_changed():
 	var current_hash = _hash_text(current_text)
 	if current_hash != last_text_hash:
 		last_text_hash = current_hash
-		GlobalSignals.file_changed.emit(current_file_path, current_text)
+		EventBus.file_changed.emit(current_file_path, current_text)
 
 func _hash_text(full_text: String) -> String:
 	var hash_ctx := HashingContext.new()
@@ -251,6 +251,6 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 		# Update current hash but keep original hash (so more patches can be applied)
 		paragraph_current_hashes[target_line] = _hash_paragraph(current_paragraph)
 		# Re-trigger paragraph selection to update diff display (with same original hash)
-		GlobalSignals.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
+		EventBus.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
 		# Emit file_changed signal since text was modified
-		GlobalSignals.file_changed.emit(current_file_path, get_text())
+		EventBus.file_changed.emit(current_file_path, get_text())

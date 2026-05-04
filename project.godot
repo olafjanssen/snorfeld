@@ -17,7 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GlobalSignals="*res://autoload/global_signals.gd"
+EventBus="*res://autoload/event_bus.gd"
 CacheManager="*res://autoload/cache_manager.gd"
 OllamaClient="*res://autoload/ollama_client.gd"
 ParagraphCache="*res://autoload/paragraph_cache.gd"

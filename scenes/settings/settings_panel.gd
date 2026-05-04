@@ -30,11 +30,11 @@ func save_llm_settings() -> void:
 
 func _on_close_pressed() -> void:
 	save_llm_settings()
-	GlobalSignals.settings_closed.emit()
+	EventBus.settings_closed.emit()
 	queue_free()
 
 
 func _on_close_requested() -> void:
 	save_llm_settings()
-	GlobalSignals.settings_closed.emit()
+	EventBus.settings_closed.emit()
 	queue_free()

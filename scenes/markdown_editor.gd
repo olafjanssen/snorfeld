@@ -15,7 +15,7 @@ func get_text() -> String:
 
 func _ready():
 	markdown_label.markdown_text = text
-	GlobalSignals.file_selected.connect(_on_file_selected)
+	EventBus.file_selected.connect(_on_file_selected)
 
 func _on_file_selected(path: String):
 	if FileAccess.file_exists(path):

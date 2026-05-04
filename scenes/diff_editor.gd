@@ -1,8 +1,8 @@
 extends RichTextLabel
 
 func _ready():
-	GlobalSignals.file_selected.connect(_on_file_selected)
-	GlobalSignals.show_git_diff.connect(_on_show_git_diff)
+	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.show_git_diff.connect(_on_show_git_diff)
 
 func _on_show_git_diff(_path: String, diff: String):
 	# Filter out [url=...] and [/url] tags to make them non-clickable in this view

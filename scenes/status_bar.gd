@@ -21,21 +21,21 @@ func _ready():
 
 func _connect_global_signals():
 	# Folder and file navigation
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	EventBus.folder_opened.connect(_on_folder_opened)
 
 	# File saving
-	GlobalSignals.file_saved.connect(_on_file_saved)
+	EventBus.file_saved.connect(_on_file_saved)
 
 	# Paragraph cache progress
-	GlobalSignals.cache_queue_updated.connect(_on_cache_queue_updated)
-	GlobalSignals.cache_task_started.connect(_on_cache_task_started)
-	GlobalSignals.cache_task_completed.connect(_on_cache_task_completed)
-	GlobalSignals.cache_cleanup_started.connect(_on_cache_cleanup_started)
-	GlobalSignals.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
+	EventBus.cache_queue_updated.connect(_on_cache_queue_updated)
+	EventBus.cache_task_started.connect(_on_cache_task_started)
+	EventBus.cache_task_completed.connect(_on_cache_task_completed)
+	EventBus.cache_cleanup_started.connect(_on_cache_cleanup_started)
+	EventBus.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
 
 	# Git integration
-	GlobalSignals.git_operation_started.connect(_on_git_operation_started)
-	GlobalSignals.git_operation_completed.connect(_on_git_operation_completed)
+	EventBus.git_operation_started.connect(_on_git_operation_started)
+	EventBus.git_operation_completed.connect(_on_git_operation_completed)
 
 
 func _on_folder_opened(path: String):

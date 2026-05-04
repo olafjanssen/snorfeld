@@ -14,10 +14,10 @@ var current_path: String = "res://"
 
 func _ready():
 	outline_tree.item_selected.connect(_on_item_selected)
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
-	GlobalSignals.file_selected.connect(_on_file_selected)
-	GlobalSignals.file_changed.connect(_on_file_changed)
-	GlobalSignals.file_saved.connect(_on_file_saved)
+	EventBus.folder_opened.connect(_on_folder_opened)
+	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.file_changed.connect(_on_file_changed)
+	EventBus.file_saved.connect(_on_file_saved)
 
 func _is_text_file(file_path: String) -> bool:
 	for ext in text_file_whitelist:
@@ -161,5 +161,5 @@ func _on_item_selected():
 	if metadata.get("type", "") == "heading":
 		var file_path = metadata["file"]
 		var line_num = metadata["line"]
-		GlobalSignals.navigate_to_line.emit(file_path, line_num)
-		GlobalSignals.file_selected.emit(file_path)
+		EventBus.navigate_to_line.emit(file_path, line_num)
+		EventBus.file_selected.emit(file_path)

@@ -8,7 +8,7 @@ var current_cache_path := ""
 
 func _ready() -> void:
 	# Connect to folder_opened signal to auto-create cache
-	GlobalSignals.folder_opened.connect(_on_folder_opened)
+	EventBus.folder_opened.connect(_on_folder_opened)
 
 func _on_folder_opened(path: String) -> void:
 	print("[CacheManager] Folder opened: %s" % path)
