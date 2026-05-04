@@ -40,15 +40,15 @@ func _exit_tree():
 
 func _on_request_save_all_files():
 	# Emit final file_changed with current content before shutdown
-	if current_file_path != "" and FileAccess.file_exists(current_file_path):
+	if current_file_path != "" and FileUtils.file_exists(current_file_path):
 		EventBus.file_changed.emit(current_file_path, get_text())
 
 func _on_file_check_timeout():
 	if current_file_path == "":
 		return
 
-	if FileAccess.file_exists(current_file_path):
-		var current_mod_time = FileAccess.get_modified_time(current_file_path)
+	if FileUtils.file_exists(current_file_path):
+		var current_mod_time = FileUtils.get_modified_time(current_file_path)
 		if current_mod_time > last_modified_time:
 			# File was modified externally - save cursor position
 			var cursor_line = get_caret_line()
@@ -58,7 +58,7 @@ func _on_file_check_timeout():
 			last_modified_time = current_mod_time
 
 			# Reload the file
-			var content: String = FileAccess.get_file_as_string(current_file_path)
+			var content: String = FileUtils.get_file_as_string(current_file_path)
 			set_text(content)
 			last_text_hash = _hash_text(content)
 			paragraph_original_hashes = {}
@@ -85,10 +85,10 @@ func _on_navigate_to_line(file_path: String, line_number: int):
 		paragraph_original_hashes = {}
 		paragraph_current_hashes = {}
 		last_text_hash = ""
-		if FileAccess.file_exists(file_path):
-			var content: String = FileAccess.get_file_as_string(file_path)
+		var content: String = FileUtils.get_file_as_string(file_path)
+		if content != "":
 			last_text_hash = _hash_text(content)
-			last_modified_time = FileAccess.get_modified_time(file_path)
+			last_modified_time = FileUtils.get_modified_time(file_path)
 			set_text(content)
 			var line_count = get_line_count()
 			var target_line = clamp(line_number - 1, 0, line_count - 1)
@@ -112,11 +112,11 @@ func _on_file_selected(path: String):
 	paragraph_original_hashes = {}
 	paragraph_current_hashes = {}
 	last_text_hash = ""
-	if FileAccess.file_exists(path):
-		var content: String = FileAccess.get_file_as_string(path)
+	var content: String = FileUtils.get_file_as_string(path)
+	if content != "":
 		set_text(content)
 		last_text_hash = _hash_text(content)
-		last_modified_time = FileAccess.get_modified_time(path)
+		last_modified_time = FileUtils.get_modified_time(path)
 
 	# Make sure panel is visible
 	visible = true

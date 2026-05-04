@@ -168,13 +168,9 @@ func _show_git_diff(file_path: String):
 	print("Absolute path: ", absolute_path)
 
 	# Get current file content
-	var current_content = ""
-	if FileAccess.file_exists(absolute_path):
-		var file = FileAccess.open(absolute_path, FileAccess.READ)
-		if file:
-			current_content = file.get_as_text()
-			file.close()
-			print("Current content length: ", current_content.length())
+	var current_content := FileUtils.read_file(absolute_path)
+	if current_content != "":
+		print("Current content length: ", current_content.length())
 
 	# Get git version of the file
 	var git_content = GitService.get_file_content_from_git(file_path)

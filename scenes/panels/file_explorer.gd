@@ -125,16 +125,15 @@ func _scan_file_and_emit(file_path: String) -> void:
 	if not _is_text_file(file_path):
 		return
 
-	var file := FileAccess.open(file_path, FileAccess.READ)
-	if file:
-		var content := file.get_as_text()
-		file.close()
+	var content := FileUtils.read_file(file_path)
+	if content == "":
+		return
 
-		# Split into paragraphs (separated by double newlines)
-		var paragraphs := content.split("\n\n")
+	# Split into paragraphs (separated by double newlines)
+	var paragraphs := content.split("\n\n")
 
-		# Emit file_scanned signal with paragraphs and full content for context
-		EventBus.file_scanned.emit(file_path, paragraphs, content)
+	# Emit file_scanned signal with paragraphs and full content for context
+	EventBus.file_scanned.emit(file_path, paragraphs, content)
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()
@@ -219,7 +218,7 @@ func _dir_scan_recursive(dir: DirAccess, path: String, state: Dictionary):
 
 		var full_path = path + file_name
 		var is_dir = dir.current_is_dir()
-		var mod_time = FileAccess.get_modified_time(full_path)
+		var mod_time = FileUtils.get_modified_time(full_path)
 
 		if is_dir:
 			state[full_path] = mod_time
@@ -238,7 +237,7 @@ func _select_first_text_file():
 	if config.load(CONFIG_FILE) == OK:
 		last_file = config.get_value("general", "last_file", "")
 
-	if last_file != "" and FileAccess.file_exists(last_file):
+	if last_file != "" and FileUtils.file_exists(last_file):
 		# Try to find the last opened file in the tree
 		var found = _find_tree_item_by_path(get_root(), last_file)
 		if found != null:

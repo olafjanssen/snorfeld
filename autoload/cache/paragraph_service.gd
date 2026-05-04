@@ -46,7 +46,7 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_conte
 	var cache_path := dir_path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
 
 	# Ensure cache exists for this directory
-	if not DirAccess.dir_exists_absolute(cache_path):
+	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 
 	# Queue tasks for each paragraph
@@ -87,14 +87,14 @@ func _queue_task(cache_path: String, paragraph_hash: String, paragraph: String, 
 func _on_priority_cache_requested(paragraph_hash: String, file_path: String, paragraph: String, file_content: String) -> void:
 	var dir_path := file_path.get_base_dir()
 	var cache_path := dir_path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
-	if not DirAccess.dir_exists_absolute(cache_path):
+	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 	_queue_task(cache_path, paragraph_hash, paragraph, file_content, true)
 
 
 func _on_folder_opened(path: String) -> void:
 	var cache_path := path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
-	if DirAccess.dir_exists_absolute(cache_path):
+	if FileUtils.dir_exists(cache_path):
 		EventBus.cache_cleanup_started.emit()
 		var removed_count := _cleanup_unused_cache_files(cache_path, path)
 		EventBus.cache_cleanup_completed.emit(removed_count)
@@ -105,23 +105,17 @@ func _on_run_all_analyses() -> void:
 	var project_path := ProjectState.get_current_path()
 	if project_path == "":
 		return
-	var text_files := _get_all_text_files(project_path)
+	var text_files := FileUtils.get_all_text_files(project_path)
 	for file_path in text_files:
-		var file := FileAccess.open(file_path, FileAccess.READ)
-		if file:
-			var content := file.get_as_text()
-			file.close()
+		var content := FileUtils.read_file(file_path)
+		if content != "":
 			var paragraphs := content.split("\n\n")
 			queue_paragraphs_for_cache(file_path, paragraphs, content)
 
 
 func _on_file_selected(path: String) -> void:
 	current_file_path = path
-	if FileAccess.file_exists(path):
-		var file := FileAccess.open(path, FileAccess.READ)
-		if file:
-			current_file_content = file.get_as_text()
-			file.close()
+	current_file_content = FileUtils.read_file(path)
 
 
 func _on_run_chapter_analyses() -> void:
@@ -155,40 +149,33 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 	var structure_result = await AnalysisService.analyze_structure(paragraph, context_before, context_after, file_content)
 
 	# Write cache file with original, grouped analysis results
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file:
-		var data := {
-			"paragraph_hash": _hash_paragraph_md5(paragraph),
-			"source": "",
-			"original_text": paragraph,
-			"analyses": {
-				"grammar": {
-					"corrected": grammar_result.get("corrected", paragraph),
-					"explanation": grammar_result.get("explanation", "")
-				},
-				"style": {
-					"enhanced": style_result.get("enhanced", paragraph),
-					"explanation": style_result.get("explanation", "")
-				},
-				"structure": {
-					"suggestion": structure_result.get("suggestion", ""),
-					"explanation": structure_result.get("explanation", "")
-				}
+	var data := {
+		"paragraph_hash": _hash_paragraph_md5(paragraph),
+		"source": "",
+		"original_text": paragraph,
+		"analyses": {
+			"grammar": {
+				"corrected": grammar_result.get("corrected", paragraph),
+				"explanation": grammar_result.get("explanation", "")
 			},
-			"llm_model": grammar_result.get("model", "unknown"),
-			"cached_at": Time.get_unix_time_from_system()
-		}
-		var json_str := JSON.stringify(data)
-		file.store_string(json_str)
-		file.close()
+			"style": {
+				"enhanced": style_result.get("enhanced", paragraph),
+				"explanation": style_result.get("explanation", "")
+			},
+			"structure": {
+				"suggestion": structure_result.get("suggestion", ""),
+				"explanation": structure_result.get("explanation", "")
+			}
+		},
+		"llm_model": grammar_result.get("model", "unknown"),
+		"cached_at": Time.get_unix_time_from_system()
+	}
+	FileUtils.write_file(path, JsonUtils.stringify_json(data))
 
 
 # Check if file exists
 func _file_exists(path: String) -> bool:
-	var dir := DirAccess.open(path.get_base_dir())
-	if dir:
-		return dir.file_exists(path.get_file())
-	return false
+	return FileUtils.file_exists(path)
 
 
 # Creates an MD5 hash from a paragraph string
@@ -210,14 +197,9 @@ func get_paragraph_cache(paragraph_hash: String, file_path: String) -> Dictionar
 	if not _file_exists(cache_file_path):
 		return {}
 
-	var file := FileAccess.open(cache_file_path, FileAccess.READ)
-	if file:
-		var content := file.get_as_text()
-		file.close()
-		var json := JSON.new()
-		var parse_result := json.parse(content)
-		if parse_result == OK:
-			return json.get_data()
+	var content := FileUtils.read_file(cache_file_path)
+	if content != "":
+		return JsonUtils.parse_json(content)
 	return {}
 
 
@@ -228,20 +210,17 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 		return 0
 
 	var removed_count := 0
-	var project_files := _get_all_text_files(project_path)
+	var project_files := FileUtils.get_all_text_files(project_path)
 
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".json"):
 			var cache_file_path := cache_path.path_join(file_name)
-			var file := FileAccess.open(cache_file_path, FileAccess.READ)
-			if file:
-				var cache_content := file.get_as_text()
-				file.close()
-				var json := JSON.new()
-				if json.parse(cache_content) == OK:
-					var data = json.get_data()
+			var cache_content := FileUtils.read_file(cache_file_path)
+			if cache_content != "":
+				var data := JsonUtils.parse_json(cache_content)
+				if not data.is_empty():
 					var source_file = data.get("source", "")
 					# If no source recorded or source file doesn't exist, check if paragraph exists in any project file
 					if source_file == "" or not _file_exists(source_file):

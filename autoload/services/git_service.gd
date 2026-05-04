@@ -89,7 +89,7 @@ func is_git_repo(path: String) -> bool:
 func find_git_root(path: String) -> String:
 	var current = path.get_base_dir()
 	while current != "":
-		if DirAccess.dir_exists_absolute(current.path_join(".git")):
+		if FileUtils.dir_exists(current.path_join(".git")):
 			return current
 		current = current.get_base_dir()
 		if current in ["/", ":/", ":\\"]:
@@ -404,16 +404,13 @@ func add_to_gitignore(pattern: String) -> bool:
 		return false
 
 	var gitignore_path = git_root.path_join(".gitignore")
-	var content = FileAccess.get_file_as_string(gitignore_path) if FileAccess.file_exists(gitignore_path) else ""
+	var content := FileUtils.read_file(gitignore_path)
 
 	if pattern in content:
 		return true
 
 	content += "\n%s\n" % pattern
-	var file = FileAccess.open(gitignore_path, FileAccess.WRITE)
-	if file:
-		file.store_string(content)
-		file.close()
+	if FileUtils.write_file(gitignore_path, content):
 		return true
 	return false
 

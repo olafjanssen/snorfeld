@@ -91,6 +91,9 @@ func _rebuild_outline_tree():
 				heading_item.set_icon(0, load("res://icons/h3.svg") if ResourceLoader.exists("res://icons/h3.svg") else null)
 
 func _find_all_text_files(base_path: String) -> Array:
+	# Use FileUtils which has a similar function but for .txt/.md/.markdown only
+	# Our whitelist is broader, so we keep the custom implementation for now
+	# TODO: Consider extending FileUtils to support custom extensions
 	var text_files: Array = []
 	var dir = DirAccess.open(base_path)
 	if dir == null:
@@ -132,12 +135,12 @@ func _get_headings_for_file(file_path: String) -> Array:
 
 func _parse_markdown_headings(file_path: String) -> Array:
 	var headings: Array = []
-	var file = FileAccess.open(file_path, FileAccess.READ)
-	if file == null:
+	var content := FileUtils.read_file(file_path)
+	if content == "":
 		return headings
+	var lines := content.split("\n")
 	var line_num = 0
-	while not file.eof_reached():
-		var line = file.get_line()
+	for line in lines:
 		line_num += 1
 		var stripped = line.strip_edges()
 		if stripped.begins_with("#"):
@@ -148,7 +151,6 @@ func _parse_markdown_headings(file_path: String) -> Array:
 				var text = stripped.substr(level).strip_edges()
 				if text != "":
 					headings.append({"level": level, "text": text, "line": line_num, "file": file_path})
-	file.close()
 	return headings
 
 func _on_item_selected():

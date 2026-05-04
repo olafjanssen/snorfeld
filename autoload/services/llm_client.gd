@@ -63,10 +63,9 @@ func generate_json(model: String, prompt: String, options: Dictionary = {}) -> D
 			response_text = json_data["thinking"]
 
 		if response_text != "":
-			var json = JSON.new()
-			var parse_err: int = json.parse(response_text)
-			if parse_err == OK:
-				response["parsed_json"] = json.get_data()
+			var parsed_data := JsonUtils.parse_json(response_text)
+			if not parsed_data.is_empty():
+				response["parsed_json"] = parsed_data
 				response["is_json"] = true
 			else:
 				response["is_json"] = false
@@ -138,10 +137,10 @@ func _process_next_queued_request() -> void:
 	current_completion = request["completion"]
 
 	print("[LLMClient] Making request to: %s" % request["endpoint"])
-	print("[LLMClient] Request body: %s" % JSON.stringify(request["request_body"]))
+	print("[LLMClient] Request body: %s" % JsonUtils.stringify_json(request["request_body"]))
 
 	var headers: PackedStringArray = ["Content-Type: application/json"]
-	var body_string: String = JSON.stringify(request["request_body"])
+	var body_string: String = JsonUtils.stringify_json(request["request_body"])
 	var request_err: int
 
 	# For GET requests (check endpoint), use GET method
@@ -196,14 +195,12 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 
 	var response_dict: Dictionary
 	if result == OK and response_code == 200:
-		var json = JSON.new()
-		var parse_err: int = json.parse(response_body_str)
-		if parse_err == OK:
-			var json_data: Dictionary = json.get_data()
+		var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
+		if not json_data.is_empty():
 			response_dict = {"json_data": json_data, "raw_response": response_body_str}
 		else:
-			print("[LLMClient] JSON parse error: %d" % parse_err)
-			response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str, "parse_error": parse_err}
+			print("[LLMClient] JSON parse error")
+			response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
 	elif response_code == 0:
 		print("[LLMClient] Connection failed")
 		response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}

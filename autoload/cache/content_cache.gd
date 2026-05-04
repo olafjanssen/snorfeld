@@ -59,30 +59,11 @@ func _create_cache_directory(base_path: String) -> bool:
 
 # Check if file exists
 func _file_exists(path: String) -> bool:
-	return FileAccess.file_exists(path)
+	return FileUtils.file_exists(path)
 
 # Get all text files in a directory recursively
 func _get_all_text_files(base_path: String) -> Array:
-	var text_files := []
-	var dir = DirAccess.open(base_path)
-	if not dir:
-		return text_files
-
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		var full_path = base_path.path_join(file_name)
-		if dir.current_is_dir():
-			# Skip .snorfeld cache directory
-			if file_name != ".snorfeld":
-				text_files += _get_all_text_files(full_path)
-		else:
-			# Only include text files (skip binary, hidden, etc.)
-			if file_name.ends_with(".txt") or file_name.ends_with(".md") or file_name.ends_with(".markdown"):
-				text_files.append(full_path)
-		file_name = dir.get_next()
-	dir.list_dir_end()
-	return text_files
+	return FileUtils.get_all_text_files(base_path)
 
 # Cleanup unused cache files (files whose source no longer exists)
 func _cleanup_unused_cache_files(cache_path: String, _source_dir: String) -> int:

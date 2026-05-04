@@ -74,10 +74,8 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 
 		# Queue this single paragraph for immediate processing
 		# We need to get the full file content to pass as context
-		var file := FileAccess.open(file_path, FileAccess.READ)
-		if file:
-			var file_content := file.get_as_text()
-			file.close()
+		var file_content := FileUtils.read_file(file_path)
+		if file_content != "":
 			# Queue with priority - insert at front of queue
 			var paragraph_hash := ParagraphService._hash_paragraph_md5(paragraph_text)
 			EventBus.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)

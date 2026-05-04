@@ -18,6 +18,6 @@ func _ready():
 	EventBus.file_selected.connect(_on_file_selected)
 
 func _on_file_selected(path: String):
-	if FileAccess.file_exists(path):
-		var content: String = FileAccess.get_file_as_string(path)
+	var content := FileUtils.read_file(path)
+	if content != "":
 		set_text(content)
