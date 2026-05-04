@@ -1,5 +1,5 @@
 extends Node
-## GitManager - Core git operations using OS.execute()
+## GitService - Core git operations using OS.execute()
 ## Uses 'which' (Unix) or 'where' (Windows) to locate Git executable.
 
 # --- State ---
@@ -14,13 +14,13 @@ const CONFIG_FILE: String = "user://git_config.cfg"
 ### Initialization
 
 func _ready():
-	print("GitManager: _ready() called")
+	print("[GitService] _ready() called")
 	_load_git_config()
-	print("GitManager: git_executable after config load: ", git_executable)
+	print("[GitService] git_executable after config load: ", git_executable)
 	if git_executable == "":
-		print("GitManager: git_executable is empty, detecting...")
+		print("[GitService] git_executable is empty, detecting...")
 		_detect_git_executable()
-		print("GitManager: git_executable after detection: ", git_executable)
+		print("[GitService] git_executable after detection: ", git_executable)
 
 	# Connect to folder opened signal
 	EventBus.folder_opened.connect(_on_folder_opened)
@@ -30,16 +30,16 @@ func _ready():
 ### Configuration
 
 func _load_git_config() -> void:
-	print("GitManager: Loading git config from ", CONFIG_FILE)
+	print("[GitService] Loading git config from ", CONFIG_FILE)
 	var config = ConfigFile.new()
 	if config.load(CONFIG_FILE) == OK:
 		git_executable = config.get_value("git", "executable", "")
-		print("GitManager: Loaded git_executable: ", git_executable)
+		print("[GitService] Loaded git_executable: ", git_executable)
 	else:
-		print("GitManager: Config file not found or error loading")
+		print("[GitService] Config file not found or error loading")
 
 func _save_git_config() -> void:
-	print("GitManager: Saving git config, executable: ", git_executable)
+	print("[GitService] Saving git config, executable: ", git_executable)
 	var config = ConfigFile.new()
 	config.set_value("git", "executable", git_executable)
 	config.save(CONFIG_FILE)
@@ -49,33 +49,34 @@ func set_git_executable(path: String) -> void:
 		git_executable = path
 		_save_git_config()
 	else:
+		print("[GitService] Invalid git executable path: ", path)
 		git_executable = ""
 		_detect_git_executable()
 
 ### Git Executable Detection
 
 func _verify_git_executable(path: String) -> bool:
-	print("GitManager: Verifying git executable at: ", path)
+	print("[GitService] Verifying git executable at: ", path)
 	var output = []
 	var result = OS.execute(path, ['--version'], output)
-	print("GitManager: Verify result: ", result, " output: ", output)
+	print("[GitService] Verify result: ", result, " output: ", output)
 	return result == 0
 
 func _detect_git_executable() -> bool:
-	print("GitManager: Detecting git executable")
+	print("[GitService] Detecting git executable")
 	var output = []
 	var result: int
 	if OS.get_name() == "Windows":
 		result = OS.execute('where', ['git'], output)
 	else:
 		result = OS.execute('which', ['git'], output)
-	print("GitManager: Command result: ", result, " output: ", output)
+	print("[GitService] Command result: ", result, " output: ", output)
 	if result == 0 and output.size() > 0:
 		git_executable = output[0].strip_edges()
-		print("GitManager: Found git at: ", git_executable)
+		print("[GitService] Found git at: ", git_executable)
 		_save_git_config()
 		return true
-	print("GitManager: Git not found")
+	print("[GitService] Git not found")
 	git_executable = ""
 	return false
 
@@ -101,9 +102,9 @@ func get_git_root() -> String:
 ### Git Command Execution
 
 func _execute_git_command(args: Array, cwd: String = "") -> Array:
-	print("GitManager: Executing git command: ", args, " in ", cwd)
+	print("[GitService] Executing git command: ", args, " in ", cwd)
 	if git_executable == "":
-		print("GitManager: ERROR - Git executable not configured")
+		print("[GitService] ERROR - Git executable not configured")
 		return ["", "Git executable not configured"]
 
 	var full_args = args.duplicate()
@@ -113,7 +114,7 @@ func _execute_git_command(args: Array, cwd: String = "") -> Array:
 
 	var output = []
 	var exit_code = OS.execute(git_executable, full_args, output)
-	print("GitManager: Command exit code: ", exit_code, " output: ", output)
+	print("[GitService] Command exit code: ", exit_code, " output: ", output)
 
 	if exit_code != 0 and output.size() == 0:
 		return ["", "Command failed with exit code: %d" % exit_code]
@@ -153,21 +154,21 @@ func init_git_repo(path: String) -> bool:
 	return true
 
 func get_status(base_path: String = "") -> Dictionary:
-	print("GitManager: get_status() called with base_path: ", base_path)
+	print("[GitService] get_status() called with base_path: ", base_path)
 	if git_executable == "":
-		print("GitManager: ERROR - Git not found")
+		print("[GitService] ERROR - Git not found")
 		return {"error": "Git not found"}
 
 	var repo_path = base_path if base_path else git_root
-	print("GitManager: repo_path: ", repo_path)
+	print("[GitService] repo_path: ", repo_path)
 	if not repo_path:
-		print("GitManager: ERROR - No git repository path")
+		print("[GitService] ERROR - No git repository path")
 		return {"error": "No git repository"}
 
 	var output = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
-	print("GitManager: status command output: ", output)
+	print("[GitService] status command output: ", output)
 	if output[0] == "":
-		print("GitManager: ERROR - ", output[1])
+		print("[GitService] ERROR - ", output[1])
 		return {"error": output[1]}
 
 	var status = {
@@ -232,18 +233,18 @@ func get_file_status(file_path: String) -> String:
 	return "clean"
 
 func refresh_status(base_path: String = "") -> void:
-	print("GitManager: refresh_status() called with base_path: ", base_path)
+	print("[GitService] refresh_status() called with base_path: ", base_path)
 
 	var repo_path = base_path if base_path else git_root
-	print("GitManager: refresh_status() - repo_path: ", repo_path)
+	print("[GitService] refresh_status() - repo_path: ", repo_path)
 	if not repo_path:
-		print("GitManager: refresh_status() - no repo_path, returning")
+		print("[GitService] refresh_status() - no repo_path, returning")
 		return
 
 	var status = get_status(repo_path)
-	print("GitManager: refresh_status() - status result: ", status)
+	print("[GitService] refresh_status() - status result: ", status)
 	if not status.has("error"):
-		print("GitManager: Emitting git_status_updated with: ", status)
+		print("[GitService] Emitting git_status_updated with: ", status)
 		EventBus.git_status_updated.emit(status)
 		file_status_cache.clear()
 		for file_info in status["files"]:
@@ -444,18 +445,18 @@ func get_absolute_path(relative_path: String) -> String:
 ### Event Handlers
 
 func _on_folder_opened(path: String):
-	print("GitManager: _on_folder_opened: ", path)
+	print("[GitService] _on_folder_opened: ", path)
 	git_root = find_git_root(path)
-	print("GitManager: git_root found: ", git_root)
+	print("[GitService] git_root found: ", git_root)
 	is_git_repo_cached = git_root != ""
 	EventBus.git_repo_changed.emit(is_git_repo_cached)
 	if is_git_repo_cached:
-		print("GitManager: Git repo detected, ensuring .snorfeld in .gitignore")
+		print("[GitService] Git repo detected, ensuring .snorfeld in .gitignore")
 		ensure_snorfeld_in_gitignore()
-		print("GitManager: Git repo detected, refreshing status")
+		print("[GitService] Git repo detected, refreshing status")
 		refresh_status(path)
 	else:
-		print("GitManager: Not a git repository")
+		print("[GitService] Not a git repository")
 
 func _on_file_saved(path: String):
 	if is_git_repo_cached:

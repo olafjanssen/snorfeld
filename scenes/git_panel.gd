@@ -35,7 +35,7 @@ var selected_files: Array = []
 var refresh_timer: Timer
 
 func _ready():
-	print("GitPanel: _ready() called, GitManager:", GitManager)
+	print("GitPanel: _ready() called, GitService:", GitService)
 	# Connect signals
 	file_list.item_selected.connect(_on_file_selected)
 	file_list.item_activated.connect(_on_file_activated)
@@ -46,9 +46,9 @@ func _ready():
 	pull_button.pressed.connect(_on_pull_pressed)
 	fetch_button.pressed.connect(_on_fetch_pressed)
 
-	# Connect GitManager signals
-	if GitManager != null:
-		print("GitPanel: Connecting GitManager signals")
+	# Connect GitService signals
+	if GitService != null:
+		print("GitPanel: Connecting GitService signals")
 		EventBus.git_repo_changed.connect(_on_git_repo_changed)
 		EventBus.git_status_updated.connect(_on_git_status_updated)
 
@@ -63,12 +63,12 @@ func _ready():
 	refresh_timer.start()
 
 	# Initial update
-	if GitManager != null:
-		_on_git_repo_changed(GitManager.is_git_repo_cached)
+	if GitService != null:
+		_on_git_repo_changed(GitService.is_git_repo_cached)
 
 func _on_git_repo_changed(is_git_repo: bool):
 	print("GitPanel: _on_git_repo_changed:", is_git_repo)
-	if GitManager == null or not is_inside_tree():
+	if GitService == null or not is_inside_tree():
 		return
 	if is_git_repo:
 		_update_file_list()
@@ -79,7 +79,7 @@ func _on_git_repo_changed(is_git_repo: bool):
 
 func _on_git_status_updated(status: Dictionary):
 	print("GitPanel: git_status_updated received, files:", status.get("files", []).size(), " is_inside_tree:", is_inside_tree())
-	if GitManager == null or not is_inside_tree():
+	if GitService == null or not is_inside_tree():
 		print("GitPanel: Skipping update - not in tree")
 		return
 
@@ -87,14 +87,14 @@ func _on_git_status_updated(status: Dictionary):
 	_update_file_list()
 
 func _update_file_list():
-	if GitManager == null or not is_inside_tree():
+	if GitService == null or not is_inside_tree():
 		return
 	file_list.clear()
 
 	# Create a root item (will be hidden due to hide_root = true)
 	var root = file_list.create_item()
 
-	var status = GitManager.get_status()
+	var status = GitService.get_status()
 	if status.has("error"):
 		return
 
@@ -148,9 +148,9 @@ func _on_stage_button_clicked(item: TreeItem, _column: int, _button_index: int, 
 
 		# Stage/unstage the file
 		if is_staged:
-			GitManager.stage_file(file_path)
+			GitService.stage_file(file_path)
 		else:
-			GitManager.unstage_file(file_path)
+			GitService.unstage_file(file_path)
 
 func _on_file_activated():
 	# Double-click to show diff
@@ -164,7 +164,7 @@ func _on_file_activated():
 func _show_git_diff(file_path: String):
 	print("Showing diff for: ", file_path)
 	# Get absolute path
-	var absolute_path = GitManager.get_absolute_path(file_path)
+	var absolute_path = GitService.get_absolute_path(file_path)
 	print("Absolute path: ", absolute_path)
 
 	# Get current file content
@@ -177,7 +177,7 @@ func _show_git_diff(file_path: String):
 			print("Current content length: ", current_content.length())
 
 	# Get git version of the file
-	var git_content = GitManager.get_file_content_from_git(file_path)
+	var git_content = GitService.get_file_content_from_git(file_path)
 	print("Git content length: ", git_content.length())
 
 	if git_content != "" and current_content != "":
@@ -196,7 +196,7 @@ func _on_commit_pressed():
 		_show_error("Please enter a commit message")
 		return
 
-	var success = GitManager.commit(message)
+	var success = GitService.commit(message)
 	if success:
 		commit_message.text = ""
 		_update_file_list()
@@ -207,18 +207,18 @@ func _on_refresh_timeout():
 
 func _on_stage_all_pressed():
 	# Simply call stage_all - the status update will refresh the tree via git_status_updated signal
-	GitManager.stage_all()
+	GitService.stage_all()
 
 func _on_push_pressed():
-	GitManager.push()
+	GitService.push()
 	_update_file_list()
 
 func _on_pull_pressed():
-	GitManager.pull()
+	GitService.pull()
 	_update_file_list()
 
 func _on_fetch_pressed():
-	GitManager.fetch()
+	GitService.fetch()
 	_update_file_list()
 
 func _set_buttons_enabled(enabled: bool):

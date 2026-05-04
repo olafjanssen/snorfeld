@@ -292,8 +292,8 @@ func _update_git_status_icon(item: TreeItem, file_path: String) -> void:
 
 	# Get git status for this file
 	var status = "not_git"
-	if GitManager != null:
-		status = GitManager.get_file_status(file_path)
+	if GitService != null:
+		status = GitService.get_file_status(file_path)
 	file_git_status[file_path] = status
 
 	# Set icon based on status
@@ -320,7 +320,7 @@ func _on_git_file_status_changed(file_path: String, status: String):
 			item.set_icon(1, null)
 
 func _on_git_repo_changed(is_git_repo: bool):
-	if GitManager == null or not is_inside_tree():
+	if GitService == null or not is_inside_tree():
 		return
 	# Clear all git status icons
 	file_git_status.clear()
@@ -336,8 +336,8 @@ func _on_git_repo_changed(is_git_repo: bool):
 func _refresh_git_icons():
 	_clear_git_icons(get_root())
 	# Re-query status for all tracked files
-	if GitManager.get_git_root() != "":
-		GitManager.refresh_status()
+	if GitService.get_git_root() != "":
+		GitService.refresh_status()
 
 func _clear_git_icons(parent: TreeItem):
 	if parent == null:

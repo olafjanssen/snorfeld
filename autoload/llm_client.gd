@@ -1,10 +1,10 @@
 extends Node
-## Utility for calling the Ollama Generate API endpoint.
+## Utility for calling LLM APIs (Ollama, Local, etc.)
 ##
 ## Usage (must be called from a Node context with await):
-##   var response = await OllamaClient.generate("llama3", "Why is the sky blue?")
-##   var json_response = await OllamaClient.generate_json("llama3", "Tell me a joke")
-##   var running = await OllamaClient.is_ollama_running()
+##   var response = await LLMClient.generate("llama3", "Why is the sky blue?")
+##   var json_response = await LLMClient.generate_json("llama3", "Tell me a joke")
+##   var running = await LLMClient.is_llm_running()
 
 ## HTTP request node
 var http_request: HTTPRequest
@@ -65,7 +65,7 @@ func generate_json(model: String, prompt: String, options: Dictionary = {}) -> D
 
 	return response
 
-## Build the request body dictionary for the Ollama API
+## Build the request body dictionary for the LLM API
 func _build_request_body(model: String, prompt: String, options: Dictionary) -> Dictionary:
 	var body: Dictionary = {
 		"model": model,
@@ -86,10 +86,10 @@ func _build_request_body(model: String, prompt: String, options: Dictionary) -> 
 
 	return body
 
-## Make the HTTP request to the Ollama API
+## Make the HTTP request to the LLM API
 func _make_api_request(endpoint: String, request_body: Dictionary, request_type: String) -> Dictionary:
-	print("[OllamaClient] Making request to: %s" % endpoint)
-	print("[OllamaClient] Request body: %s" % JSON.stringify(request_body))
+	print("[LLMClient] Making request to: %s" % endpoint)
+	print("[LLMClient] Request body: %s" % JSON.stringify(request_body))
 	current_request_type = request_type
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var body_string: String = JSON.stringify(request_body)
@@ -97,25 +97,25 @@ func _make_api_request(endpoint: String, request_body: Dictionary, request_type:
 	var request_err: int = http_request.request(endpoint, headers, HTTPClient.METHOD_POST, body_string)
 
 	if request_err != OK:
-		print("[OllamaClient] ERROR: Failed to send request, error code: %d" % request_err)
+		print("[LLMClient] ERROR: Failed to send request, error code: %d" % request_err)
 		return {"error": "Failed to send request", "error_code": request_err}
 
-	print("[OllamaClient] Request sent, waiting for response...")
+	print("[LLMClient] Request sent, waiting for response...")
 	var response: Dictionary = await generate_complete
-	print("[OllamaClient] Received response")
+	print("[LLMClient] Received response")
 	return response
 
 ## Generic HTTP request completion callback
 func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	print("[OllamaClient] HTTP callback: result=%d, response_code=%d" % [result, response_code])
+	print("[LLMClient] HTTP callback: result=%d, response_code=%d" % [result, response_code])
 	if current_request_type == "check":
-		print("[OllamaClient] Check request completed with code: %d" % response_code)
+		print("[LLMClient] Check request completed with code: %d" % response_code)
 		check_complete.emit(response_code == 200)
 		return
 
 	# Otherwise it's a generate request
 	var response_body_str: String = body.get_string_from_utf8()
-	print("[OllamaClient] Response body received")
+	print("[LLMClient] Response body received")
 
 	if result == OK and response_code == 200:
 		var json = JSON.new()
@@ -125,31 +125,31 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 			generate_complete.emit({"json_data": json_data, "raw_response": response_body_str})
 			return
 		else:
-			print("[OllamaClient] JSON parse error: %d" % parse_err)
+			print("[LLMClient] JSON parse error: %d" % parse_err)
 			generate_complete.emit({"error": "Failed to parse JSON response", "raw_response": response_body_str, "parse_error": parse_err})
 			return
 	elif response_code == 0:
-		print("[OllamaClient] Connection failed")
-		generate_complete.emit({"error": "Connection failed - is Ollama running?", "error_code": response_code})
+		print("[LLMClient] Connection failed")
+		generate_complete.emit({"error": "Connection failed - is LLM server running?", "error_code": response_code})
 	else:
-		print("[OllamaClient] API request failed with code: %d" % response_code)
+		print("[LLMClient] API request failed with code: %d" % response_code)
 		generate_complete.emit({"error": "API request failed", "error_code": response_code, "response": response_body_str})
 
-## Check if Ollama is running and accessible
-func is_ollama_running() -> bool:
-	print("[OllamaClient] Checking if Ollama is running...")
+## Check if LLM server is running and accessible
+func is_llm_running() -> bool:
+	print("[LLMClient] Checking if LLM server is running...")
 	current_request_type = "check"
 	var headers: PackedStringArray = []
 
 	var request_err: int = http_request.request(AppConfig.get_llm_check_endpoint(), headers, HTTPClient.METHOD_GET, "")
 
 	if request_err != OK:
-		print("[OllamaClient] ERROR: Failed to send check request, error code: %d" % request_err)
+		print("[LLMClient] ERROR: Failed to send check request, error code: %d" % request_err)
 		current_request_type = ""
 		return false
 
-	print("[OllamaClient] Check request sent to %s, waiting for response..." % AppConfig.get_llm_check_endpoint())
+	print("[LLMClient] Check request sent to %s, waiting for response..." % AppConfig.get_llm_check_endpoint())
 	var running: bool = await check_complete
-	print("[OllamaClient] Ollama running: %s" % running)
+	print("[LLMClient] LLM server running: %s" % running)
 	current_request_type = ""
 	return running

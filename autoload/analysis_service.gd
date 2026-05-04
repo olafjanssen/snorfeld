@@ -1,9 +1,9 @@
 extends Node
-# Text analyzer for generating corrections and explanations using LLM
+# Analysis service for generating corrections and explanations using LLM
 
 # Analyzes text for grammar/spelling corrections
 func analyze_grammar(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
-	print("[TextAnalyzer] Generating grammar LLM response for paragraph...")
+	print("[AnalysisService] Generating grammar LLM response for paragraph...")
 	# Build context from surrounding text (trim to reasonable size)
 	var context := ""
 	if context_before.length() > 0 or context_after.length() > 0:
@@ -12,7 +12,7 @@ func analyze_grammar(paragraph: String, context_before: String = "", context_aft
 		var after_words := _get_words(context_after, 100)
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call Ollama to get spelling/grammar corrections with explanations
+	# Call LLM to get spelling/grammar corrections with explanations
 	var prompt := """
 You are a helpful writing assistant. Analyze the following text and provide:
 1. A corrected version with improved spelling and grammar (keep the original meaning), be aware the text may contain dialogue between \"...\" and MarkDown markup.
@@ -32,14 +32,14 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 """ % [context, paragraph]
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var corrected_text: String = paragraph
 	var explanation: String = ""
 	var model: String = AppConfig.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
-		# The OllamaClient.generate_json already parsed the JSON for us
+		# The LLMClient.generate_json already parsed the JSON for us
 		var parsed = llm_response["parsed_json"]
 		if parsed is Dictionary:
 			if parsed.has("corrected") and parsed["corrected"] is String:
@@ -47,11 +47,11 @@ Respond with a JSON object containing 'corrected' and 'explanation' fields:
 			if parsed.has("explanation") and parsed["explanation"] is String:
 				explanation = parsed["explanation"]
 		else:
-			print("[TextAnalyzer] WARNING: Grammar LLM returned non-Dictionary JSON: %s" % parsed)
+			print("[AnalysisService] WARNING: Grammar LLM returned non-Dictionary JSON: %s" % parsed)
 	else:
-		print("[TextAnalyzer] WARNING: Grammar LLM response error or not JSON")
+		print("[AnalysisService] WARNING: Grammar LLM response error or not JSON")
 		if llm_response.has("error"):
-			print("[TextAnalyzer] Grammar LLM Error: %s" % llm_response["error"])
+			print("[AnalysisService] Grammar LLM Error: %s" % llm_response["error"])
 
 	return {
 		"corrected": corrected_text,
@@ -70,7 +70,7 @@ func analyze_style(paragraph: String, context_before: String = "", context_after
 		var after_words := _get_words(context_after, 100)
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call Ollama to get stylistic improvements with explanations
+	# Call LLM to get stylistic improvements with explanations
 	var prompt := """
 You are a helpful writing assistant. Analyze the following text and provide:
 1. An enhanced version with improved style, flow, and readability (keep the original meaning)
@@ -90,14 +90,14 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 """ % [context, paragraph]
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var enhanced_text: String = paragraph
 	var explanation: String = ""
 	var model: String = AppConfig.get_llm_model()
 
 	if llm_response.get("parsed_json", null) != null:
-		# The OllamaClient.generate_json already parsed the JSON for us
+		# The LLMClient.generate_json already parsed the JSON for us
 		var parsed = llm_response["parsed_json"]
 		if parsed is Dictionary:
 			if parsed.has("enhanced") and parsed["enhanced"] is String:
@@ -105,11 +105,11 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 			if parsed.has("explanation") and parsed["explanation"] is String:
 				explanation = parsed["explanation"]
 		else:
-			print("[TextAnalyzer] WARNING: Style LLM returned non-Dictionary JSON: %s" % parsed)
+			print("[AnalysisService] WARNING: Style LLM returned non-Dictionary JSON: %s" % parsed)
 	else:
-		print("[TextAnalyzer] WARNING: Style LLM response error or not JSON")
+		print("[AnalysisService] WARNING: Style LLM response error or not JSON")
 		if llm_response.has("error"):
-			print("[TextAnalyzer] Style LLM Error: %s" % llm_response["error"])
+			print("[AnalysisService] Style LLM Error: %s" % llm_response["error"])
 
 	return {
 		"enhanced": enhanced_text,
@@ -142,7 +142,7 @@ func analyze_structure(paragraph: String, context_before: String = "", context_a
 		var after_words := _get_words(context_after, 200)
 		context = "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call Ollama to get structural suggestions
+	# Call LLM to get structural suggestions
 	var prompt := """
 You are a helpful writing assistant specializing in story structure. Analyze the following text and provide:
 1. A rewrite for this paragraph to improve plot, pacing, or structural flow
@@ -162,7 +162,7 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 """ % [context, paragraph]
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
-	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var suggestion: String = ""
 	var explanation: String = ""
@@ -176,11 +176,11 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 			if parsed.has("explanation") and parsed["explanation"] is String:
 				explanation = parsed["explanation"]
 		else:
-			print("[TextAnalyzer] WARNING: Structure LLM returned non-Dictionary JSON: %s" % parsed)
+			print("[AnalysisService] WARNING: Structure LLM returned non-Dictionary JSON: %s" % parsed)
 	else:
-		print("[TextAnalyzer] WARNING: Structure LLM response error or not JSON")
+		print("[AnalysisService] WARNING: Structure LLM response error or not JSON")
 		if llm_response.has("error"):
-			print("[TextAnalyzer] Structure LLM Error: %s" % llm_response["error"])
+			print("[AnalysisService] Structure LLM Error: %s" % llm_response["error"])
 
 	return {
 		"suggestion": suggestion,

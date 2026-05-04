@@ -381,7 +381,7 @@ Respond with a JSON object:
 		"max_tokens": AppConfig.get_llm_max_tokens()
 	}
 
-	var llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
@@ -396,7 +396,7 @@ Respond with a JSON object:
 			else:
 				print("[CharacterCache] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
 
-			llm_response = await OllamaClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+			llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 			if llm_response.get("parsed_json", null) != null:
 				return llm_response["parsed_json"]
 

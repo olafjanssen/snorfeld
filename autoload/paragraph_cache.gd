@@ -166,12 +166,12 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 			var after_end = min(file_content.length(), after_start + 1000)
 			context_after = file_content.substr(after_start, after_end - after_start)
 
-	# Use TextAnalyzer to get grammar corrections with context
-	var grammar_result = await TextAnalyzer.analyze_grammar(paragraph, context_before, context_after)
-	# Use TextAnalyzer to get stylistic improvements with context
-	var style_result = await TextAnalyzer.analyze_style(paragraph, context_before, context_after)
-	# Use TextAnalyzer to get structural suggestions with full chapter context
-	var structure_result = await TextAnalyzer.analyze_structure(paragraph, context_before, context_after, file_content)
+	# Use AnalysisService to get grammar corrections with context
+	var grammar_result = await AnalysisService.analyze_grammar(paragraph, context_before, context_after)
+	# Use AnalysisService to get stylistic improvements with context
+	var style_result = await AnalysisService.analyze_style(paragraph, context_before, context_after)
+	# Use AnalysisService to get structural suggestions with full chapter context
+	var structure_result = await AnalysisService.analyze_structure(paragraph, context_before, context_after, file_content)
 
 	# Write cache file with original, grouped analysis results
 	var file := FileAccess.open(path, FileAccess.WRITE)
