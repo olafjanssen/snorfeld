@@ -173,11 +173,6 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 	FileUtils.write_file(path, JsonUtils.stringify_json(data))
 
 
-# Check if file exists
-func _file_exists(path: String) -> bool:
-	return FileUtils.file_exists(path)
-
-
 # Creates an MD5 hash from a paragraph string
 func _hash_paragraph(paragraph: String) -> String:
 	var hash_ctx := HashingContext.new()
@@ -242,35 +237,6 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 	dir.list_dir_end()
 
 	return removed_count
-
-
-func _get_all_text_files(project_path: String) -> Array:
-	var text_files := []
-	var dir := DirAccess.open(project_path)
-	if not dir:
-		return text_files
-
-	_get_text_files_recursive(dir, project_path, text_files)
-	return text_files
-
-
-func _get_text_files_recursive(dir: DirAccess, base_path: String, text_files: Array) -> void:
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		var full_path := base_path.path_join(file_name)
-		if dir.current_is_dir():
-			# Skip .snorfeld cache directory
-			if file_name != ".snorfeld":
-				var sub_dir := DirAccess.open(full_path)
-				if sub_dir:
-					_get_text_files_recursive(sub_dir, full_path, text_files)
-		else:
-			# Check if it's a text file (not binary)
-			if file_name.ends_with(".txt") or file_name.ends_with(".md") or file_name.ends_with(".markdown"):
-				text_files.append(full_path)
-		file_name = dir.get_next()
-	dir.list_dir_end()
 
 
 func _is_paragraph_in_project(paragraph_hash: String, project_files: Array) -> bool:

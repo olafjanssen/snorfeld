@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b6mbklwdmt1fk"]
 
-[ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/panels/story_bible.gd" id="1"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="3"]
 [ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="4_isx1l"]

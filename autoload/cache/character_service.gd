@@ -103,7 +103,7 @@ func _on_run_all_character_analyses() -> void:
 	var project_path := ProjectState.get_current_path()
 	if project_path == "":
 		return
-	var text_files: Array = _get_all_text_files(project_path)
+	var text_files: Array = FileUtils.get_all_text_files(project_path)
 	# Sort files alphabetically to process in order
 	text_files.sort()
 	for file_path in text_files:
@@ -176,7 +176,7 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 							character_data["aliases"] = aliases
 
 		# Use MD5 hash of the CANONICAL character name for filename
-		var char_hash: String = _hash_character_name(canonical_name)
+		var char_hash: String = _hash_character(canonical_name)
 		var char_file_path: String = cache_path.path_join("%s.json" % char_hash)
 
 		# Load existing data if file exists
@@ -481,7 +481,7 @@ func _calculate_similarity(str1: String, str2: String) -> int:
 
 
 # Creates an MD5 hash from a character name string
-func _hash_character_name(character_name: String) -> String:
+func _hash_character(character_name: String) -> String:
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
 	hash_ctx.update(character_name.to_utf8_buffer())
@@ -491,10 +491,7 @@ func _hash_character_name(character_name: String) -> String:
 
 # Check if file exists
 func _file_exists(path: String) -> bool:
-	var dir := DirAccess.open(path.get_base_dir())
-	if dir:
-		return dir.file_exists(path.get_file())
-	return false
+	return FileUtils.file_exists(path)
 
 
 # Get the character cache path for the current project
@@ -540,7 +537,7 @@ func get_all_project_characters() -> Array:
 # Get a specific character by name
 func get_character(char_name: String, cache_path: String) -> Dictionary:
 	# Use MD5 hash of character name for filename
-	var char_hash: String = _hash_character_name(char_name)
+	var char_hash: String = _hash_character(char_name)
 	var char_file_path: String = cache_path.path_join("%s.json" % char_hash)
 
 	# First try exact hash match
@@ -574,7 +571,7 @@ func cleanup_unused_character_files(cache_path: String, project_path: String) ->
 		return 0
 
 	var removed_count := 0
-	var project_files: Array = _get_all_text_files(project_path)
+	var project_files: Array = FileUtils.get_all_text_files(project_path)
 
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
@@ -617,31 +614,3 @@ func cleanup_unused_character_files(cache_path: String, project_path: String) ->
 	dir.list_dir_end()
 
 	return removed_count
-
-
-# Helper to get all text files recursively
-func _get_all_text_files(project_path: String) -> Array:
-	var text_files: Array = []
-	var dir := DirAccess.open(project_path)
-	if not dir:
-		return text_files
-
-	_get_text_files_recursive(dir, project_path, text_files)
-	return text_files
-
-
-func _get_text_files_recursive(dir: DirAccess, base_path: String, text_files: Array) -> void:
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		var full_path := base_path.path_join(file_name)
-		if dir.current_is_dir():
-			if file_name != ".snorfeld":
-				var sub_dir := DirAccess.open(full_path)
-				if sub_dir:
-					_get_text_files_recursive(sub_dir, full_path, text_files)
-		else:
-			if file_name.ends_with(".txt") or file_name.ends_with(".md") or file_name.ends_with(".markdown"):
-				text_files.append(full_path)
-		file_name = dir.get_next()
-	dir.list_dir_end()
