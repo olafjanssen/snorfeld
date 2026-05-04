@@ -93,7 +93,7 @@ func _set_caret_and_center(line_number: int):
 	set_caret_column(0)
 	set_caret_line(line_number)
 	center_viewport_to_caret()
-		
+
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
@@ -142,7 +142,7 @@ func _on_cursor_changed():
 			paragraph_current_hashes[cursor_line] = current_hash
 
 			# Check if cache exists for this paragraph, if not request caching
-			var cache = ParagraphCache.get_paragraph_cache(current_hash, current_file_path)
+			var cache = ParagraphService.get_paragraph_cache(current_hash, current_file_path)
 			if cache.is_empty():
 				EventBus.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
 

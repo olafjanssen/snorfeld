@@ -24,10 +24,10 @@ Services="*res://autoload/services.gd"
 LLMClient="*res://autoload/llm_client.gd"
 AnalysisService="*res://autoload/analysis_service.gd"
 GitService="*res://autoload/git_service.gd"
-CacheManager="*res://autoload/cache_manager.gd"
-ParagraphCache="*res://autoload/paragraph_cache.gd"
-FileSaver="*res://autoload/file_saver.gd"
-CharacterCache="*res://autoload/character_cache.gd"
+StorageService="*res://autoload/storage_service.gd"
+ParagraphService="*res://autoload/paragraph_service.gd"
+FileService="*res://autoload/file_service.gd"
+CharacterService="*res://autoload/character_service.gd"
 
 [display]
 

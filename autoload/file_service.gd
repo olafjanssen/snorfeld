@@ -1,6 +1,6 @@
 extends Node
 
-# FileSaver - Handles automatic saving of files with debouncing
+# FileService - Handles automatic saving of files with debouncing
 # Implements:
 # - Save when changing editor to another file
 # - Save X seconds after last change (debounced)

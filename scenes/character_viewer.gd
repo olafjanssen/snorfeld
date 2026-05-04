@@ -30,7 +30,7 @@ func _on_folder_opened(_path: String):
 	_load_characters()
 
 func _load_characters():
-	characters = CharacterCache.get_all_project_characters()
+	characters = CharacterService.get_all_project_characters()
 	_build_character_tree()
 	if characters.size() > 0:
 		status_message.text = "%d characters loaded" % characters.size()

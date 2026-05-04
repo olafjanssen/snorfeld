@@ -1,5 +1,5 @@
 extends Node
-# Character cache management - handles caching of character analysis results
+# Character service - handles caching and analysis of character results
 
 const CHARACTER_DIR_NAME := "characters"
 
@@ -146,7 +146,7 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 	var extraction_result = await _extract_characters_from_text(file_content, chapter_id, existing_characters_json)
 
 	if extraction_result == null or not extraction_result.has("characters"):
-		print("[CharacterCache] Failed to extract characters from file: %s" % file_path)
+		print("[CharacterService] Failed to extract characters from file: %s" % file_path)
 		return false
 
 	var characters: Array = extraction_result["characters"]
@@ -205,7 +205,7 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 			file.store_string(json_str)
 			file.close()
 		else:
-			push_error("[CharacterCache] Failed to save character file: %s" % char_file_path)
+			push_error("[CharacterService] Failed to save character file: %s" % char_file_path)
 			success = false
 
 	return success
@@ -392,15 +392,15 @@ Respond with a JSON object:
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
 				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
-				print("[CharacterCache] Token limit reached, retrying %d/%d with max_tokens: %d" % [retry + 1, max_retries, options["max_tokens"]])
+				print("[CharacterService] Token limit reached, retrying %d/%d with max_tokens: %d" % [retry + 1, max_retries, options["max_tokens"]])
 			else:
-				print("[CharacterCache] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
+				print("[CharacterService] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
 
 			llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 			if llm_response.get("parsed_json", null) != null:
 				return llm_response["parsed_json"]
 
-		push_error("[CharacterCache] Failed to parse character extraction response after %d retries" % max_retries)
+		push_error("[CharacterService] Failed to parse character extraction response after %d retries" % max_retries)
 		print(llm_response)
 		return {"characters": []}
 

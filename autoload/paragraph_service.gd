@@ -1,5 +1,5 @@
 extends Node
-# Paragraph cache management - handles caching of paragraph analysis results
+# Paragraph service - handles caching and analysis of paragraph results
 
 const PARAGRAPH_DIR_NAME := "paragraph"
 
