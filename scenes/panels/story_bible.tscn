@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b6mbklwdmt1fk"]
 
-[ext_resource type="Script" path="res://scenes/panels/character_viewer.gd" id="1"]
+[ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
 [ext_resource type="Theme" uid="uid://o8gx2nmawf21" path="res://themes/light_theme.tres" id="2"]
 [ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="3"]
 [ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="4_isx1l"]
@@ -16,9 +16,9 @@ bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
 border_width_top = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
 
-[node name="CharacterViewer" type="Window" unique_id=1329163322]
+[node name="StoryBible" type="Window" unique_id=1329163322]
 oversampling_override = 1.0
-title = "Characters"
+title = "Story Bible"
 position = Vector2i(0, 36)
 size = Vector2i(800, 600)
 script = ExtResource("1")

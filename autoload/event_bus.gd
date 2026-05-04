@@ -29,6 +29,10 @@ signal open_settings
 @warning_ignore("unused_signal")
 signal settings_closed
 
+# Story Bible
+@warning_ignore("unused_signal")
+signal open_story_bible
+
 # File saving
 @warning_ignore("unused_signal")
 signal request_save_file(path: String)

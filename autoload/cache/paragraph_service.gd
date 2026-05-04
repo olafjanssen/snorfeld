@@ -51,7 +51,7 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_conte
 
 	# Queue tasks for each paragraph
 	for paragraph in paragraphs:
-		var paragraph_hash := _hash_paragraph_md5(paragraph)
+		var paragraph_hash := _hash_paragraph(paragraph)
 		var cache_file_path := cache_path.path_join("%s.json" % paragraph_hash)
 
 		# Only create if it doesn't exist
@@ -150,7 +150,7 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 
 	# Write cache file with original, grouped analysis results
 	var data := {
-		"paragraph_hash": _hash_paragraph_md5(paragraph),
+		"paragraph_hash": _hash_paragraph(paragraph),
 		"source": "",
 		"original_text": paragraph,
 		"analyses": {
@@ -179,7 +179,7 @@ func _file_exists(path: String) -> bool:
 
 
 # Creates an MD5 hash from a paragraph string
-func _hash_paragraph_md5(paragraph: String) -> String:
+func _hash_paragraph(paragraph: String) -> String:
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
 	hash_ctx.update(paragraph.to_utf8_buffer())
@@ -282,6 +282,6 @@ func _is_paragraph_in_project(paragraph_hash: String, project_files: Array) -> b
 			# Split content into paragraphs and check hashes
 			var paragraphs := content.split("\n\n")
 			for paragraph in paragraphs:
-				if _hash_paragraph_md5(paragraph.strip_edges()) == paragraph_hash:
+				if _hash_paragraph(paragraph.strip_edges()) == paragraph_hash:
 					return true
 	return false

@@ -1,6 +1,6 @@
 extends Control
 
-var character_viewer: Window
+var story_bible: Window
 
 func _ready():
 	await get_tree().process_frame
@@ -15,11 +15,13 @@ func _ready():
 	$VBoxContainer.offset_top = $MenuBar.size.y
 	$VBoxContainer/HSplitContainer.split_offsets = PackedInt32Array([200, 800, 1600])
 
-	# Open character viewer window
-	_open_character_viewer()
+	# Connect Story Bible menu signal
+	EventBus.open_story_bible.connect(_open_story_bible)
 
-func _open_character_viewer():
-	var CharacterViewerScene = preload("res://scenes/panels/character_viewer.tscn")
-	character_viewer = CharacterViewerScene.instantiate()
-	get_tree().root.add_child(character_viewer)
-	character_viewer.position = Vector2(820, 0)
+func _open_story_bible():
+	if story_bible != null:
+		story_bible.queue_free()
+	var StoryBibleScene = preload("res://scenes/panels/story_bible.tscn")
+	story_bible = StoryBibleScene.instantiate()
+	get_tree().root.add_child(story_bible)
+	story_bible.position = Vector2(820, 0)

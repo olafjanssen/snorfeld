@@ -2,6 +2,7 @@ extends PopupMenu
 
 const OPEN_FOLDER_ID: int = 0
 const SETTINGS_ID: int = 2
+const STORY_BIBLE_ID: int = 3
 const RUN_ALL_ANALYSES_ID: int = 200
 const RUN_CHAPTER_ANALYSES_ID: int = 201
 const RUN_ALL_CHARACTER_ANALYSES_ID: int = 202
@@ -11,6 +12,7 @@ func _ready():
 	add_item("Open Folder...", OPEN_FOLDER_ID)
 	add_separator()
 	add_item("Settings...", SETTINGS_ID)
+	add_item("Story Bible", STORY_BIBLE_ID)
 	add_separator()
 	add_item("Run All Analyses", RUN_ALL_ANALYSES_ID)
 	add_item("Run Chapter Analyses", RUN_CHAPTER_ANALYSES_ID)
@@ -27,6 +29,8 @@ func _on_item_pressed(id: int):
 		EventBus.request_open_folder.emit()
 	elif id == SETTINGS_ID:
 		EventBus.open_settings.emit()
+	elif id == STORY_BIBLE_ID:
+		EventBus.open_story_bible.emit()
 	elif id == RUN_ALL_ANALYSES_ID:
 		EventBus.run_all_analyses.emit()
 	elif id == RUN_CHAPTER_ANALYSES_ID:

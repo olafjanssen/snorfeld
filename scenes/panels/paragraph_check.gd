@@ -77,5 +77,5 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 		var file_content := FileUtils.read_file(file_path)
 		if file_content != "":
 			# Queue with priority - insert at front of queue
-			var paragraph_hash := ParagraphService._hash_paragraph_md5(paragraph_text)
+			var paragraph_hash := ParagraphService._hash_paragraph(paragraph_text)
 			EventBus.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)
