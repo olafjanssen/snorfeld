@@ -55,7 +55,12 @@ extends Resource
 }
 
 ## External resources (fonts, textures) to include in the theme
+## Each entry: {"type": String, "path": String}
 @export var external_resources: Array = []
+
+## Control-specific theme overrides
+## Structure: {"ControlType": {"colors": {...}, "font_sizes": {...}, "fonts": {...}, "constants": {...}, "styles": {...}}}
+@export var control_overrides: Dictionary = {}
 
 ## Resolve a color reference to an actual Color
 ## If the reference is a color name, look it up in colors

@@ -1,4 +1,4 @@
-tool
+@tool
 class_name ThemeCompiler
 extends EditorScript
 ## ThemeCompiler - Editor tool to compile ThemeDefinition resources into Theme resources
@@ -84,16 +84,9 @@ func _compile_all_themes() -> bool:
 func _compile_theme(def: ThemeDefinition) -> Theme:
 	var theme = Theme.new()
 
-	# First, add all colors as theme color overrides
-	# These can be referenced by controls that use theme colors
-	for color_name in def.colors:
-		var color_value = def.colors[color_name]
-		# Store in theme's colors if the control type supports it
-		# Note: Godot Theme doesn't have a generic color storage,
-		# colors are per-control-type. So we store them as metadata
-		# and also create a way to access them.
+	# First, create all defined styles
+	var created_styles: Dictionary = {}
 
-	# Create all defined styles
 	for style_name in def.styles:
 		var style_config = def.styles[style_name]
 		var style_type = style_config.get("type", "")
@@ -102,25 +95,104 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 			"StyleBoxFlat":
 				var style = _create_stylebox_flat(def, style_config)
 				if style:
-					theme.set_stylebox(style_name, style_name, style)
+					style.resource_name = style_name
+					created_styles[style_name] = style
 				else:
 					push_error("Failed to create StyleBoxFlat for: %s" % style_name)
 
 			"StyleBoxEmpty":
-				var style = _create_stylebox_empty(style_config)
+				var style = _create_stylebox_empty(def, style_config)
 				if style:
-					theme.set_stylebox(style_name, style_name, style)
+					style.resource_name = style_name
+					created_styles[style_name] = style
 				else:
 					push_error("Failed to create StyleBoxEmpty for: %s" % style_name)
 
 			_:
 				push_error("Unknown style type: %s for style: %s" % [style_type, style_name])
 
-	# Add control-specific theme overrides
-	# These would be defined in the ThemeDefinition as well
-	# For now, we just handle the style definitions above
+	# Load external resources (fonts)
+	var ext_resources: Array = []
+	for ext_res in def.external_resources:
+		var res = load(ext_res["path"])
+		if res:
+			ext_resources.append(res)
+		else:
+			push_error("Failed to load external resource: %s" % ext_res["path"])
+
+	# Apply control-specific theme overrides
+	for control_type in def.control_overrides:
+		var overrides = def.control_overrides[control_type]
+		_apply_control_overrides(theme, control_type, overrides, def, ext_resources, created_styles)
 
 	return theme
+
+
+## Apply all overrides for a specific control type
+func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary) -> void:
+	# Apply colors
+	if overrides.has("colors"):
+		for color_name in overrides["colors"]:
+			var color_value = overrides["colors"][color_name]
+			# Resolve color reference if it's a string
+			if color_value is String:
+				color_value = _resolve_color(def, color_value)
+			elif color_value is Color:
+				pass  # Already a Color
+			else:
+				push_error("Invalid color value for %s/%s" % [control_type, color_name])
+				continue
+			theme.set_color(color_name, control_type, color_value)
+
+	# Apply font sizes
+	if overrides.has("font_sizes"):
+		for size_name in overrides["font_sizes"]:
+			var size_value = overrides["font_sizes"][size_name]
+			theme.set_font_size(size_name, control_type, size_value)
+
+	# Apply fonts
+	if overrides.has("fonts"):
+		for font_name in overrides["fonts"]:
+			var font_idx = overrides["fonts"][font_name]
+			if font_idx is int and font_idx >= 0 and font_idx < ext_resources.size():
+				var font_resource = ext_resources[font_idx]
+				# FontFile extends Font, so we can use it directly
+				if font_resource is FontFile:
+					theme.set_font(font_name, control_type, font_resource)
+				elif font_resource is Font:
+					theme.set_font(font_name, control_type, font_resource)
+				else:
+					push_error("Invalid font resource type for %s/%s" % [control_type, font_name])
+			else:
+				push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_idx])
+
+	# Apply constants
+	if overrides.has("constants"):
+		for const_name in overrides["constants"]:
+			var const_value = overrides["constants"][const_name]
+			theme.set_constant(const_name, control_type, const_value)
+
+	# Apply styles (StyleBox references)
+	if overrides.has("styles"):
+		for style_name in overrides["styles"]:
+			var style_ref = overrides["styles"][style_name]
+			# Look up the style from our created_styles dictionary
+			if created_styles.has(style_ref):
+				var style = created_styles[style_ref]
+				theme.set_stylebox(style_name, control_type, style)
+			else:
+				push_error("Style reference not found: %s for %s/%s" % [style_ref, control_type, style_name])
+
+
+## Resolve a color reference (string name or Color) to an actual Color
+func _resolve_color(def: ThemeDefinition, ref: Variant) -> Color:
+	if ref is Color:
+		return ref
+	elif ref is String and def.colors.has(ref):
+		return def.colors[ref]
+	else:
+		push_warning("Unknown color reference: %s" % ref)
+		return Color(1, 0, 1, 1)  # Magenta as error color
 
 
 ## Create a StyleBoxFlat from a style configuration
@@ -129,11 +201,11 @@ func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBox
 
 	# Background color
 	if config.has("bg_color"):
-		style.bg_color = def.resolve_color(config["bg_color"])
+		style.bg_color = _resolve_color(def, config["bg_color"])
 
 	# Border colors
 	if config.has("border_color"):
-		var border_color = def.resolve_color(config["border_color"])
+		var border_color = _resolve_color(def, config["border_color"])
 		style.border_color = border_color
 
 	# Border widths - can be individual or "all"
@@ -184,7 +256,7 @@ func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBox
 
 
 ## Create a StyleBoxEmpty from a style configuration
-func _create_stylebox_empty(config: Dictionary) -> StyleBoxEmpty:
+func _create_stylebox_empty(def: ThemeDefinition, config: Dictionary) -> StyleBoxEmpty:
 	var style = StyleBoxEmpty.new()
 
 	# StyleBoxEmpty has fewer properties
@@ -194,7 +266,7 @@ func _create_stylebox_empty(config: Dictionary) -> StyleBoxEmpty:
 
 	# It does have border properties though
 	if config.has("border_color"):
-		style.border_color = config["border_color"]
+		style.border_color = _resolve_color(def, config["border_color"])
 	if config.has("border_width_left"):
 		style.border_width_left = config["border_width_left"]
 	if config.has("border_width_top"):
