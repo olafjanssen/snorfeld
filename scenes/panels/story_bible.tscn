@@ -10,7 +10,7 @@ variation_opentype = {
 2003265652: 600
 }
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_storybible_panel"]
 bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
 border_width_top = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
@@ -82,7 +82,7 @@ hint_underlined = false
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1364190976]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel = SubResource("StyleBoxFlat_storybible_panel")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772969]
 custom_minimum_size = Vector2(0, 22)

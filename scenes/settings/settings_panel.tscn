@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://hhn0hkpgptrr" path="res://scenes/settings/settings_panel.gd" id="0"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oj0hr"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_panel"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
 
 [node name="SettingsPanel" type="Window" unique_id=994651929]
@@ -25,7 +25,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_oj0hr")
+theme_override_styles/panel = SubResource("StyleBoxFlat_settings_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=508918967]
 anchors_preset = 15

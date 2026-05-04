@@ -12,7 +12,7 @@
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5lcyj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statusbar"]
 bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
 border_width_top = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
@@ -104,7 +104,7 @@ layout_mode = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1364190975]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_5lcyj")
+theme_override_styles/panel = SubResource("StyleBoxFlat_statusbar")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1536772968]
 custom_minimum_size = Vector2(0, 22)

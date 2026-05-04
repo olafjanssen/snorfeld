@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://q4e3ujtx5cig" path="res://scenes/editor/text_editor.gd" id="2"]
 [ext_resource type="Script" uid="uid://b1duug47uaj00" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xyvjo"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_texteditor_panel"]
 bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
 border_width_bottom = 1
 border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
@@ -29,7 +29,7 @@ theme_override_constants/separation = 0
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=465978657]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_xyvjo")
+theme_override_styles/panel = SubResource("StyleBoxFlat_texteditor_panel")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1866113266]
 custom_minimum_size = Vector2(0, 26)
