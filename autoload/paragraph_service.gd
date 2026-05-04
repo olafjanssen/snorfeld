@@ -1,16 +1,7 @@
-extends Node
+extends ContentCache
 # Paragraph service - handles caching and analysis of paragraph results
 
 const PARAGRAPH_DIR_NAME := "paragraph"
-
-# Task queue for paragraph cache creation
-var task_queue := []
-var queue_mutex := Mutex.new()
-var processing := false
-
-# Track the current file for chapter analysis
-var current_file_path: String = ""
-var current_file_content: String = ""
 
 func _ready() -> void:
 	EventBus.request_priority_cache.connect(_on_priority_cache_requested)
@@ -20,9 +11,37 @@ func _ready() -> void:
 	EventBus.file_selected.connect(_on_file_selected)
 
 
+# Override: Get cache subdirectory name
+func _get_cache_subdir() -> String:
+	return PARAGRAPH_DIR_NAME
+
+
+# Override: Process a single task
+func _process_task(task: Dictionary) -> void:
+	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
+	if not _file_exists(cache_file_path):
+		var paragraph = task.get("paragraph", "")
+		var file_content = task.get("file_content", "")
+		await _create_cache_file(cache_file_path, paragraph, file_content)
+
+
+# Override: Emit queue updated signal
+func _emit_queue_updated() -> void:
+	EventBus.cache_queue_updated.emit(task_queue.size(), processing)
+
+
+# Override: Emit task started signal
+func _emit_task_started(remaining: int) -> void:
+	EventBus.cache_task_started.emit(remaining)
+
+
+# Override: Emit task completed signal
+func _emit_task_completed(remaining: int) -> void:
+	EventBus.cache_task_completed.emit(remaining)
+
+
 # Handle file scanned event - queue paragraphs for caching
 func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_content: String = "") -> void:
-	# Get the base directory from the file path
 	var dir_path := file_path.get_base_dir()
 	var cache_path := dir_path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
 
@@ -39,7 +58,8 @@ func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_conte
 		if not _file_exists(cache_file_path):
 			# Pass file_content as full_chapter for structure analysis
 			_queue_task(cache_path, paragraph_hash, paragraph, file_content)
-			EventBus.cache_queue_updated.emit(task_queue.size(), processing)
+			_emit_queue_updated()
+
 	# Start processing if not already running
 	if not processing:
 		_processing_start()
@@ -54,9 +74,9 @@ func _queue_task(cache_path: String, paragraph_hash: String, paragraph: String, 
 	else:
 		task_queue.append(task)
 	queue_mutex.unlock()
-	EventBus.cache_queue_updated.emit(task_queue.size(), processing)
+	_emit_queue_updated()
 
-	# If already processing, just return - the thread will pick up new tasks
+	# If already processing, just return - the processing loop will pick up new tasks
 	if processing:
 		return
 
@@ -111,47 +131,8 @@ func _on_run_chapter_analyses() -> void:
 	queue_paragraphs_for_cache(current_file_path, paragraphs, current_file_content)
 
 
-# Start processing tasks
-func _processing_start() -> void:
-	if processing:
-		return
-	processing = true
-	_process_next_task()
-
-
-# Process next task using call_deferred to avoid blocking the main thread
-func _process_next_task() -> void:
-	queue_mutex.lock()
-	if task_queue.is_empty():
-		queue_mutex.unlock()
-		processing = false
-		EventBus.cache_queue_updated.emit(0, false)
-		return
-
-	var task: Dictionary = task_queue.pop_front()
-	var remaining := task_queue.size()
-	queue_mutex.unlock()
-	EventBus.cache_task_started.emit(remaining)
-
-	# Process the task - create cache file
-	var cache_file_path: String = task["cache_path"].path_join("%s.json" % task["hash"])
-	if not _file_exists(cache_file_path):
-		_create_cache_file_and_continue(cache_file_path, task["paragraph"], task.get("file_content", ""), remaining)
-	else:
-		EventBus.cache_task_completed.emit(remaining)
-		call_deferred("_process_next_task")
-
-
-# Helper to create cache file and continue processing
-func _create_cache_file_and_continue(cache_file_path: String, paragraph: String, file_content: String, remaining: int) -> void:
-	var _success := await _create_cache_file(cache_file_path, paragraph, file_content)
-	# Process next task
-	EventBus.cache_task_completed.emit(remaining)
-	call_deferred("_process_next_task")
-
-
 # Creates a cache file for a paragraph with analysis results
-func _create_cache_file(path: String, paragraph: String, file_content: String = "") -> bool:
+func _create_cache_file(path: String, paragraph: String, file_content: String = "") -> void:
 	# Extract context from file_content (text before and after the paragraph)
 	var context_before := ""
 	var context_after := ""
@@ -200,8 +181,6 @@ func _create_cache_file(path: String, paragraph: String, file_content: String = 
 		var json_str := JSON.stringify(data)
 		file.store_string(json_str)
 		file.close()
-		return true
-	return false
 
 
 # Check if file exists
@@ -219,19 +198,6 @@ func _hash_paragraph_md5(paragraph: String) -> String:
 	hash_ctx.update(paragraph.to_utf8_buffer())
 	var hash_bytes := hash_ctx.finish()
 	return hash_bytes.hex_encode()
-
-
-# Creates a folder for the given directory
-func _create_cache_directory(base_path: String) -> bool:
-	if not DirAccess.dir_exists_absolute(base_path):
-		var err: int = DirAccess.make_dir_recursive_absolute(base_path)
-		if err == OK:
-			return true
-		else:
-			push_error("Failed to create paragraph cache directory: %s" % [base_path])
-			return false
-	else:
-		return true
 
 
 # Get cached data for a paragraph by its hash
@@ -253,6 +219,7 @@ func get_paragraph_cache(paragraph_hash: String, file_path: String) -> Dictionar
 		if parse_result == OK:
 			return json.get_data()
 	return {}
+
 
 # Clean up cache files that don't have corresponding source files in the project
 func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
@@ -291,7 +258,7 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 					if DirAccess.remove_absolute(cache_file_path) == OK:
 						removed_count += 1
 			else:
-				push_error("Failed to open cache file: %s" % file_name)
+					push_error("Failed to open cache file: %s" % file_name)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 

@@ -1,12 +1,7 @@
-extends Node
+extends ContentCache
 # Character service - handles caching and analysis of character results
 
 const CHARACTER_DIR_NAME := "characters"
-
-# Task queue for character cache creation
-var character_task_queue := []
-var character_queue_mutex := Mutex.new()
-var character_processing := false
 
 # Track the current file for character analysis
 var current_character_file_path: String = ""
@@ -17,6 +12,44 @@ func _ready() -> void:
 	EventBus.run_all_character_analyses.connect(_on_run_all_character_analyses)
 	EventBus.run_chapter_character_analyses.connect(_on_run_chapter_character_analyses)
 	EventBus.file_selected.connect(_on_file_selected)
+	EventBus.folder_opened.connect(_on_folder_opened)
+
+
+# Override: Get cache subdirectory name
+func _get_cache_subdir() -> String:
+	return CHARACTER_DIR_NAME
+
+func _on_folder_opened(path: String) -> void:
+	var cache_path := path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	if DirAccess.dir_exists_absolute(cache_path):
+		EventBus.cache_cleanup_started.emit()
+		var removed_count := cleanup_unused_character_files(cache_path, path)
+		EventBus.cache_cleanup_completed.emit(removed_count)
+
+
+# Override: Process a single task
+func _process_task(task: Dictionary) -> void:
+	var cache_path: String = task["cache_path"]
+	var file_path: String = task["file_path"]
+	var file_content: String = task["file_content"]
+
+	# Process the task - extract characters and create/update cache files
+	await _extract_and_cache_characters(cache_path, file_path, file_content)
+
+
+# Override: Emit queue updated signal
+func _emit_queue_updated() -> void:
+	EventBus.character_cache_queue_updated.emit(task_queue.size(), processing)
+
+
+# Override: Emit task started signal
+func _emit_task_started(remaining: int) -> void:
+	EventBus.character_cache_task_started.emit(remaining)
+
+
+# Override: Emit task completed signal
+func _emit_task_completed(remaining: int) -> void:
+	EventBus.character_cache_task_completed.emit(remaining)
 
 
 # Handle file scanned event - queue characters for caching
@@ -27,42 +60,42 @@ func queue_characters_for_cache(file_path: String, file_content: String = "") ->
 
 	# Ensure cache exists for this directory
 	if not DirAccess.dir_exists_absolute(cache_path):
-		_create_character_cache_directory(cache_path)
+		_create_cache_directory(cache_path)
 
 	# Extract characters from the file content using LLM
-	_queue_character_extraction_task(cache_path, file_path, file_content)
-	EventBus.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
+	_queue_task(cache_path, file_path, file_content)
+	_emit_queue_updated()
 
 	# Start processing if not already running
-	if not character_processing:
-		_character_processing_start()
+	if not processing:
+		_processing_start()
 
 
 # Queue a task for character extraction and cache creation
-func _queue_character_extraction_task(cache_path: String, file_path: String, file_content: String, priority: bool = false) -> void:
-	character_queue_mutex.lock()
+func _queue_task(cache_path: String, file_path: String, file_content: String, priority: bool = false) -> void:
+	queue_mutex.lock()
 	var task: Dictionary = {"cache_path": cache_path, "file_path": file_path, "file_content": file_content}
 	if priority:
-		character_task_queue.insert(0, task)
+		task_queue.insert(0, task)
 	else:
-		character_task_queue.append(task)
-	character_queue_mutex.unlock()
-	EventBus.character_cache_queue_updated.emit(character_task_queue.size(), character_processing)
+		task_queue.append(task)
+	queue_mutex.unlock()
+	_emit_queue_updated()
 
-	# If already processing, just return - the thread will pick up new tasks
-	if character_processing:
+	# If already processing, just return - the processing loop will pick up new tasks
+	if processing:
 		return
 
 	# Otherwise start processing
-	_character_processing_start()
+	_processing_start()
 
 
 func _on_priority_character_cache_requested(file_path: String, file_content: String) -> void:
 	var dir_path := file_path.get_base_dir()
 	var cache_path := dir_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 	if not DirAccess.dir_exists_absolute(cache_path):
-		_create_character_cache_directory(cache_path)
-	_queue_character_extraction_task(cache_path, file_path, file_content, true)
+		_create_cache_directory(cache_path)
+	_queue_task(cache_path, file_path, file_content, true)
 
 
 func _on_run_all_character_analyses() -> void:
@@ -94,44 +127,6 @@ func _on_run_chapter_character_analyses() -> void:
 	if current_character_file_path == "":
 		return
 	queue_characters_for_cache(current_character_file_path, current_character_file_content)
-
-
-# Start processing tasks
-func _character_processing_start() -> void:
-	if character_processing:
-		return
-	character_processing = true
-	_process_next_character_task()
-
-
-# Process next task using call_deferred to avoid blocking the main thread
-func _process_next_character_task() -> void:
-	character_queue_mutex.lock()
-	if character_task_queue.is_empty():
-		character_queue_mutex.unlock()
-		character_processing = false
-		EventBus.character_cache_queue_updated.emit(0, false)
-		return
-
-	var task: Dictionary = character_task_queue.pop_front()
-	var remaining := character_task_queue.size()
-	character_queue_mutex.unlock()
-	EventBus.character_cache_task_started.emit(remaining)
-
-	# Process the task - extract characters and create/update cache files
-	var cache_path: String = task["cache_path"]
-	var file_path: String = task["file_path"]
-	var file_content: String = task["file_content"]
-
-	_create_character_cache_files_and_continue(cache_path, file_path, file_content, remaining)
-
-
-# Helper to create character cache files and continue processing
-func _create_character_cache_files_and_continue(cache_path: String, file_path: String, file_content: String, remaining: int) -> void:
-	var _success := await _extract_and_cache_characters(cache_path, file_path, file_content)
-	# Process next task
-	EventBus.character_cache_task_completed.emit(remaining)
-	call_deferred("_process_next_character_task")
 
 
 # Extracts characters from file content and creates/updates cache files
@@ -175,10 +170,10 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 					canonical_name = character_data.get("name", char_name)
 					# Also add the new alias to the existing character
 					if not character_data.get("aliases", []).has(char_name):
-						var aliases: Array = char_data.get("aliases", [])
+						var aliases: Array = character_data.get("aliases", [])
 						if not aliases.has(char_name):
 							aliases.append(char_name)
-							char_data["aliases"] = aliases
+							character_data["aliases"] = aliases
 
 		# Use MD5 hash of the CANONICAL character name for filename
 		var char_hash: String = _hash_character_name(canonical_name)
@@ -243,7 +238,7 @@ func _load_existing_characters_json(cache_path: String) -> String:
 							clean_char["aliases"] = char_data["aliases"]
 						existing_chars.append(clean_char)
 			file_name = dir.get_next()
-		dir.list_dir_end()
+			dir.list_dir_end()
 
 	if existing_chars.size() > 0:
 		return JSON.stringify(existing_chars)
@@ -271,6 +266,7 @@ func _merge_relationships(existing: Dictionary, new: Dictionary) -> Dictionary:
 	for key in new:
 		merged[key] = new[key]
 	return merged
+
 
 # Merge character data from LLM with existing data, adding chapter-specific fields
 func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary, chapter_id: String) -> Dictionary:
@@ -492,25 +488,13 @@ func _hash_character_name(character_name: String) -> String:
 	var hash_bytes := hash_ctx.finish()
 	return hash_bytes.hex_encode()
 
+
 # Check if file exists
 func _file_exists(path: String) -> bool:
 	var dir := DirAccess.open(path.get_base_dir())
 	if dir:
 		return dir.file_exists(path.get_file())
 	return false
-
-
-# Creates a folder for the given directory
-func _create_character_cache_directory(base_path: String) -> bool:
-	if not DirAccess.dir_exists_absolute(base_path):
-		var err: int = DirAccess.make_dir_recursive_absolute(base_path)
-		if err == OK:
-			return true
-		else:
-			push_error("Failed to create character cache directory: %s" % [base_path])
-			return false
-	else:
-		return true
 
 
 # Get the character cache path for the current project
@@ -520,6 +504,7 @@ func get_cache_path() -> String:
 		project_path = "res://"
 	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 	return cache_path
+
 
 # Get all character files in the cache directory
 func get_all_characters(cache_path: String) -> Array:
@@ -544,6 +529,7 @@ func get_all_characters(cache_path: String) -> Array:
 	dir.list_dir_end()
 
 	return characters
+
 
 # Get all characters for the current project
 func get_all_project_characters() -> Array:
