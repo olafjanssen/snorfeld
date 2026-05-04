@@ -67,7 +67,7 @@ func _on_priority_character_cache_requested(file_path: String, file_content: Str
 
 func _on_run_all_character_analyses() -> void:
 	# Queue all text files in the project for character analysis
-	var project_path := EventBus.current_path
+	var project_path := ProjectState.get_current_path()
 	if project_path == "":
 		return
 	var text_files: Array = _get_all_text_files(project_path)
@@ -515,7 +515,7 @@ func _create_character_cache_directory(base_path: String) -> bool:
 
 # Get the character cache path for the current project
 func get_cache_path() -> String:
-	var project_path := EventBus.current_path
+	var project_path := ProjectState.get_current_path()
 	if project_path == "":
 		project_path = "res://"
 	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)

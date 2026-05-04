@@ -20,7 +20,7 @@ func _ready():
 
 	# Load characters immediately
 	await get_tree().process_frame
-	_on_folder_opened(EventBus.current_path)
+	_on_folder_opened(ProjectState.get_current_path())
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

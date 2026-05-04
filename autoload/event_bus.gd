@@ -1,9 +1,5 @@
 extends Node
-
-# Global state
-var current_path: String = ""
-
-# Global signal bus for cross-component communication
+## EventBus - Centralized signal bus for the application
 
 # Folder and file navigation
 @warning_ignore("unused_signal")
@@ -14,12 +10,6 @@ signal file_selected(path: String)
 signal request_open_folder
 @warning_ignore("unused_signal")
 signal navigate_to_line(file_path: String, line_number: int)
-
-func _on_folder_opened(path: String):
-	current_path = path
-
-func _ready():
-	folder_opened.connect(_on_folder_opened)
 
 # File content and scanning
 @warning_ignore("unused_signal")

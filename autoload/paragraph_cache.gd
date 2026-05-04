@@ -82,7 +82,7 @@ func _on_folder_opened(path: String) -> void:
 
 func _on_run_all_analyses() -> void:
 	# Queue all paragraphs from all text files in the project
-	var project_path := EventBus.current_path
+	var project_path := ProjectState.get_current_path()
 	if project_path == "":
 		return
 	var text_files := _get_all_text_files(project_path)
