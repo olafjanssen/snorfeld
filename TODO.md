@@ -1,6 +1,6 @@
 # Development plans
-- [ ] World Building panel
-  - [ ] Character tab with list of characters and their character sheets
+- [ ] Story Bible panel
+  - [x] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
   - [ ] Plot overview and suggestions
 - [ ] LLM Generation
@@ -12,10 +12,13 @@
 - [ ] Usability improvements
 	- [x] Create an outline tab showing the chapter outline instead of files
 - [ ] Styling and UI improvement
-	- [x] Detect screen pixel density to scale the UI with
+	- [x] Detect screen pixel density to scale the UI
+	- [x] Allow switching between light/dark/OS-auto mode
 	- [ ] File menu is not always available. Consider switching to naked window and arrange buttons ourselves.
-- [ ] Architectural design
-	- [ ] Rearrange scenes in logical folders
+- [x] Architectural design
+	- [x] Rearrange scenes in logical folders
+	- [x] Simplify queueing of llm calls
+	- [x] Overhauled theming system so we never need theme overrides (colors and fonts)
 
 ## Features Done
 - [x] Saving files
