@@ -20,7 +20,13 @@ func _run():
 		"text_tertiary": Color.html("#313131ff"),
 		"text_dimmed": Color.html("#58585bff"),
 		"text_placeholder": Color.html("#7e8086ff"),
-		"text_accent": Color.html("#0078d4ff")
+		"text_accent": Color.html("#0078d4ff"),
+		# Syntax highlighting colors
+		"syntax_normal": Color.html("#1e1e1eff"),
+		"syntax_header": Color.html("#2185b9ff"),
+		"syntax_bold": Color.html("#000000ff"),
+		"syntax_italic": Color.html("#1e1e1ec8"),
+		"syntax_dialog": Color.html("#1e1e1ec8")
 	}
 
 	# Set styles

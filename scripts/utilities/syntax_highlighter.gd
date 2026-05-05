@@ -7,17 +7,24 @@ const TOKEN_BOLD = 2
 const TOKEN_ITALIC = 3
 const TOKEN_DIALOG = 4
 
-# Colors for each token type
-const COLORS = {
-	TOKEN_NORMAL: Color("1e1e1e"),
-	TOKEN_HEADER: Color(0.13, 0.522, 0.724, 1.0),
-	TOKEN_BOLD: Color(0.0, 0.0, 0.0),
-	TOKEN_ITALIC: Color("1e1e1ec8"),
-	TOKEN_DIALOG: Color("1e1e1ec8")
+# Theme color names for syntax highlighting
+const THEME_COLORS = {
+	TOKEN_NORMAL: "syntax_normal",
+	TOKEN_HEADER: "syntax_header",
+	TOKEN_BOLD: "syntax_bold",
+	TOKEN_ITALIC: "syntax_italic",
+	TOKEN_DIALOG: "syntax_dialog"
 }
 
+func _get_theme_color(color_name: String) -> Color:
+	var text_edit = get_text_edit()
+	return text_edit.get_theme_color(color_name, "SyntaxHighlighter")
+
 func _get_token_color(index: int) -> Color:
-	return COLORS.get(index, Color(1, 1, 1))
+	var color_name = THEME_COLORS.get(index, "")
+	if color_name:
+		return _get_theme_color(color_name)
+	return Color(1, 1, 1)
 
 func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var text: String = get_text_edit().get_line(line)
