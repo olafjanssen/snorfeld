@@ -3,21 +3,21 @@
 [ext_resource type="Script" uid="uid://vgof72l4gq86" path="res://scenes/main/editor.gd" id="1"]
 [ext_resource type="Script" uid="uid://b5xbax8sh0sjm" path="res://scenes/main/file_menu.gd" id="2"]
 [ext_resource type="Script" uid="uid://dfo8qqgf0egog" path="res://scenes/panels/file_explorer.gd" id="3"]
+[ext_resource type="Script" uid="uid://byidirrbvn4no" path="res://scenes/main/window_bar.gd" id="3_ubhtb"]
+[ext_resource type="Texture2D" uid="uid://it6ym7og3e31" path="res://icons/folder.svg" id="4_dfoqb"]
+[ext_resource type="Texture2D" uid="uid://cm1hl7ros7kjh" path="res://icons/menu.svg" id="5_1hmye"]
+[ext_resource type="Script" uid="uid://cg5eg1hv4u742" path="res://scenes/main/project_folder_label.gd" id="5_qd5yd"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/editor/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/panels/paragraph_check.tscn" id="7_5lcyj"]
-[ext_resource type="FontFile" uid="uid://n6fo8pgkbo3j" path="res://fonts/Inter-VariableFont_opsz,wght.ttf" id="7_5tm2q"]
 [ext_resource type="Script" uid="uid://blknfvy0e60k8" path="res://scenes/panels/status_bar.gd" id="8"]
 [ext_resource type="PackedScene" uid="uid://bkg70qtikji0p" path="res://scenes/panels/git_panel.tscn" id="9"]
+[ext_resource type="Texture2D" uid="uid://2v6py1nldq67" path="res://icons/sidebar.svg" id="9_pub2n"]
 [ext_resource type="PackedScene" uid="uid://tau4uty5y17l" path="res://scenes/panels/outline_panel.tscn" id="10"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_5lcyj"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statusbar"]
-bg_color = Color(0.8627451, 0.8627451, 0.8666667, 1)
-border_width_top = 1
-border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
-
 [node name="Editor" type="Control" unique_id=1329163321]
+clip_contents = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,14 +51,67 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
+[node name="WindowBar" type="PanelContainer" parent="VBoxContainer" unique_id=1747329254]
+layout_mode = 2
+theme_type_variation = &"StatusBar"
+script = ExtResource("3_ubhtb")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/WindowBar" unique_id=400787002]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+alignment = 2
+
+[node name="Spacer" type="Control" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=383905512]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+
+[node name="OpenFolderButton" type="Button" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=2087128908]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+icon = ExtResource("4_dfoqb")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="ProjectFolderLabel" type="RichTextLabel" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=304788748]
+layout_mode = 2
+theme_type_variation = &"EditorStatusMessage"
+bbcode_enabled = true
+text = "C:\\CurrentFolders\\MyBook\\"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+shortcut_keys_enabled = false
+vertical_alignment = 1
+meta_underlined = false
+hint_underlined = false
+script = ExtResource("5_qd5yd")
+
+[node name="Spacer2" type="Control" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=129139127]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MenuButton" type="Button" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=1284862845]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+icon = ExtResource("5_1hmye")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Spacer3" type="Control" parent="VBoxContainer/WindowBar/HBoxContainer" unique_id=1319635816]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+
 [node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer" unique_id=1412264399]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
 theme_override_icons/grabber = SubResource("ImageTexture_5lcyj")
-split_offsets = PackedInt32Array(660, 0)
-split_offset = 660
+split_offsets = PackedInt32Array(200, -200)
+split_offset = 200
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer" unique_id=853678824]
 custom_minimum_size = Vector2(200, 0)
@@ -111,6 +164,23 @@ custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 alignment = 2
 
+[node name="Spacer" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1599987720]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+
+[node name="SidebarButtonLeft" type="Button" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=763986879]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+icon = ExtResource("9_pub2n")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Spacer3" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1301417542]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="StatusMessage" type="RichTextLabel" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=37567921]
 layout_mode = 2
 theme_type_variation = &"EditorStatusMessage"
@@ -127,6 +197,18 @@ script = ExtResource("8")
 default_message = null
 display_duration = null
 
-[node name="Spacer" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1599987720]
+[node name="Spacer2" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1866524598]
 custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+
+[node name="SidebarButtonRight" type="Button" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=834904357]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+icon = ExtResource("9_pub2n")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Spacer4" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=152077643]
+custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
