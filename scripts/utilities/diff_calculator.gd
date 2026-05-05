@@ -24,13 +24,19 @@ const DELIMITER := "|"
 func _encode_text(text: String) -> String:
 	return text.replace(" ", "%20").replace(":", "%3A").replace("|", "%7C")
 
-# Get the bgcolor for an operation type
+var _control: Control
+
+func set_control(control: Control) -> void:
+	_control = control
+
+# Get the bgcolor for an operation type from theme
 func _get_bgcolor(operation: String) -> String:
+	var color_name = ""
 	match operation:
-		"delete": return "#ff0000B0"  # Red with opacity
-		"insert": return "#00ff00B0"  # Green with opacity
-		"change": return "#ffa500B0"  # Orange with opacity
-	return "white"
+		"delete": color_name = "diff_delete_bg"
+		"insert": color_name = "diff_insert_bg"
+		"change": color_name = "diff_change_bg"
+	return _control.get_theme_color(color_name, "DiffCalculator").to_html()
 
 # Helper to merge adjacent spans of the same type
 func _merge_adjacent_spans(bbcode: String) -> String:

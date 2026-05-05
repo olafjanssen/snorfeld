@@ -26,7 +26,11 @@ func _run():
 		"syntax_header": Color.html("#2185b9ff"),
 		"syntax_bold": Color.html("#000000ff"),
 		"syntax_italic": Color.html("#1e1e1ec8"),
-		"syntax_dialog": Color.html("#1e1e1ec8")
+		"syntax_dialog": Color.html("#1e1e1ec8"),
+		# Diff colors
+		"diff_delete_bg": Color.html("#ff0000B0"),
+		"diff_insert_bg": Color.html("#00ff00B0"),
+		"diff_change_bg": Color.html("#ffa500B0")
 	}
 
 	# Set styles
@@ -433,6 +437,22 @@ func _run():
 			"base_type": "Label",
 			"font_sizes": {
 				"font_size": 14
+			}
+		},
+		"SyntaxHighlighter": {
+			"colors": {
+				"syntax_normal": "syntax_normal",
+				"syntax_header": "syntax_header",
+				"syntax_bold": "syntax_bold",
+				"syntax_italic": "syntax_italic",
+				"syntax_dialog": "syntax_dialog"
+			}
+		},
+		"DiffCalculator": {
+			"colors": {
+				"diff_delete_bg": "diff_delete_bg",
+				"diff_insert_bg": "diff_insert_bg",
+				"diff_change_bg": "diff_change_bg"
 			}
 		}
 	}

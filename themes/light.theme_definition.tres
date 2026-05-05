@@ -13,6 +13,9 @@ colors = {
 "bg_secondary": Color(0.91764706, 0.91764706, 0.91764706, 1),
 "border_accent": Color(0.019607844, 0.53333336, 0.93333334, 1),
 "border_primary": Color(0.7882353, 0.7882353, 0.7921569, 1),
+"diff_change_bg": Color(1, 0.64705884, 0, 0.6901961),
+"diff_delete_bg": Color(1, 0, 0, 0.6901961),
+"diff_insert_bg": Color(0, 1, 0, 0.6901961),
 "syntax_bold": Color(0, 0, 0, 1),
 "syntax_dialog": Color(0.11764706, 0.11764706, 0.11764706, 0.78431374),
 "syntax_header": Color(0.12941177, 0.52156866, 0.7254902, 1),
@@ -246,6 +249,13 @@ control_overrides = {
 "focus": "StyleBoxEmpty_codeedit_focus"
 }
 },
+"DiffCalculator": {
+"colors": {
+"diff_change_bg": "diff_change_bg",
+"diff_delete_bg": "diff_delete_bg",
+"diff_insert_bg": "diff_insert_bg"
+}
+},
 "EditorStatusMessage": {
 "base_type": "RichTextLabel",
 "font_sizes": {
@@ -348,6 +358,15 @@ control_overrides = {
 },
 "fonts": {
 "normal_font": "Inter_Regular"
+}
+},
+"SyntaxHighlighter": {
+"colors": {
+"syntax_bold": "syntax_bold",
+"syntax_dialog": "syntax_dialog",
+"syntax_header": "syntax_header",
+"syntax_italic": "syntax_italic",
+"syntax_normal": "syntax_normal"
 }
 },
 "TabContainer": {

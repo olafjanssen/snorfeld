@@ -37,6 +37,7 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 
 		if current_paragraph_text != corrected:
 			var diff_utility: DiffUtility = DiffUtility.new()
+			diff_utility.set_control(self)
 			Correction.set_text(diff_utility.calculate_diff(current_paragraph_text, corrected))
 		else:
 			Correction.set_text("No grammar and spelling suggestions.")
@@ -47,6 +48,7 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 
 		if current_paragraph_text != enhanced:
 			var diff_utility: DiffUtility = DiffUtility.new()
+			diff_utility.set_control(self)
 			Enhancement.set_text(diff_utility.calculate_diff(current_paragraph_text, enhanced))
 		else:
 			Enhancement.set_text("No stylistic suggestions.")
@@ -57,6 +59,7 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 		var suggestion : String = cache_data.get("analyses",{}).get("structure",{}).get("suggestion", "")
 		if suggestion.length() > 0:
 			var diff_utility: DiffUtility = DiffUtility.new()
+			diff_utility.set_control(self)
 			Suggestion.set_text(diff_utility.calculate_diff(current_paragraph_text, suggestion))
 		else:
 			Suggestion.set_text("No structural suggestions.")

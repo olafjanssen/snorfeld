@@ -179,6 +179,7 @@ func _show_git_diff(file_path: String):
 	if git_content != "" and current_content != "":
 		# Use DiffUtility to create a human-readable diff
 		var diff_utility = DiffUtility.new()
+		diff_utility.set_control(self)
 		print("Calculating diff...")
 		var diff_bbcode = diff_utility.calculate_diff(git_content, current_content)
 		print("Diff calculated, length: ", diff_bbcode.length())

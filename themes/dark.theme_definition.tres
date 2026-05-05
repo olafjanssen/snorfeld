@@ -13,9 +13,12 @@ colors = {
 "bg_secondary": Color(0.18039216, 0.20392157, 0.24313726, 1),
 "border_accent": Color(0.2784314, 0.40392157, 0.61960787, 1),
 "border_primary": Color(0.27450982, 0.29411766, 0.34117648, 1),
+"diff_change_bg": Color(1, 0.64705884, 0, 0.3764706),
+"diff_delete_bg": Color(1, 0, 0, 0.3764706),
+"diff_insert_bg": Color(0, 1, 0, 0.3764706),
 "syntax_bold": Color(1, 1, 1, 1),
 "syntax_dialog": Color(0.8627451, 0.8784314, 0.8980392, 0.78431374),
-"syntax_header": Color(0.45490196, 0.6784314, 0.9098039, 1),
+"syntax_header": Color(0.12941177, 0.52156866, 0.7254902, 1),
 "syntax_italic": Color(0.8627451, 0.8784314, 0.8980392, 0.78431374),
 "syntax_normal": Color(0.8627451, 0.8784314, 0.8980392, 1),
 "text_accent": Color(0.45490196, 0.6784314, 0.9098039, 1),
@@ -246,6 +249,13 @@ control_overrides = {
 "focus": "StyleBoxEmpty_codeedit_focus"
 }
 },
+"DiffCalculator": {
+"colors": {
+"diff_change_bg": "diff_change_bg",
+"diff_delete_bg": "diff_delete_bg",
+"diff_insert_bg": "diff_insert_bg"
+}
+},
 "EditorStatusMessage": {
 "base_type": "RichTextLabel",
 "font_sizes": {
@@ -348,6 +358,15 @@ control_overrides = {
 },
 "fonts": {
 "normal_font": "Inter_Regular"
+}
+},
+"SyntaxHighlighter": {
+"colors": {
+"syntax_bold": "syntax_bold",
+"syntax_dialog": "syntax_dialog",
+"syntax_header": "syntax_header",
+"syntax_italic": "syntax_italic",
+"syntax_normal": "syntax_normal"
 }
 },
 "TabContainer": {
