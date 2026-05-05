@@ -5,22 +5,22 @@ extends EditorScript
 func _run():
 	var def = ThemeDefinition.new()
 
-	# Set semantic colors
+	# Set semantic colors using hex codes
 	def.colors = {
-		"bg_primary": Color(0.8627451, 0.8627451, 0.8666667, 1),
-		"bg_secondary": Color(0.92156863, 0.92156863, 0.9254902, 1),
-		"bg_lighter": Color(0.9529412, 0.9529412, 0.9529412, 1),
-		"bg_lightest": Color(0.98039216, 0.98039216, 0.98039216, 1),
-		"bg_dark": Color(0.7921569, 0.7921569, 0.7921569, 1),
-		"bg_medium": Color(0.8745098, 0.8745098, 0.8784314, 1),
-		"border_primary": Color(0.7882353, 0.7882353, 0.7921569, 1),
-		"border_accent": Color(0.019607844, 0.53333336, 0.9411765, 1),
-		"text_primary": Color(0.11764706, 0.11764706, 0.11764706, 1),
-		"text_secondary": Color(0.14117648, 0.14509805, 0.16078432, 1),
-		"text_tertiary": Color(0.19215687, 0.19215687, 0.19215687, 1),
-		"text_dimmed": Color(0.34509805, 0.34509805, 0.3529412, 1),
-		"text_placeholder": Color(0.49411765, 0.5019608, 0.5254902, 1),
-		"text_accent": Color(0, 0.47058824, 0.83137256, 1)
+		"bg_primary": Color.html("#ddddddff"),
+		"bg_secondary": Color.html("#eaeaeaff"),
+		"bg_lighter": Color.html("#f3f3f3ff"),
+		"bg_lightest": Color.html("#f9f9f9ff"),
+		"bg_dark": Color.html("#c9c9c9ff"),
+		"bg_medium": Color.html("#e0e0e0ff"),
+		"border_primary": Color.html("#c9c9caff"),
+		"border_accent": Color.html("#0588eeff"),
+		"text_primary": Color.html("#1e1e1eff"),
+		"text_secondary": Color.html("#242629ff"),
+		"text_tertiary": Color.html("#313131ff"),
+		"text_dimmed": Color.html("#58585bff"),
+		"text_placeholder": Color.html("#7e8086ff"),
+		"text_accent": Color.html("#0078d4ff")
 	}
 
 	# Set styles
@@ -234,7 +234,7 @@ func _run():
 				"background_color": "bg_lighter",
 				"caret_color": "text_primary",
 				"font_color": "text_primary",
-				"selection_color": Color(0.6784314, 0.8392157, 1, 1)
+				"selection_color": Color.html("#aed6ffff")
 			},
 			"constants": {
 				"wrap_offset": 0
