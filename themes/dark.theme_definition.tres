@@ -171,6 +171,12 @@ styles = {
 "border_width_bottom": 1,
 "border_width_top": 1,
 "type": "StyleBoxFlat"
+},
+"StyleBoxFlat_windowbar": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_bottom": 1,
+"type": "StyleBoxFlat"
 }
 }
 external_resources = [{
@@ -441,6 +447,12 @@ control_overrides = {
 "hovered_selected": "StyleBoxFlat_tree_hovered_selected",
 "panel": "StyleBoxFlat_tree_panel",
 "selected": "StyleBoxFlat_tree_selected"
+}
+},
+"WindowBar": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_windowbar"
 }
 }
 }

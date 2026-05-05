@@ -169,6 +169,12 @@ func _run():
 			"border_color": "border_primary",
 			"border_width_top": 1
 		},
+		"StyleBoxFlat_windowbar": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_primary",
+			"border_color": "border_primary",
+			"border_width_bottom": 1
+		},
 		"StyleBoxFlat_texteditor_panel": {
 			"type": "StyleBoxFlat",
 			"bg_color": "bg_secondary",
@@ -380,6 +386,12 @@ func _run():
 				"panel": "StyleBoxFlat_statusbar"
 			}
 		},
+		"WindowBar": {
+			"base_type": "Panel",
+			"styles": {
+				"panel": "StyleBoxFlat_windowbar"
+			}
+		},		
 		"TextEditorPanel": {
 			"base_type": "Panel",
 			"styles": {

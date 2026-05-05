@@ -2,6 +2,7 @@
 - [ ] Story Bible panel
   - [x] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
+  - [ ] Object or chekov's gun overview
   - [ ] Plot overview and suggestions
 - [ ] LLM Generation
   - [x] Show LLM status and progress in status bar
