@@ -8,6 +8,9 @@ styles = {
 "StyleBoxEmpty_codeedit_focus": {
 "type": "StyleBoxEmpty"
 },
+"StyleBoxEmpty_paragraph_separator": {
+"type": "StyleBoxEmpty"
+},
 "StyleBoxEmpty_tree_button_hover": {
 "type": "StyleBoxEmpty"
 },
@@ -34,8 +37,37 @@ styles = {
 "corner_radius_all": 4,
 "type": "StyleBoxFlat"
 },
+"StyleBoxFlat_git_panel": {
+"bg_color": "bg_lightest",
+"border_color": "border_primary",
+"border_width_top": 1,
+"type": "StyleBoxFlat"
+},
 "StyleBoxFlat_panel_codeedit": {
 "bg_color": "bg_lighter",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_paneled_label": {
+"bg_color": "bg_lighter",
+"border_color": "border_primary",
+"border_width_all": 1,
+"corner_radius_all": 6,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_settings_panel": {
+"bg_color": "bg_secondary",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_statusbar": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_top": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_storybible_panel": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_top": 1,
 "type": "StyleBoxFlat"
 },
 "StyleBoxFlat_tab_hovered": {
@@ -82,6 +114,12 @@ styles = {
 "bg_color": "bg_lightest",
 "type": "StyleBoxFlat"
 },
+"StyleBoxFlat_texteditor_panel": {
+"bg_color": "bg_secondary",
+"border_color": "border_primary",
+"border_width_bottom": 1,
+"type": "StyleBoxFlat"
+},
 "StyleBoxFlat_tree_hovered": {
 "bg_color": "bg_medium",
 "type": "StyleBoxFlat"
@@ -117,7 +155,39 @@ external_resources = [{
 }, {
 "path": "res://fonts/Lora-Italic-VariableFont_wght.ttf",
 "type": "FontFile"
+}, {
+"path": "res://fonts/Inter-VariableFont_opsz,wght.ttf",
+"type": "FontFile"
+}, {
+"path": "res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf",
+"type": "FontFile"
 }]
+fonts = {
+"Inter_Bold": {
+"base_font": 2,
+"type": "FontVariation",
+"variation_opentype": {
+1869640570: 14,
+2003265652: 600
+}
+},
+"Inter_Italic": {
+"index": 3,
+"type": "FontFile"
+},
+"Inter_Regular": {
+"index": 2,
+"type": "FontFile"
+},
+"Lora_Italic": {
+"index": 1,
+"type": "FontFile"
+},
+"Lora_Regular": {
+"index": 0,
+"type": "FontFile"
+}
+}
 control_overrides = {
 "Button": {
 "colors": {
@@ -155,6 +225,26 @@ control_overrides = {
 "focus": "StyleBoxEmpty_codeedit_focus"
 }
 },
+"EditorStatusMessage": {
+"base_type": "RichTextLabel",
+"font_sizes": {
+"normal_font_size": 12
+},
+"fonts": {
+"normal_font": "Inter_Regular"
+}
+},
+"GitCommitPanel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_git_panel"
+}
+},
+"HSeparator": {
+"styles": {
+"separator": "StyleBoxEmpty_paragraph_separator"
+}
+},
 "Label": {
 "colors": {
 "font_color": "text_secondary"
@@ -166,6 +256,12 @@ control_overrides = {
 "Panel": {
 "styles": {
 "panel": "StyleBoxFlat_panel_codeedit"
+}
+},
+"PaneledLabel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_paneled_label"
 }
 },
 "RichTextLabel": {
@@ -187,6 +283,50 @@ control_overrides = {
 "fonts": {
 "italics_font": 1,
 "normal_font": 0
+}
+},
+"SettingsPanel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_settings_panel"
+}
+},
+"StatusBar": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_statusbar"
+}
+},
+"StoryBibleCharacterSheet": {
+"base_type": "RichTextLabel",
+"font_sizes": {
+"bold_font_size": 14,
+"bold_italics_font_size": 14,
+"italics_font_size": 14,
+"mono_font_size": 14,
+"normal_font_size": 14
+},
+"fonts": {
+"bold_font": "Inter_Bold",
+"bold_italics_font": "Inter_Italic",
+"italics_font": "Inter_Italic",
+"mono_font": "Inter_Regular",
+"normal_font": "Inter_Regular"
+}
+},
+"StoryBiblePanel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_storybible_panel"
+}
+},
+"StoryBibleStatusMessage": {
+"base_type": "RichTextLabel",
+"font_sizes": {
+"normal_font_size": 12
+},
+"fonts": {
+"normal_font": "Inter_Regular"
 }
 },
 "TabContainer": {
@@ -220,6 +360,18 @@ control_overrides = {
 },
 "styles": {
 "normal": "StyleBoxFlat_textedit_normal"
+}
+},
+"TextEditorPanel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_texteditor_panel"
+}
+},
+"TextEditorTitleMessage": {
+"base_type": "Label",
+"font_sizes": {
+"font_size": 14
 }
 },
 "Tree": {

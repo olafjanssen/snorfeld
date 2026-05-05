@@ -347,31 +347,37 @@ func _run():
 		},
 		# === Custom control types for scene-specific styling ===
 		"SettingsPanel": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_settings_panel"
 			}
 		},
 		"StoryBiblePanel": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_storybible_panel"
 			}
 		},
 		"GitCommitPanel": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_git_panel"
 			}
 		},
 		"PaneledLabel": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_paneled_label"
 			}
 		},
 		"StatusBar": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_statusbar"
 			}
 		},
 		"TextEditorPanel": {
+			"base_type": "Panel",
 			"styles": {
 				"panel": "StyleBoxFlat_texteditor_panel"
 			}
@@ -383,6 +389,7 @@ func _run():
 		},
 		# === Scene-specific control types with Font overrides ===
 		"StoryBibleCharacterSheet": {
+			"base_type": "RichTextLabel",
 			"fonts": {
 				"normal_font": "Inter_Regular",
 				"bold_font": "Inter_Bold",
@@ -399,6 +406,7 @@ func _run():
 			}
 		},
 		"StoryBibleStatusMessage": {
+			"base_type": "RichTextLabel",
 			"fonts": {
 				"normal_font": "Inter_Regular"
 			},
@@ -407,6 +415,7 @@ func _run():
 			}
 		},
 		"EditorStatusMessage": {
+			"base_type": "RichTextLabel",
 			"fonts": {
 				"normal_font": "Inter_Regular"
 			},
@@ -415,12 +424,16 @@ func _run():
 			}
 		},
 		"TextEditorTitleMessage": {
+			"base_type": "Label",
 			"font_sizes": {
 				"font_size": 14
 			}
 		}
 	}
 
+	print(def.control_overrides.size(), def.control_overrides.keys())
+
+	DirAccess.remove_absolute("res://themes/light.theme_definition.tres")
 	var err = ResourceSaver.save(def, "res://themes/light.theme_definition.tres")
 	if err == OK:
 		print("Successfully generated light.theme_definition.tres")

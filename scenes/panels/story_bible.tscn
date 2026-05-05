@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b6mbklwdmt1fk"]
 
 [ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
+
 [node name="StoryBible" type="Window" unique_id=1329163322]
 oversampling_override = 1.0
 title = "Story Bible"

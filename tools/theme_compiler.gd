@@ -62,6 +62,7 @@ func _compile_all_themes() -> bool:
 				push_error("Could not load ThemeDefinition: %s" % def_path)
 				success = false
 			else:
+				print()
 				print("  Loaded ThemeDefinition, control_overrides type:", typeof(def.control_overrides))
 				print("  control_overrides size:", def.control_overrides.size())
 				if def.control_overrides.size() > 0:
@@ -71,6 +72,7 @@ func _compile_all_themes() -> bool:
 
 				var theme = _compile_theme(def)
 				if theme != null:
+					DirAccess.remove_absolute(output_path)
 					var err = ResourceSaver.save(theme, output_path, ResourceSaver.FLAG_BUNDLE_RESOURCES)
 					if err != OK:
 						push_error("Failed to save compiled theme: %s" % output_path)
@@ -139,8 +141,6 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 				var font_file = ext_resources[font_idx]
 				if font_file is FontFile:
 					# Create a Font resource from the FontFile
-					var font = FontFile.new()
-					# Actually, we can just use the FontFile directly
 					created_fonts[font_name] = font_file
 				else:
 					push_error("Resource at index %d is not a FontFile" % font_idx)
@@ -153,13 +153,13 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 			if base_font_idx >= 0 and base_font_idx < ext_resources.size():
 				var base_font_file = ext_resources[base_font_idx]
 				if base_font_file is FontFile:
-					# Use the base FontFile directly and set variation
-					# FontFile inherits from Font, which has variation_opentype
-					var font = base_font_file
-					if variation.size() > 0:
-						for axis_tag in variation:
-							font.variation_opentype[axis_tag] = variation[axis_tag]
-					created_fonts[font_name] = font
+					# Use DynamicFont for variable font support
+					var font_path = def.external_resources[base_font_idx]["path"]
+					var base_font: FontFile = load(font_path)
+					if base_font:
+						var font = FontFile.new()
+						font.set_opentype_feature_overrides(variation)
+						created_fonts[font_name] = font
 				else:
 					push_error("Base resource at index %d is not a FontFile" % base_font_idx)
 			else:
@@ -177,6 +177,13 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 
 ## Apply all overrides for a specific control type
 func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary, created_fonts: Dictionary) -> void:
+	# Apply base type for custom control types
+	if overrides.has("base_type"):
+		var base_type = overrides["base_type"]
+		print("Base type:", base_type)
+		if base_type is String:
+			theme.set_type_variation(control_type, base_type)
+
 	# Apply colors
 	if overrides.has("colors"):
 		for color_name in overrides["colors"]:
