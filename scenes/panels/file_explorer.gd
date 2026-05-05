@@ -8,6 +8,15 @@ var is_building_tree: bool = false
 
 var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
 
+# Icon textures for theming
+var folder_icon: Texture2D
+var folder_open_icon: Texture2D
+var file_icon: Texture2D
+# Modulated versions
+var folder_icon_img: ImageTexture
+var folder_open_icon_img: ImageTexture
+var file_icon_img: ImageTexture
+
 # Git status icons
 var git_status_icons: Dictionary = {
 	"modified": load("res://icons/git-modified.svg"),
@@ -27,8 +36,19 @@ func _ready():
 	EventBus.request_open_folder.connect(_on_open_folder_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.git_file_status_changed.connect(_on_git_file_status_changed)
+	EventBus.theme_changed.connect(_update_icon_colors)
+
+	# Load icon textures
+	folder_icon = load("res://icons/folder.svg")
+	folder_open_icon = load("res://icons/folder-open.svg")
+	file_icon = load("res://icons/file.svg")
+	# Initialize modulated textures
+	folder_icon_img = ImageTexture.new()
+	folder_open_icon_img = ImageTexture.new()
+	file_icon_img = ImageTexture.new()
 
 	_load_config()
+	_update_icon_colors()
 
 	# Setup directory watch timer
 	dir_check_timer = Timer.new()
@@ -71,7 +91,7 @@ func _setup_file_tree():
 	var root_name = path_parts[-2] if current_path.ends_with("/") else path_parts[-1]
 
 	root_item.set_text(0, root_name)
-	root_item.set_icon(0, load("res://icons/folder-open.svg"))
+	root_item.set_icon(0, folder_open_icon_img)
 	root_item.set_metadata(0, {"path": current_path, "is_dir": true})
 	_refresh_files(root_item, _ensure_trailing_slash(current_path))
 
@@ -104,10 +124,10 @@ func _refresh_files(parent_item: TreeItem, path: String):
 		item.set_metadata(0, {"path": entry["path"], "is_dir": entry["is_dir"]})
 		# Set icons for folders and files
 		if entry["is_dir"]:
-			item.set_icon(0, load("res://icons/folder.svg"))
+			item.set_icon(0, folder_icon_img)
 			_refresh_files(item, _ensure_trailing_slash(entry["path"]))
 		else:
-			item.set_icon(0, load("res://icons/file.svg"))
+			item.set_icon(0, file_icon_img)
 			# Add git status icon if available
 			_update_git_status_icon(item, entry["path"])
 			# Scan file and emit signal with paragraphs
@@ -173,6 +193,24 @@ func _on_folder_opened(path: String):
 	last_dir_state = _scan_directory_state(current_path)
 	# Use call_deferred to avoid clear() during tree processing
 	call_deferred("_setup_file_tree_deferred")
+
+func _update_icon_colors():
+	var icon_color = get_theme_color("font_color", "Button")
+	folder_icon_img = _create_modulated_texture(folder_icon, icon_color)
+	folder_open_icon_img = _create_modulated_texture(folder_open_icon, icon_color)
+	file_icon_img = _create_modulated_texture(file_icon, icon_color)
+	# Force tree redraw
+	if is_building_tree == false:
+		call_deferred("_setup_file_tree_deferred")
+
+func _create_modulated_texture(base: Texture2D, color: Color) -> ImageTexture:
+	var src_img = base.get_image()
+	var img = Image.create(src_img.get_width(), src_img.get_height(), false, Image.FORMAT_RGBA8)
+	img.copy_from(src_img)
+	for y in range(img.get_height()):
+		for x in range(img.get_width()):
+			img.set_pixel(x, y, img.get_pixel(x, y) * color)
+	return ImageTexture.create_from_image(img)
 
 func _on_dir_check_timeout():
 	if is_building_tree:
