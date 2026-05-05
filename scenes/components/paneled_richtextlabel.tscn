@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://tncq4cf0k61t"]
 
-[ext_resource type="Script" path="res://scripts/utilities/clickable_label.gd" id="1_3y3hr"]
-[ext_resource type="Script" path="res://scenes/components/paneled_richtextlabel.gd" id="1_bi6yx"]
+[ext_resource type="Script" uid="uid://b20decrn8uayt" path="res://scripts/utilities/clickable_label.gd" id="1_3y3hr"]
+[ext_resource type="Script" uid="uid://dbxge1otb73rc" path="res://scenes/components/paneled_richtextlabel.gd" id="1_bi6yx"]
 
 [node name="PanelContainer" type="PanelContainer" unique_id=1890990576]
 theme_type_variation = &"PaneledLabel"
@@ -22,4 +22,3 @@ fit_content = true
 meta_underlined = false
 hint_underlined = false
 script = ExtResource("1_3y3hr")
-metadata/_custom_type_script = "uid://bgn8xb80w21lh"

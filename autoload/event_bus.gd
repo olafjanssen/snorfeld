@@ -29,6 +29,10 @@ signal open_settings
 @warning_ignore("unused_signal")
 signal settings_closed
 
+# Theme
+@warning_ignore("unused_signal")
+signal theme_changed
+
 # Story Bible
 @warning_ignore("unused_signal")
 signal open_story_bible

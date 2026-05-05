@@ -8,8 +8,8 @@ snap_2d_vertices_to_pixel = true
 oversampling_override = 1.0
 title = "Settings"
 initial_position = 2
-size = Vector2i(800, 800)
-min_size = Vector2i(800, 760)
+size = Vector2i(800, 840)
+min_size = Vector2i(800, 800)
 content_scale_aspect = 4
 content_scale_stretch = 1
 script = ExtResource("0")
@@ -45,7 +45,7 @@ size_flags_vertical = 3
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1826043352]
 layout_mode = 2
-text = "LLM Settings"
+text = "Settings"
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=1878981586]
 layout_mode = 2
@@ -99,6 +99,21 @@ value = 512.0
 
 [node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=60580143]
 layout_mode = 2
+
+[node name="ThemeLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1111111111]
+layout_mode = 2
+text = "Theme:"
+
+[node name="ThemeOptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer" unique_id=2222222222]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator3" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=3333333333]
+layout_mode = 2
+
+[node name="LLMSettingsLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=4444444444]
+layout_mode = 2
+text = "LLM Settings"
 
 [node name="CloseButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1992816154]
 layout_mode = 2

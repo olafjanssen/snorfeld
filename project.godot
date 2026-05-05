@@ -28,6 +28,7 @@ StorageService="*res://autoload/managers/storage_service.gd"
 ParagraphService="*res://autoload/cache/paragraph_service.gd"
 FileService="*res://autoload/managers/file_service.gd"
 CharacterService="*res://autoload/cache/character_service.gd"
+ThemeManager="*res://autoload/managers/theme_manager.gd"
 
 [display]
 
@@ -44,7 +45,7 @@ project/assembly_name="snorfeld"
 
 [gui]
 
-theme/custom="uid://bdnkacs1va1ma"
+theme/custom="uid://byvp4t6w5eo1n"
 theme/custom_font="uid://n6fo8pgkbo3j"
 
 [physics]

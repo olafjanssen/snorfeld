@@ -31,10 +31,14 @@ var next_button_id: int = 0
 # Track selected files
 var selected_files: Array = []
 
+# Track current diff file
+var _current_diff_file: String = ""
+
 # Auto-refresh timer
 var refresh_timer: Timer
 
 func _ready():
+	EventBus.theme_changed.connect(_on_theme_changed)
 	print("GitPanel: _ready() called, GitService:", GitService)
 	# Connect signals
 	file_list.item_selected.connect(_on_file_selected)
@@ -162,6 +166,7 @@ func _on_file_activated():
 			_show_git_diff(file_path)
 
 func _show_git_diff(file_path: String):
+	_current_diff_file = file_path
 	print("Showing diff for: ", file_path)
 	# Get absolute path
 	var absolute_path = GitService.get_absolute_path(file_path)
@@ -186,6 +191,13 @@ func _show_git_diff(file_path: String):
 		EventBus.show_git_diff.emit(file_path, diff_bbcode)
 	else:
 		print("Skipping diff - git_content empty:", git_content == "", " current_content empty:", current_content == "")
+
+func _regenerate_diff():
+	if _current_diff_file != "":
+		_show_git_diff(_current_diff_file)
+
+func _on_theme_changed():
+	_regenerate_diff()
 
 func _on_commit_pressed():
 	var message = commit_message.text.strip_edges()
