@@ -3,7 +3,7 @@ extends Tree
 const CONFIG_FILE: String = "user://config.cfg"
 
 var config: ConfigFile = ConfigFile.new()
-var current_path: String = "res://"
+var current_path: String = ""
 var is_building_tree: bool = false
 
 var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
@@ -62,26 +62,31 @@ func _load_config():
 	call_deferred("_load_config_deferred")
 
 func _load_config_deferred():
-	if config.load(CONFIG_FILE) != OK:
-		EventBus.folder_opened.emit("res://")
-	else:
-		EventBus.folder_opened.emit(config.get_value("general", "last_folder", "res://"))
+	if config.load(CONFIG_FILE) == OK:
+		var last_folder = config.get_value("general", "last_folder", "")
+		if last_folder != "":
+			EventBus.folder_opened.emit(last_folder)
 
 func _save_config():
-	config.set_value("general", "last_folder", current_path)
-	config.save(CONFIG_FILE)
+	if current_path != "":
+		config.set_value("general", "last_folder", current_path)
+		config.save(CONFIG_FILE)
 
 func _save_last_file(file_path: String):
-	config.set_value("general", "last_file", file_path)
-	config.save(CONFIG_FILE)
+	# Don't save res:// paths or empty paths (internal project resources)
+	if file_path != "" and not file_path.begins_with("res://"):
+		config.set_value("general", "last_file", file_path)
+		config.save(CONFIG_FILE)
 
 func _ensure_trailing_slash(path: String) -> String:
+	if path == "":
+		return ""
 	if not path.ends_with("/") and not path.ends_with("://"):
 		return path + "/"
 	return path
 
 func _setup_file_tree():
-	if is_building_tree:
+	if is_building_tree or current_path == "":
 		return
 	is_building_tree = true
 
@@ -189,6 +194,8 @@ func _on_dir_selected(path: String):
 	_save_config()
 
 func _on_folder_opened(path: String):
+	if path == "":
+		return
 	current_path = path
 	last_dir_state = _scan_directory_state(current_path)
 	# Use call_deferred to avoid clear() during tree processing
@@ -217,7 +224,7 @@ func _on_theme_changed():
 	_update_icon_colors()
 
 func _on_dir_check_timeout():
-	if is_building_tree:
+	if is_building_tree or current_path == "":
 		return
 
 	var current_state = _scan_directory_state(current_path)
@@ -274,12 +281,17 @@ func _setup_file_tree_deferred():
 	_setup_file_tree()
 
 func _select_first_text_file():
+	# Don't auto-select if no folder is opened
+	if current_path == "":
+		return
+
 	# Try to select the last opened file first
 	var last_file = ""
 	if config.load(CONFIG_FILE) == OK:
 		last_file = config.get_value("general", "last_file", "")
 
-	if last_file != "" and FileUtils.file_exists(last_file):
+	# Skip res:// paths (internal project resources, not real story files)
+	if last_file != "" and not last_file.begins_with("res://") and FileUtils.file_exists(last_file):
 		# Try to find the last opened file in the tree
 		var found = _find_tree_item_by_path(get_root(), last_file)
 		if found != null:

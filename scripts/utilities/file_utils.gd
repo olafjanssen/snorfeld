@@ -108,4 +108,6 @@ static func get_all_text_files(base_path: String) -> Array:
 				text_files.append(full_path)
 		file_name = dir.get_next()
 	dir.list_dir_end()
+	# Sort files alphabetically for consistent processing order
+	text_files.sort()
 	return text_files
