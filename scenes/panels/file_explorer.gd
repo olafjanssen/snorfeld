@@ -36,7 +36,7 @@ func _ready():
 	EventBus.request_open_folder.connect(_on_open_folder_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.git_file_status_changed.connect(_on_git_file_status_changed)
-	EventBus.theme_changed.connect(_update_icon_colors)
+	EventBus.theme_changed.connect(_on_theme_changed)
 
 	# Load icon textures
 	folder_icon = load("res://icons/folder.svg")
@@ -46,9 +46,9 @@ func _ready():
 	folder_icon_img = ImageTexture.new()
 	folder_open_icon_img = ImageTexture.new()
 	file_icon_img = ImageTexture.new()
+	_update_icon_colors()
 
 	_load_config()
-	_update_icon_colors()
 
 	# Setup directory watch timer
 	dir_check_timer = Timer.new()
@@ -202,6 +202,7 @@ func _update_icon_colors():
 	# Force tree redraw
 	if is_building_tree == false:
 		call_deferred("_setup_file_tree_deferred")
+	queue_redraw()
 
 func _create_modulated_texture(base: Texture2D, color: Color) -> ImageTexture:
 	var src_img = base.get_image()
@@ -211,6 +212,9 @@ func _create_modulated_texture(base: Texture2D, color: Color) -> ImageTexture:
 		for x in range(img.get_width()):
 			img.set_pixel(x, y, img.get_pixel(x, y) * color)
 	return ImageTexture.create_from_image(img)
+
+func _on_theme_changed():
+	_update_icon_colors()
 
 func _on_dir_check_timeout():
 	if is_building_tree:

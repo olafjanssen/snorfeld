@@ -21,10 +21,7 @@ func _ready():
 	$VBoxContainer/WindowBar/HBoxContainer/OpenFolderButton.connect("pressed",_on_folder_open_button_pressed)
 	$VBoxContainer/WindowBar/HBoxContainer/MenuButton.connect("pressed", _on_menu_open_button_pressed)
 
-	# Connect theme change signal
 	EventBus.theme_changed.connect(_update_icon_colors)
-
-	# Connect Story Bible menu signal
 	EventBus.open_story_bible.connect(_open_story_bible)
 
 func _open_story_bible():

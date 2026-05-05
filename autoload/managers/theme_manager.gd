@@ -64,13 +64,13 @@ func apply_theme() -> void:
 		ThemeMode.AUTO:
 			theme = DARK_THEME if DisplayServer.is_dark_mode() else LIGHT_THEME
 	get_tree().root.set_theme(theme)
+	EventBus.theme_changed.emit()
 
 # Set theme mode
 func set_mode(mode: ThemeMode) -> void:
 	_current_mode = mode
 	apply_theme()
 	save_settings()
-	EventBus.theme_changed.emit()
 
 # Get current mode
 func get_mode() -> ThemeMode:
