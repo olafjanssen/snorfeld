@@ -28,6 +28,7 @@ StorageService="*res://autoload/managers/storage_service.gd"
 ParagraphService="*res://autoload/cache/paragraph_service.gd"
 FileService="*res://autoload/managers/file_service.gd"
 CharacterService="*res://autoload/cache/character_service.gd"
+EmbeddingService="*res://autoload/cache/embedding_service.gd"
 ThemeManager="*res://autoload/managers/theme_manager.gd"
 
 [display]

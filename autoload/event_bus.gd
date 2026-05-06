@@ -69,6 +69,12 @@ signal run_all_analyses
 @warning_ignore("unused_signal")
 signal run_chapter_analyses
 
+# Embedding indexing triggers
+@warning_ignore("unused_signal")
+signal index_project_embeddings
+@warning_ignore("unused_signal")
+signal index_chapter_embeddings
+
 # Character cache progress
 @warning_ignore("unused_signal")
 signal character_cache_queue_updated(queued: int, processing: bool)
@@ -82,6 +88,16 @@ signal request_priority_character_cache(file_path: String, file_content: String)
 signal run_all_character_analyses
 @warning_ignore("unused_signal")
 signal run_chapter_character_analyses
+
+# Embedding cache progress
+@warning_ignore("unused_signal")
+signal embedding_cache_queue_updated(queued: int, processing: bool)
+@warning_ignore("unused_signal")
+signal embedding_cache_task_started(remaining: int)
+@warning_ignore("unused_signal")
+signal embedding_cache_task_completed(remaining: int)
+@warning_ignore("unused_signal")
+signal request_priority_embedding_cache(text_hash: String, file_path: String, text: String, is_chapter: bool)
 
 # Git integration signals
 @warning_ignore("unused_signal")

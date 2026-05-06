@@ -100,6 +100,31 @@ value = 512.0
 [node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=60580143]
 layout_mode = 2
 
+[node name="EmbeddingSettingsLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=7777777777]
+layout_mode = 2
+text = "Embedding Settings"
+
+[node name="EmbeddingEndpointLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=8888888888]
+layout_mode = 2
+text = "Embedding Endpoint:"
+
+[node name="EmbeddingEndpointLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=9999999999]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "http://localhost:11434/api/embeddings"
+
+[node name="EmbeddingModelLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1111111112]
+layout_mode = 2
+text = "Embedding Model:"
+
+[node name="EmbeddingModelLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=2222222223]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "qwen3-embedding:0.6b"
+
+[node name="HSeparator4" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=60580144]
+layout_mode = 2
+
 [node name="ThemeLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1111111111]
 layout_mode = 2
 text = "Theme:"

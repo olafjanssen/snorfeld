@@ -4,41 +4,24 @@
   - [ ] Location tab with list of locations and their descriptions
   - [ ] Object or chekov's gun overview
   - [ ] Plot overview and suggestions
-- [ ] LLM Generation
-  - [x] Show LLM status and progress in status bar
-  - [x] Trigger LLM generation if user clicks paragraph without cache
-  - [x] Clear cache of unused cache files (no longer in project)
-  - [x] Schedule chapter or bookwise paragraph with a button, otherwise on demand
-  - [ ] Schedule chapter and bookwide LLM tasks
 - [ ] Usability improvements
 	- [x] Create an outline tab showing the chapter outline instead of files
 - [ ] Styling and UI improvement
 	- [x] Detect screen pixel density to scale the UI
 	- [x] Allow switching between light/dark/OS-auto mode
-	- [ ] File menu is not always available. Consider switching to naked window and arrange buttons ourselves.
+- [ ] Statistics
+  - [ ] Create paragraph and chapter embeddings
+	
+## Features Done
+- [x] LLM Generation
+  - [x] Show LLM status and progress in status bar
+  - [x] Trigger LLM generation if user clicks paragraph without cache
+  - [x] Clear cache of unused cache files (no longer in project)
+  - [x] Schedule chapter or bookwise paragraph with a button, otherwise on demand
 - [x] Architectural design
 	- [x] Rearrange scenes in logical folders
 	- [x] Simplify queueing of llm calls
 	- [x] Overhauled theming system so we never need theme overrides (colors and fonts)
-
-## Features Done
-- [x] Saving files
-  - [x] Exporting the CodeEdit text back to original format in the file (should be automatic) 
-  - [x] Save when changing the editor to another file
-  - [x] Save X seconds after the last change of a user to the text (invalidating the timer when the text is changed)
-  - [x] Save when the application closes
-- [x] Usability updates
-  - [x] Automatically open first file of project when opening
-  - [x] Automatically open the last opened file of the project when opening
-  - [x] Pick a slimmer font for the interface and a more elegant font
-  - [x] When the direction changes outside the app the tree must be updated
-  - [x] When the opened file is changed outside the app, the text editor must be updated
-- [x] UI improvements
-  - [x] Decent settings menu styling
-  - [x] Better tab panel styling for the editing assistant
-  - [x] Status bars and header panels for the different panels
-  - [x] Tree view should show root as project folder
-  - [x] Tree view should add file and folder icons
 - [x] Simple Git integration
   - [x] Integrate OS git calls
   - [x] Check if project in git repo, allow to git init
@@ -47,3 +30,20 @@
   - [x] Allow committing files
   - [x] Allow push/pull/fetch
   - [x] Add .snorfeld to .gitignore or create one for a git project
+- [x] UI improvements
+  - [x] Decent settings menu styling
+  - [x] Better tab panel styling for the editing assistant
+  - [x] Status bars and header panels for the different panels
+  - [x] Tree view should show root as project folder
+  - [x] Tree view should add file and folder icons
+- [x] Usability updates
+  - [x] Automatically open first file of project when opening
+  - [x] Automatically open the last opened file of the project when opening
+  - [x] Pick a slimmer font for the interface and a more elegant font
+  - [x] When the direction changes outside the app the tree must be updated
+  - [x] When the opened file is changed outside the app, the text editor must be updated
+- [x] Saving files
+  - [x] Exporting the CodeEdit text back to original format in the file (should be automatic) 
+  - [x] Save when changing the editor to another file
+  - [x] Save X seconds after the last change of a user to the text (invalidating the timer when the text is changed)
+  - [x] Save when the application closes

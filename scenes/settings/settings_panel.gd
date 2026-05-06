@@ -28,6 +28,8 @@ func load_llm_settings() -> void:
 	$MarginContainer/VBoxContainer/ModelLineEdit.text = AppConfig.get_llm_model()
 	$MarginContainer/VBoxContainer/TemperatureSpinBox.value = AppConfig.get_llm_temperature()
 	$MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
+	$MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text = AppConfig.get_embedding_endpoint()
+	$MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
 
 func load_theme_settings() -> void:
 	var theme_mode := ThemeManager.get_mode()
@@ -44,6 +46,8 @@ func save_llm_settings() -> void:
 	AppConfig.set_llm_model($MarginContainer/VBoxContainer/ModelLineEdit.text)
 	AppConfig.set_llm_temperature($MarginContainer/VBoxContainer/TemperatureSpinBox.value)
 	AppConfig.set_llm_max_tokens(int($MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
+	AppConfig.set_embedding_endpoint($MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text)
+	AppConfig.set_embedding_model($MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
 
 func save_theme_settings() -> void:
 	var index = $MarginContainer/VBoxContainer/ThemeOptionButton.selected

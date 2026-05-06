@@ -33,6 +33,11 @@ func _connect_global_signals():
 	EventBus.cache_cleanup_started.connect(_on_cache_cleanup_started)
 	EventBus.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
 
+	# Embedding cache progress
+	EventBus.embedding_cache_queue_updated.connect(_on_embedding_cache_queue_updated)
+	EventBus.embedding_cache_task_started.connect(_on_embedding_cache_task_started)
+	EventBus.embedding_cache_task_completed.connect(_on_embedding_cache_task_completed)
+
 	# Git integration
 	EventBus.git_operation_started.connect(_on_git_operation_started)
 	EventBus.git_operation_completed.connect(_on_git_operation_completed)
@@ -65,6 +70,20 @@ func _on_cache_cleanup_completed(removed_count: int):
 		_set_status(icon_text + "Cache cleanup: removed %d orphaned files" % removed_count)
 	else:
 		_set_status(icon_text + "Cache cleanup: nothing to remove")
+
+# Embedding cache progress handlers
+func _on_embedding_cache_queue_updated(queued: int, _processing: bool):
+	if queued > 0:
+		_set_status(icon_text + "Indexing embeddings: %d queued" % queued, false)
+
+func _on_embedding_cache_task_started(remaining: int):
+	_set_status(icon_text + "Indexing embeddings: %d remaining" % remaining, true)
+
+func _on_embedding_cache_task_completed(remaining: int):
+	if remaining > 0:
+		_set_status(icon_text + "Indexing embeddings: %d remaining" % remaining, true)
+	else:
+		_set_status(icon_text + "Embedding indexing complete", true)
 
 func _set_status(message: String, persistent: bool = false):
 	text = message

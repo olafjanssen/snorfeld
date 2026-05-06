@@ -4,6 +4,7 @@ extends Node
 ## Usage (must be called from a Node context with await):
 ##   var response = await LLMClient.generate("llama3", "Why is the sky blue?")
 ##   var json_response = await LLMClient.generate_json("llama3", "Tell me a joke")
+##   var embedding = await LLMClient.embed("qwen3-embedding:0.6b", "Some text to embed")
 ##   var running = await LLMClient.is_llm_running()
 
 ## HTTP request node
@@ -24,6 +25,7 @@ var current_completion: Dictionary
 ## Signal for async completion (backward compatibility)
 signal generate_complete(response: Dictionary)
 signal check_complete(running: bool)
+signal embed_complete(response: Dictionary)
 
 func _ready() -> void:
 	http_request = HTTPRequest.new()
@@ -72,6 +74,30 @@ func generate_json(model: String, prompt: String, options: Dictionary = {}) -> D
 				response["raw_response"] = response_text
 
 	return response
+
+## Generate embedding vector from a model for a given text
+## Returns a dictionary with "embedding" (vector array) and metadata
+func embed(model: String, text: String, options: Dictionary = {}) -> Dictionary:
+	# Use embedding model from settings if not provided
+	if model == "" or model == null:
+		model = AppConfig.get_embedding_model()
+
+	# Build embedding request body
+	var request_body: Dictionary = _build_embed_request_body(model, text, options)
+	return await _make_api_request(AppConfig.get_embedding_endpoint(), request_body, "embed")
+
+## Build the request body dictionary for the embedding API
+func _build_embed_request_body(model: String, text: String, options: Dictionary) -> Dictionary:
+	var body: Dictionary = {
+		"model": model,
+		"prompt": text
+	}
+	# Ollama embedding API uses "prompt" for the text to embed
+	# Some APIs may use "input" - this can be overridden via options
+	if options.has("input_field"):
+		body.erase("prompt")
+		body[options["input_field"]] = text
+	return body
 
 ## Build the request body dictionary for the LLM API
 func _build_request_body(model: String, prompt: String, options: Dictionary) -> Dictionary:
@@ -187,6 +213,44 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 		current_completion["completed"] = true
 		# Emit for backward compatibility
 		check_complete.emit(is_running)
+		return
+
+	if current_request_type == "embed":
+		var response_body_str: String = body.get_string_from_utf8()
+		print("[LLMClient] Embedding response body received")
+
+		var response_dict: Dictionary
+		if result == OK and response_code == 200:
+			var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
+			if not json_data.is_empty():
+				# Ollama embedding API returns: {"embedding": [...], "model": "...", ...}
+				response_dict = {"json_data": json_data, "raw_response": response_body_str}
+				# Extract embedding vector if present
+				if json_data.has("embedding"):
+					response_dict["embedding"] = json_data["embedding"]
+					response_dict["model"] = json_data.get("model", "")
+					response_dict["success"] = true
+				else:
+					print("[LLMClient] Embedding JSON parse error or missing embedding field")
+					response_dict = {"error": "Failed to parse embedding response or missing embedding", "raw_response": response_body_str}
+					response_dict["success"] = false
+			else:
+				print("[LLMClient] JSON parse error")
+				response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
+				response_dict["success"] = false
+		elif response_code == 0:
+			print("[LLMClient] Connection failed")
+			response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}
+			response_dict["success"] = false
+		else:
+			print("[LLMClient] API embedding request failed with code: %d" % response_code)
+			response_dict = {"error": "API embedding request failed", "error_code": response_code, "response": response_body_str}
+			response_dict["success"] = false
+
+		current_completion["response"] = response_dict
+		current_completion["completed"] = true
+		# Emit for backward compatibility
+		embed_complete.emit(response_dict)
 		return
 
 	# Otherwise it's a generate request

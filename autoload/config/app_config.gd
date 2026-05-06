@@ -12,12 +12,20 @@ const DEFAULT_LLM_MODEL := "qwen3.5:9b"
 const DEFAULT_LLM_TEMPERATURE := 0.3
 const DEFAULT_LLM_MAX_TOKENS := 512
 
+# Embedding model defaults
+const DEFAULT_EMBEDDING_ENDPOINT := "http://localhost:11434/api/embeddings"
+const DEFAULT_EMBEDDING_MODEL := "qwen3-embedding:0.6b"
+
 # Cached values
 var _llm_endpoint: String
 var _llm_check_endpoint: String
 var _llm_model: String
 var _llm_temperature: float
 var _llm_max_tokens: int
+
+# Embedding configuration cached values
+var _embedding_endpoint: String
+var _embedding_model: String
 
 # UI state
 var settings_panel: Window
@@ -41,6 +49,8 @@ func load_settings() -> void:
 		_llm_model = config.get_value("llm", "model", DEFAULT_LLM_MODEL)
 		_llm_temperature = config.get_value("llm", "temperature", DEFAULT_LLM_TEMPERATURE)
 		_llm_max_tokens = config.get_value("llm", "max_tokens", DEFAULT_LLM_MAX_TOKENS)
+		_embedding_endpoint = config.get_value("embedding", "endpoint", DEFAULT_EMBEDDING_ENDPOINT)
+		_embedding_model = config.get_value("embedding", "model", DEFAULT_EMBEDDING_MODEL)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -48,6 +58,8 @@ func load_settings() -> void:
 		_llm_model = DEFAULT_LLM_MODEL
 		_llm_temperature = DEFAULT_LLM_TEMPERATURE
 		_llm_max_tokens = DEFAULT_LLM_MAX_TOKENS
+		_embedding_endpoint = DEFAULT_EMBEDDING_ENDPOINT
+		_embedding_model = DEFAULT_EMBEDDING_MODEL
 
 # Save all settings to config file
 func save_settings() -> void:
@@ -58,6 +70,8 @@ func save_settings() -> void:
 	config.set_value("llm", "model", _llm_model)
 	config.set_value("llm", "temperature", _llm_temperature)
 	config.set_value("llm", "max_tokens", _llm_max_tokens)
+	config.set_value("embedding", "endpoint", _embedding_endpoint)
+	config.set_value("embedding", "model", _embedding_model)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
@@ -98,6 +112,22 @@ func set_llm_temperature(temperature: float) -> void:
 
 func set_llm_max_tokens(max_tokens: int) -> void:
 	_llm_max_tokens = max_tokens
+	save_settings()
+
+# Embedding configuration getters
+func get_embedding_endpoint() -> String:
+	return _embedding_endpoint
+
+func get_embedding_model() -> String:
+	return _embedding_model
+
+# Embedding configuration setters
+func set_embedding_endpoint(endpoint: String) -> void:
+	_embedding_endpoint = endpoint
+	save_settings()
+
+func set_embedding_model(model: String) -> void:
+	_embedding_model = model
 	save_settings()
 
 # Settings panel management
