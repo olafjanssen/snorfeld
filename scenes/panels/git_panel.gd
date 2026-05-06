@@ -49,10 +49,9 @@ func _ready():
 	pull_button.pressed.connect(_on_pull_pressed)
 	fetch_button.pressed.connect(_on_fetch_pressed)
 
-	# Connect GitService signals
-	if GitService != null:
-		EventBus.git_repo_changed.connect(_on_git_repo_changed)
-		EventBus.git_status_updated.connect(_on_git_status_updated)
+	# Connect GitService signals (now a child node)
+	EventBus.git_repo_changed.connect(_on_git_repo_changed)
+	EventBus.git_status_updated.connect(_on_git_status_updated)
 
 	# Connect tree button clicked signal for staging
 	file_list.button_clicked.connect(_on_stage_button_clicked)
@@ -65,11 +64,10 @@ func _ready():
 	refresh_timer.start()
 
 	# Initial update
-	if GitService != null:
-		_on_git_repo_changed(GitService.is_git_repo_cached)
+	_on_git_repo_changed($GitService.is_git_repo_cached)
 
 func _on_git_repo_changed(is_git_repo: bool):
-	if GitService == null or not is_inside_tree():
+	if not is_inside_tree():
 		return
 	if is_git_repo:
 		_update_file_list()
@@ -79,21 +77,21 @@ func _on_git_repo_changed(is_git_repo: bool):
 		_set_buttons_enabled(false)
 
 func _on_git_status_updated(_status: Dictionary):
-	if GitService == null or not is_inside_tree():
+	if not is_inside_tree():
 		return
 
 	# Update file list
 	_update_file_list()
 
 func _update_file_list():
-	if GitService == null or not is_inside_tree():
+	if not is_inside_tree():
 		return
 	file_list.clear()
 
 	# Create a root item (will be hidden due to hide_root = true)
 	var root = file_list.create_item()
 
-	var status = GitService.get_status()
+	var status = $GitService.get_status()
 	if status.has("error"):
 		return
 
@@ -146,9 +144,9 @@ func _on_stage_button_clicked(item: TreeItem, _column: int, _button_index: int, 
 
 		# Stage/unstage the file
 		if is_staged:
-			GitService.stage_file(file_path)
+			$GitService.stage_file(file_path)
 		else:
-			GitService.unstage_file(file_path)
+			$GitService.unstage_file(file_path)
 
 func _on_file_activated():
 	# Double-click to show diff
@@ -162,13 +160,13 @@ func _on_file_activated():
 func _show_git_diff(file_path: String):
 	_current_diff_file = file_path
 	# Get absolute path
-	var absolute_path = GitService.get_absolute_path(file_path)
+	var absolute_path = $GitService.get_absolute_path(file_path)
 
 	# Get current file content
 	var current_content := FileUtils.read_file(absolute_path)
 
 	# Get git version of the file
-	var git_content = GitService.get_file_content_from_git(file_path)
+	var git_content = $GitService.get_file_content_from_git(file_path)
 
 	if git_content != "" and current_content != "":
 		# Use DiffUtility to create a human-readable diff
@@ -190,7 +188,7 @@ func _on_commit_pressed():
 		_show_error("Please enter a commit message")
 		return
 
-	var success = GitService.commit(message)
+	var success = $GitService.commit(message)
 	if success:
 		commit_message.text = ""
 		_update_file_list()
@@ -201,18 +199,18 @@ func _on_refresh_timeout():
 
 func _on_stage_all_pressed():
 	# Simply call stage_all - the status update will refresh the tree via git_status_updated signal
-	GitService.stage_all()
+	$GitService.stage_all()
 
 func _on_push_pressed():
-	GitService.push()
+	$GitService.push()
 	_update_file_list()
 
 func _on_pull_pressed():
-	GitService.pull()
+	$GitService.pull()
 	_update_file_list()
 
 func _on_fetch_pressed():
-	GitService.fetch()
+	$GitService.fetch()
 	_update_file_list()
 
 func _set_buttons_enabled(enabled: bool):

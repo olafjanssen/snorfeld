@@ -17,14 +17,6 @@ var folder_icon_img: ImageTexture
 var folder_open_icon_img: ImageTexture
 var file_icon_img: ImageTexture
 
-# Git status icons
-var git_status_icons: Dictionary = {
-	"modified": load("res://icons/git-modified.svg"),
-	"staged": load("res://icons/git-staged.svg"),
-	"untracked": load("res://icons/git-untracked.svg"),
-	"deleted": load("res://icons/git-deleted.svg")
-}
-
 # Map of file paths to their git status
 var file_git_status: Dictionary = {}
 
@@ -35,7 +27,6 @@ func _ready():
 	item_selected.connect(_on_item_selected)
 	CommandBus.open_folder.connect(_on_open_folder_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.file_status_changed.connect(_on_git_file_status_changed)
 	EventBus.theme_changed.connect(_on_theme_changed)
 
 	# Load icon textures
@@ -133,25 +124,12 @@ func _refresh_files(parent_item: TreeItem, path: String):
 			_refresh_files(item, _ensure_trailing_slash(entry["path"]))
 		else:
 			item.set_icon(0, file_icon_img)
-			# Add git status icon if available
-			_update_git_status_icon(item, entry["path"])
-			# Scan file and emit signal with paragraphs
-			_scan_file_and_emit(entry["path"])
 
 func _is_text_file(file_path: String) -> bool:
 	for ext in text_file_whitelist:
 		if file_path.ends_with(".%s" % ext):
 			return true
 	return false
-
-
-func _scan_file_and_emit(file_path: String) -> void:
-	# Only scan whitelisted text files
-	if not _is_text_file(file_path):
-		return
-
-	# Note: file_scanned signal removed - use BookService for file content
-	# BookService automatically loads and parses all text files
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()
@@ -327,71 +305,3 @@ func _find_tree_item_by_path(parent: TreeItem, target_path: String) -> TreeItem:
 			return found
 
 	return null
-
-
-## Git Status Integration
-
-func _update_git_status_icon(item: TreeItem, file_path: String) -> void:
-	# Only update for text files
-	if not _is_text_file(file_path):
-		return
-
-	# Get git status for this file
-	var status = "not_git"
-	if GitService != null:
-		status = GitService.get_file_status(file_path)
-	file_git_status[file_path] = status
-
-	# Set icon based on status
-	if git_status_icons.has(status):
-		item.set_icon(1, git_status_icons[status])
-
-func _on_git_file_status_changed(file_path: String, status: String):
-	if not is_inside_tree():
-		return
-	# Update the status cache
-	file_git_status[file_path] = status
-
-	# Find the tree item for this file and update its icon
-	var root = get_root()
-	if root == null:
-		return
-
-	var item = _find_tree_item_by_path(root, file_path)
-	if item != null:
-		if git_status_icons.has(status):
-			item.set_icon(1, git_status_icons[status])
-		else:
-			# Clear the git status icon
-			item.set_icon(1, null)
-
-func _on_git_repo_changed(is_git_repo: bool):
-	if GitService == null or not is_inside_tree():
-		return
-	# Clear all git status icons
-	file_git_status.clear()
-
-	# Refresh the tree to update icons
-	if is_git_repo:
-		# Re-scan and update all file icons
-		call_deferred("_refresh_git_icons")
-	else:
-		# Clear git status column
-		_clear_git_icons(get_root())
-
-func _refresh_git_icons():
-	_clear_git_icons(get_root())
-	# Re-query status for all tracked files
-	if GitService.get_git_root() != "":
-		GitService.refresh_status()
-
-func _clear_git_icons(parent: TreeItem):
-	if parent == null:
-		return
-
-	# Clear git status icon (column 1)
-	parent.set_icon(1, null)
-
-	for i in range(parent.get_child_count()):
-		var child = parent.get_child(i)
-		_clear_git_icons(child)

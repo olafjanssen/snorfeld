@@ -1,8 +1,11 @@
 [gd_scene format=3 uid="uid://bkg70qtikji0p"]
 
 [ext_resource type="Script" uid="uid://bc45v60y7kfqi" path="res://scenes/panels/git_panel.gd" id="1"]
+[ext_resource type="Script" uid="uid://c5q8m9p3s7t2u1v4w" path="res://autoload/services/git_service.gd" id="2"]
 
 [node name="GitPanel" type="Control" unique_id=431570014]
+[node name="GitService" type="Node" parent="." unique_id=123456789]
+script = ExtResource("2")
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 3
 anchors_preset = 15
