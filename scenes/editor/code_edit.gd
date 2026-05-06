@@ -1,7 +1,7 @@
 extends CodeEdit
 
 var current_file_path: String = ""
-var last_text_hash: String = ""
+var last_text: String = ""
 
 var last_modified_time: float = 0.0
 var file_check_timer: Timer
@@ -57,7 +57,7 @@ func _on_file_check_timeout():
 			# Reload the file
 			var content: String = FileUtils.get_file_as_string(current_file_path)
 			set_text(content)
-			last_text_hash = _hash_text(content)
+			last_text = content
 
 			# Restore cursor position
 			if cursor_line >= 0:
@@ -77,10 +77,10 @@ func _on_navigate_to_line(file_path: String, line_number: int):
 		grab_focus()
 	else:
 		current_file_path = file_path
-		last_text_hash = ""
+		last_text = ""
 		var content: String = FileUtils.get_file_as_string(file_path)
 		if content != "":
-			last_text_hash = _hash_text(content)
+			last_text = content
 			last_modified_time = FileUtils.get_modified_time(file_path)
 			set_text(content)
 			var line_count = get_line_count()
@@ -102,11 +102,11 @@ func _on_file_selected(path: String):
 		EventBus.request_save_file.emit(current_file_path)
 
 	current_file_path = path
-	last_text_hash = ""
+	last_text = ""
 	var content: String = FileUtils.get_file_as_string(path)
 	if content != "":
 		set_text(content)
-		last_text_hash = _hash_text(content)
+		last_text = content
 		last_modified_time = FileUtils.get_modified_time(path)
 
 	# Make sure panel is visible
@@ -131,17 +131,11 @@ func _on_book_content_changed():
 func _on_text_changed():
 	# Emit file_changed signal when text changes
 	var current_text: String = get_text()
-	var current_hash: String = _hash_text(current_text)
-	if current_hash != last_text_hash:
-		last_text_hash = current_hash
+	if current_text != last_text:
+		last_text = current_text
 		EventBus.file_changed.emit(current_file_path, current_text)
 
-func _hash_text(full_text: String) -> String:
-	var hash_ctx := HashingContext.new()
-	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(full_text.to_utf8_buffer())
-	var hash_bytes := hash_ctx.finish()
-	return hash_bytes.hex_encode()
+
 
 func _on_apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
 	# Only apply if this is the current file

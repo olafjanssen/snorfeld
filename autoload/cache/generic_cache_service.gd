@@ -235,10 +235,3 @@ func get_stats() -> Dictionary:
 		"queued_count": queued_keys.size(),
 		"loaded_dirs_count": loaded_cache_dirs.size()
 	}
-
-## Hash a string using MD5 (utility for cache keys)
-func _hash_text(text: String) -> String:
-	var hash_ctx := HashingContext.new()
-	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(text.to_utf8_buffer())
-	return hash_ctx.finish().hex_encode()

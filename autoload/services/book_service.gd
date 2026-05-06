@@ -69,7 +69,7 @@ func _add_file(file_path: String) -> void:
 		return
 
 	# File hash based on content
-	var file_hash := _hash_text(content)
+	var file_hash := hash_text(content)
 
 	# File data
 	var file_data := {
@@ -112,7 +112,7 @@ func _add_file(file_path: String) -> void:
 
 				# Create new chapter
 				chapter_id_counter += 1
-				current_chapter_id = "%s%d_%s" % [CHAPTER_ID_PREFIX, chapter_id_counter, _hash_text(file_path)]
+				current_chapter_id = "%s%d_%s" % [CHAPTER_ID_PREFIX, chapter_id_counter, hash_text(file_path)]
 				var chapter_title := stripped.substr(level).strip_edges()
 				var chapter_data := {
 					"id": current_chapter_id,
@@ -161,7 +161,7 @@ func _save_paragraph_for_chapter(chapter_id: String, file_path: String, text: St
 	if text == "":
 		return
 
-	var para_hash := _hash_text(text)
+	var para_hash := hash_text(text)
 	var para_id := "%s%s" % [PARAGRAPH_ID_PREFIX, para_hash.substr(0, 8)]
 
 	# Store paragraph
@@ -189,7 +189,7 @@ func _save_paragraph_for_file(file_path: String, text: String, start_line: int, 
 	if text == "":
 		return
 
-	var para_hash := _hash_text(text)
+	var para_hash := hash_text(text)
 	var para_id := "%s%s" % [PARAGRAPH_ID_PREFIX, para_hash.substr(0, 8)]
 
 	# Store paragraph
@@ -296,9 +296,9 @@ func get_all_chapter_hashes() -> Array:
 	for file_path in files:
 		var file_data = files[file_path]
 		if not file_data.is_empty():
-			var content = file_data.get("content", "")
-			if content != "":
-				hashes.append(_hash_text(content))
+			var file_hash = file_data.get("hash", "")
+			if file_hash != "":
+				hashes.append(file_hash)
 	return hashes
 
 
@@ -491,7 +491,7 @@ func _determine_chapter_level(content: String) -> int:
 
 
 # Hash text using MD5
-func _hash_text(text: String) -> String:
+func hash_text(text: String) -> String:
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
 	hash_ctx.update(text.to_utf8_buffer())

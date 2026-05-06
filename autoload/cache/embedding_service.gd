@@ -185,16 +185,11 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 	return file_path.get_base_dir().path_join(".snorfeld").path_join(EMBEDDING_DIR_NAME)
 
 
-# Hash a string for cache key (MD5)
-func _hash_text(text: String) -> String:
-	var hash_ctx := HashingContext.new()
-	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(text.to_utf8_buffer())
-	return hash_ctx.finish().hex_encode()
+
 
 
 # Queue paragraphs for embedding cache
-func queue_paragraphs_for_embedding(file_path: String, paragraphs: Array, file_content: String = "") -> void:
+func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Array, file_content: String = "") -> void:
 	var cache_dir := _get_cache_dir_for_file(file_path)
 
 	# Ensure cache directory exists
@@ -205,14 +200,15 @@ func queue_paragraphs_for_embedding(file_path: String, paragraphs: Array, file_c
 	_ensure_cache_loaded(cache_dir)
 
 	# Queue tasks for each paragraph
-	for paragraph in paragraphs:
-		var paragraph_hash := _hash_text(paragraph)
+	for para_data in paragraph_data_list:
+		var paragraph_hash = para_data.get("hash", "")
+		var paragraph_text = para_data.get("text", "")
 		var key := _make_cache_key(cache_dir, paragraph_hash, false)
 
 		# Only queue if not already in memory cache or queued
 		if not memory_cache.has(key) and not queued_keys.has(key):
 			queued_keys[key] = true
-			_queue_task(cache_dir, paragraph_hash, paragraph, file_content, false, false)
+			_queue_task(cache_dir, paragraph_hash, paragraph_text, file_content, false, false)
 			_emit_queue_updated()
 
 	# Start processing if not already running
@@ -221,7 +217,7 @@ func queue_paragraphs_for_embedding(file_path: String, paragraphs: Array, file_c
 
 
 # Queue chapter for embedding cache
-func queue_chapter_for_embedding(file_path: String, file_content: String) -> void:
+func queue_chapter_for_embedding(file_path: String) -> void:
 	var cache_dir := _get_cache_dir_for_file(file_path)
 
 	# Ensure cache directory exists
@@ -231,8 +227,14 @@ func queue_chapter_for_embedding(file_path: String, file_content: String) -> voi
 	# Ensure this directory's cache is loaded
 	_ensure_cache_loaded(cache_dir)
 
-	# Hash the full chapter content
-	var chapter_hash := _hash_text(file_content)
+	# Get file data from BookService
+	var file_data := BookService.get_file(file_path)
+	if file_data.is_empty():
+		return
+
+	var chapter_hash = file_data.get("hash", "")
+	var file_content = file_data.get("content", "")
+
 	var key := _make_cache_key(cache_dir, chapter_hash, true)
 
 	# Only queue if not already in memory cache or queued
@@ -328,15 +330,15 @@ func _on_index_project_embeddings() -> void:
 			continue
 		var content = file_data.get("content", "")
 		if content != "":
-			# Get paragraphs from BookService
+			# Get paragraph data from BookService (includes hash)
 			var para_ids := BookService.get_paragraphs_for_file(file_path)
 			var paragraphs := []
 			for para_id in para_ids:
 				var para_data = BookService.get_paragraph(para_id)
-				paragraphs.append(para_data.get("text", ""))
+				paragraphs.append(para_data)
 			queue_paragraphs_for_embedding(file_path, paragraphs, content)
 			# Also queue chapter-level embedding
-			queue_chapter_for_embedding(file_path, content)
+			queue_chapter_for_embedding(file_path)
 
 
 func _on_file_selected(path: String) -> void:
@@ -357,15 +359,15 @@ func _on_index_chapter_embeddings() -> void:
 	else:
 		content = file_data.get("content", current_file_content)
 
-	# Get paragraphs from BookService
+	# Get paragraph data from BookService (includes hash)
 	var para_ids := BookService.get_paragraphs_for_file(current_file_path)
 	var paragraphs := []
 	for para_id in para_ids:
 		var para_data = BookService.get_paragraph(para_id)
-		paragraphs.append(para_data.get("text", ""))
+		paragraphs.append(para_data)
 
 	queue_paragraphs_for_embedding(current_file_path, paragraphs, content)
-	queue_chapter_for_embedding(current_file_path, content)
+	queue_chapter_for_embedding(current_file_path)
 
 
 # Get cached embedding for a paragraph by its hash
@@ -380,8 +382,10 @@ func get_paragraph_embedding(paragraph_hash: String, file_path: String) -> Dicti
 func get_chapter_embedding(file_path: String) -> Dictionary:
 	var cache_dir := _get_cache_dir_for_file(file_path)
 	_ensure_cache_loaded(cache_dir)
-	var file_content := FileUtils.read_file(file_path)
-	var chapter_hash := _hash_text(file_content)
+	var file_data := BookService.get_file(file_path)
+	if file_data.is_empty():
+		return {}
+	var chapter_hash = file_data.get("hash", "")
 	var key := _make_cache_key(cache_dir, chapter_hash, true)
 	return memory_cache.get(key, {})
 
@@ -466,128 +470,3 @@ func _rewrite_jsonl_files(cache_dir: String) -> void:
 func compute_embedding(text: String) -> Dictionary:
 	var embedding_model = AppConfig.get_embedding_model()
 	return await LLMClient.embed(embedding_model, text)
-
-
-# Compute and cache embedding for a paragraph
-func compute_and_cache_paragraph_embedding(paragraph: String, file_path: String) -> Dictionary:
-	var cache_dir := _get_cache_dir_for_file(file_path)
-	_ensure_cache_loaded(cache_dir)
-
-	var paragraph_hash := _hash_text(paragraph)
-	var key := _make_cache_key(cache_dir, paragraph_hash, false)
-
-	# Check if already cached
-	if memory_cache.has(key):
-		return memory_cache[key]
-
-	# Compute embedding
-	var result = await compute_embedding(paragraph)
-
-	if result.get("error", null) != null:
-		return {"error": result.get("error", "Unknown error")}
-
-	if not result.has("embedding") and not result.has("json_data"):
-		return {"error": "No embedding in response"}
-
-	# Extract embedding vector
-	var embedding_vector: Array
-	if result.has("embedding"):
-		embedding_vector = result["embedding"]
-	elif result.has("json_data") and result["json_data"].has("embedding"):
-		embedding_vector = result["json_data"]["embedding"]
-	else:
-		return {"error": "Could not find embedding vector in response"}
-
-	# Build cache data - store embedding as Variant in memory
-	var data := {
-		"text_hash": paragraph_hash,
-		"text": paragraph,
-		"embedding": embedding_vector,
-		"model": result.get("model", AppConfig.get_embedding_model()),
-		"is_chapter": false,
-		"cached_at": Time.get_unix_time_from_system()
-	}
-
-	# Store in memory
-	memory_cache[key] = data
-
-	# Save to file - convert embedding to base64 for JSON storage
-	if not FileUtils.dir_exists(cache_dir):
-		_create_cache_directory(cache_dir)
-
-	var save_data = data.duplicate()
-	save_data["embedding"] = Marshalls.variant_to_base64(embedding_vector)
-
-	var jsonl_path := cache_dir.path_join(PARAGRAPH_JSONL_FILENAME)
-	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
-	if file:
-		file.seek_end()
-		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
-		file.close()
-	else:
-		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(save_data) + "\n")
-
-	return data
-
-
-# Compute and cache embedding for a chapter (full file content)
-func compute_and_cache_chapter_embedding(file_path: String) -> Dictionary:
-	var file_content := FileUtils.read_file(file_path)
-	var cache_dir := _get_cache_dir_for_file(file_path)
-	_ensure_cache_loaded(cache_dir)
-
-	var chapter_hash := _hash_text(file_content)
-	var key := _make_cache_key(cache_dir, chapter_hash, true)
-
-	# Check if already cached
-	if memory_cache.has(key):
-		return memory_cache[key]
-
-	# Compute embedding
-	var result = await compute_embedding(file_content)
-
-	if result.get("error", null) != null:
-		return {"error": result.get("error", "Unknown error")}
-
-	if not result.has("embedding") and not result.has("json_data"):
-		return {"error": "No embedding in response"}
-
-	# Extract embedding vector
-	var embedding_vector: Array
-	if result.has("embedding"):
-		embedding_vector = result["embedding"]
-	elif result.has("json_data") and result["json_data"].has("embedding"):
-		embedding_vector = result["json_data"]["embedding"]
-	else:
-		return {"error": "Could not find embedding vector in response"}
-
-	# Build cache data - store embedding as Variant in memory
-	var data := {
-		"text_hash": chapter_hash,
-		"text": file_content,
-		"embedding": embedding_vector,
-		"model": result.get("model", AppConfig.get_embedding_model()),
-		"is_chapter": true,
-		"cached_at": Time.get_unix_time_from_system()
-	}
-
-	# Store in memory
-	memory_cache[key] = data
-
-	# Save to file - convert embedding to base64 for JSON storage
-	if not FileUtils.dir_exists(cache_dir):
-		_create_cache_directory(cache_dir)
-
-	var save_data = data.duplicate()
-	save_data["embedding"] = Marshalls.variant_to_base64(embedding_vector)
-
-	var jsonl_path := cache_dir.path_join(CHAPTER_JSONL_FILENAME)
-	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
-	if file:
-		file.seek_end()
-		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
-		file.close()
-	else:
-		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(save_data) + "\n")
-
-	return data
