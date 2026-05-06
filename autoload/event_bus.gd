@@ -62,6 +62,14 @@ signal request_priority_character_cache(file_path: String, file_content: String)
 signal run_all_character_analyses
 signal run_chapter_character_analyses
 
+# Object cache progress
+signal object_cache_queue_updated(queued: int, processing: bool)
+signal object_cache_task_started(remaining: int)
+signal object_cache_task_completed(remaining: int)
+signal request_priority_object_cache(file_path: String, file_content: String)
+signal run_all_object_analyses
+signal run_chapter_object_analyses
+
 # Embedding cache progress
 signal embedding_cache_queue_updated(queued: int, processing: bool)
 signal embedding_cache_task_started(remaining: int)

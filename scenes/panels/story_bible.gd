@@ -1,13 +1,19 @@
 extends Window
 
+@onready var tab_container: TabContainer = $VBoxContainer/HSplitContainer/TabContainer
 @onready var character_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/CharacterTree
+@onready var object_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/ObjectTree
 @onready var character_sheet: RichTextLabel = $VBoxContainer/HSplitContainer/CharacterSheet
+@onready var object_sheet: RichTextLabel = $VBoxContainer/HSplitContainer/ObjectSheet
 @onready var status_message: RichTextLabel = $VBoxContainer/PanelContainer/HBoxContainer/StatusMessage
 
 var characters: Array = []
+var objects: Array = []
 
 func _ready():
 	character_tree.item_selected.connect(_on_character_selected)
+	object_tree.item_selected.connect(_on_object_selected)
+	tab_container.tab_changed.connect(_on_tab_changed)
 	EventBus.folder_opened.connect(_on_folder_opened)
 
 	# Set initial position next to main editor
@@ -18,7 +24,7 @@ func _ready():
 	var ui_scale := 2.0 if dpi > 144 else 1.0
 	set_content_scale_factor(ui_scale)
 
-	# Load characters immediately
+	# Load characters and objects immediately
 	await get_tree().process_frame
 	_on_folder_opened(ProjectState.get_current_path())
 
@@ -26,16 +32,25 @@ func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		queue_free()
 
-func _on_folder_opened(_path: String):
-	_load_characters()
-
 func _load_characters():
 	characters = CharacterService.get_all_project_characters()
 	_build_character_tree()
-	if characters.size() > 0:
-		status_message.text = "%d characters loaded" % characters.size()
+
+func _load_objects():
+	objects = ObjectService.get_all_project_objects()
+	_build_object_tree()
+
+func _update_status_message():
+	var char_count = characters.size()
+	var obj_count = objects.size()
+	if char_count > 0 and obj_count > 0:
+		status_message.text = "%d characters, %d objects loaded" % [char_count, obj_count]
+	elif char_count > 0:
+		status_message.text = "%d characters loaded" % char_count
+	elif obj_count > 0:
+		status_message.text = "%d objects loaded" % obj_count
 	else:
-		status_message.text = "No characters found"
+		status_message.text = "No characters or objects found"
 
 func _build_character_tree():
 	character_tree.clear()
@@ -58,6 +73,27 @@ func _build_character_tree():
 		item.set_text(0, full_name)
 		item.set_metadata(0, {"type": "character", "data": char_data})
 
+func _build_object_tree():
+	object_tree.clear()
+	var root = object_tree.create_item()
+	root.set_text(0, "Objects")
+	root.set_metadata(0, {"type": "root"})
+
+	# Sort objects by appearance count (descending), then by name
+	objects.sort_custom(func(a, b):
+		var a_appearances = a.get("appearances", []).size()
+		var b_appearances = b.get("appearances", []).size()
+		if a_appearances != b_appearances:
+			return a_appearances > b_appearances
+		return a.get("name", "").naturalnocasecmp_to(b.get("name", "")) < 0
+	)
+
+	for obj_data in objects:
+		var item = object_tree.create_item(root)
+		var full_name = obj_data.get("name", "Unknown")
+		item.set_text(0, full_name)
+		item.set_metadata(0, {"type": "object", "data": obj_data})
+
 func _on_character_selected():
 	var item = character_tree.get_selected()
 	if item == null:
@@ -70,6 +106,42 @@ func _on_character_selected():
 
 	var char_data = metadata["data"]
 	_display_character_sheet(char_data)
+
+func _on_object_selected():
+	var item = object_tree.get_selected()
+	if item == null:
+		return
+	var metadata = item.get_metadata(0)
+	if metadata == null:
+		return
+	if metadata.get("type", "") != "object":
+		return
+
+	var obj_data = metadata["data"]
+	_display_object_sheet(obj_data)
+
+func _on_tab_changed(tab_index: int):
+	# Update the sheet display based on which tab is active
+	if tab_index == 0:
+		# Characters tab - refresh character display
+		var selected = character_tree.get_selected()
+		if selected:
+			var metadata = selected.get_metadata(0)
+			if metadata and metadata.get("type") == "character":
+				_display_character_sheet(metadata["data"])
+		else:
+			character_sheet.text = ""
+		object_sheet.text = ""
+	elif tab_index == 1:
+		# Objects tab - refresh object display
+		var selected = object_tree.get_selected()
+		if selected:
+			var metadata = selected.get_metadata(0)
+			if metadata and metadata.get("type") == "object":
+				_display_object_sheet(metadata["data"])
+		else:
+			object_sheet.text = ""
+		character_sheet.text = ""
 
 func _display_character_sheet(char_data: Dictionary):
 	var full_name = char_data.get("name", "Unknown")
@@ -119,3 +191,69 @@ func _display_character_sheet(char_data: Dictionary):
 		output += "\n"
 
 	character_sheet.text = output
+
+
+func _display_object_sheet(obj_data: Dictionary):
+	var full_name = obj_data.get("name", "Unknown")
+	var output = ""
+
+	output += "[b][font_size=18]%s[/font_size][/b]" % [full_name]
+
+	# Aliases
+	var aliases = obj_data.get("aliases", [])
+	if aliases.size() > 0:
+		output += " (%s)" % [", ".join(aliases)]
+
+	output += "\n\n"
+
+	# Object Types
+	var object_types = obj_data.get("object_type", [])
+	if object_types.size() > 0:
+		output += "[b]Type:[/b] %s\n\n" % [", ".join(object_types)]
+
+	# Description
+	var description = obj_data.get("description", "")
+	if description != "":
+		output += "[b]Description:[/b] %s\n\n" % [description]
+
+	# Thematic Relevance
+	var thematic_relevance = obj_data.get("thematic_relevance", [])
+	if thematic_relevance.size() > 0:
+		output += "[b]Themes:[/b] %s\n\n" % [", ".join(thematic_relevance)]
+
+	# Symbolic Meaning
+	var symbolic_meaning = obj_data.get("symbolic_meaning", [])
+	if symbolic_meaning.size() > 0:
+		output += "[b]Symbolic Meaning:[/b] %s\n\n" % [", ".join(symbolic_meaning)]
+
+	# Character Relations
+	var character_relations = obj_data.get("character_relations", {})
+	if character_relations.size() > 0:
+		output += "[b]Character Relations:[/b]\n"
+		for char_name in character_relations:
+			output += "[ul][i]%s[/i]: %s[/ul]\n" % [char_name, character_relations[char_name]]
+		output += "\n"
+
+	# Appearances
+	var appearances = obj_data.get("appearances", [])
+	if appearances.size() > 0:
+		output += "[b]Appears in:[/b] %s\n\n" % [", ".join(appearances)]
+
+	# Notes
+	var notes = obj_data.get("notes", {})
+	if notes.size() > 0:
+		output += "[b]Chapter Notes:[/b]\n"
+		if notes is Dictionary:
+			for chapter in notes:
+				output += "[ul]%s [i](%s)[/i][/ul]\n" % [notes[chapter], chapter]
+		elif notes is String:
+			output += "  %s\n" % [notes]
+		output += "\n"
+
+	object_sheet.text = output
+
+
+func _on_folder_opened(_path: String):
+	_load_characters()
+	_load_objects()
+	_update_status_message()

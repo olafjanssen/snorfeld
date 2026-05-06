@@ -37,8 +37,13 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 current_tab = 0
 tab_0/title = "Characters"
+tab_1/title = "Objects"
 
 [node name="CharacterTree" type="Tree" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=282338754]
+metadata/_tab_index = 0
+metadata/_tab_name = "Characters"
+
+[node name="ObjectTree" type="Tree" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=282338755]
 clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
@@ -46,14 +51,23 @@ allow_reselect = true
 hide_root = true
 auto_tooltip = false
 scroll_horizontal_enabled = false
-metadata/_tab_index = 0
-metadata/_tab_name = "Characters"
+metadata/_tab_index = 1
+metadata/_tab_name = "Objects"
 
 [node name="CharacterSheet" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1652980616]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StoryBibleCharacterSheet"
+bbcode_enabled = true
+meta_underlined = false
+hint_underlined = false
+
+[node name="ObjectSheet" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1652980617]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StoryBibleObjectSheet"
 bbcode_enabled = true
 meta_underlined = false
 hint_underlined = false

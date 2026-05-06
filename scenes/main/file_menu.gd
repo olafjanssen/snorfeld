@@ -7,6 +7,8 @@ const RUN_ALL_ANALYSES_ID: int = 200
 const RUN_CHAPTER_ANALYSES_ID: int = 201
 const RUN_ALL_CHARACTER_ANALYSES_ID: int = 202
 const RUN_CHAPTER_CHARACTER_ANALYSES_ID: int = 203
+const RUN_ALL_OBJECT_ANALYSES_ID: int = 204
+const RUN_CHAPTER_OBJECT_ANALYSES_ID: int = 205
 const INDEX_PROJECT_EMBEDDINGS_ID: int = 300
 const INDEX_CHAPTER_EMBEDDINGS_ID: int = 301
 
@@ -21,6 +23,9 @@ func _ready():
 	add_separator()
 	add_item("Run All Character Analyses", RUN_ALL_CHARACTER_ANALYSES_ID)
 	add_item("Run Chapter Character Analyses", RUN_CHAPTER_CHARACTER_ANALYSES_ID)
+	add_separator()
+	add_item("Run All Object Analyses", RUN_ALL_OBJECT_ANALYSES_ID)
+	add_item("Run Chapter Object Analyses", RUN_CHAPTER_OBJECT_ANALYSES_ID)
 	add_separator()
 	add_item("Index Project Embeddings", INDEX_PROJECT_EMBEDDINGS_ID)
 	add_item("Index Chapter Embeddings", INDEX_CHAPTER_EMBEDDINGS_ID)
@@ -44,6 +49,10 @@ func _on_item_pressed(id: int):
 		EventBus.run_all_character_analyses.emit()
 	elif id == RUN_CHAPTER_CHARACTER_ANALYSES_ID:
 		EventBus.run_chapter_character_analyses.emit()
+	elif id == RUN_ALL_OBJECT_ANALYSES_ID:
+		EventBus.run_all_object_analyses.emit()
+	elif id == RUN_CHAPTER_OBJECT_ANALYSES_ID:
+		EventBus.run_chapter_object_analyses.emit()
 	elif id == INDEX_PROJECT_EMBEDDINGS_ID:
 		EventBus.index_project_embeddings.emit()
 	elif id == INDEX_CHAPTER_EMBEDDINGS_ID:

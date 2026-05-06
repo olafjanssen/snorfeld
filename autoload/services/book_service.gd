@@ -281,6 +281,27 @@ func has_paragraph_in_file(paragraph_hash: String, file_path: String) -> bool:
 	return false
 
 
+# Get all paragraph hashes in the project
+func get_all_paragraph_hashes() -> Array:
+	var hashes := []
+	for para_id in paragraphs:
+		hashes.append(paragraphs[para_id].get("hash", ""))
+	return hashes
+
+
+# Get all chapter hashes in the project
+# Chapters are identified by their content hash (full file content)
+func get_all_chapter_hashes() -> Array:
+	var hashes := []
+	for file_path in files:
+		var file_data = files[file_path]
+		if not file_data.is_empty():
+			var content = file_data.get("content", "")
+			if content != "":
+				hashes.append(_hash_text(content))
+	return hashes
+
+
 # Get chapter containing a specific line in a file
 func get_chapter_at_line(file_path: String, line_number: int) -> Dictionary:
 	if not files.has(file_path):
