@@ -1,11 +1,6 @@
 extends CodeEdit
 
 var current_file_path: String = ""
-# Map from line number to original hash for that paragraph
-var paragraph_original_hashes := {}
-# Map from line number to current hash for that paragraph
-var paragraph_current_hashes := {}
-
 var last_text_hash: String = ""
 
 var last_modified_time: float = 0.0
@@ -20,6 +15,8 @@ func _ready():
 	EventBus.request_save_all_files.connect(_on_request_save_all_files)
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 	EventBus.navigate_to_line.connect(_on_navigate_to_line)
+	if BookService != null:
+		BookService.content_changed.connect(_on_book_content_changed)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
@@ -61,8 +58,6 @@ func _on_file_check_timeout():
 			var content: String = FileUtils.get_file_as_string(current_file_path)
 			set_text(content)
 			last_text_hash = _hash_text(content)
-			paragraph_original_hashes = {}
-			paragraph_current_hashes = {}
 
 			# Restore cursor position
 			if cursor_line >= 0:
@@ -82,8 +77,6 @@ func _on_navigate_to_line(file_path: String, line_number: int):
 		grab_focus()
 	else:
 		current_file_path = file_path
-		paragraph_original_hashes = {}
-		paragraph_current_hashes = {}
 		last_text_hash = ""
 		var content: String = FileUtils.get_file_as_string(file_path)
 		if content != "":
@@ -109,8 +102,6 @@ func _on_file_selected(path: String):
 		EventBus.request_save_file.emit(current_file_path)
 
 	current_file_path = path
-	paragraph_original_hashes = {}
-	paragraph_current_hashes = {}
 	last_text_hash = ""
 	var content: String = FileUtils.get_file_as_string(path)
 	if content != "":
@@ -123,54 +114,24 @@ func _on_file_selected(path: String):
 
 func _on_cursor_changed():
 	var cursor_line := get_caret_line()
-	var full_text := get_text()
-	var lines := full_text.split("\n")
-	if cursor_line >= 0 and cursor_line < lines.size():
-		var paragraph := lines[cursor_line]
-		# Only process non-empty paragraphs
-		if paragraph.length() > 0:
-			var current_hash := _hash_paragraph(paragraph)
+	if cursor_line < 0:
+		return
 
-			# Check if this line has an original hash
-			if paragraph_original_hashes.has(cursor_line):
-				# If current hash doesn't match current hash, user made manual edit
-				if paragraph_current_hashes.has(cursor_line) and current_hash != paragraph_current_hashes[cursor_line]:
-					# User manually edited - invalidate original hash
-					paragraph_original_hashes.erase(cursor_line)
-					paragraph_current_hashes.erase(cursor_line)
-					# Set new original hash to current
-					paragraph_original_hashes[cursor_line] = current_hash
+	# Emit signal with file_path and line number (1-based)
+	# Consumers will use BookService to get paragraph data
+	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 
-			# If this line doesn't have an original hash yet, set it
-			if not paragraph_original_hashes.has(cursor_line):
-				paragraph_original_hashes[cursor_line] = current_hash
+func _on_book_content_changed():
+	# BookService content changed - refresh our view if we have a file loaded
+	if current_file_path != "":
+		# Force a cursor change to update paragraph selection
+		_on_cursor_changed()
 
-			# Update current hash
-			paragraph_current_hashes[cursor_line] = current_hash
-
-			# Check if cache exists for this paragraph, if not request caching
-			var cache = ParagraphService.get_paragraph_cache(current_hash, current_file_path)
-			if cache.is_empty():
-				EventBus.request_priority_cache.emit(current_hash, current_file_path, paragraph, full_text)
-
-			# Emit signal with original hash for this line
-			EventBus.paragraph_selected.emit(
-				paragraph_original_hashes[cursor_line],
-				current_file_path,
-				paragraph
-			)
-
-func _hash_paragraph(paragraph: String) -> String:
-	var hash_ctx := HashingContext.new()
-	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(paragraph.to_utf8_buffer())
-	var hash_bytes := hash_ctx.finish()
-	return hash_bytes.hex_encode()
 
 func _on_text_changed():
 	# Emit file_changed signal when text changes
-	var current_text = get_text()
-	var current_hash = _hash_text(current_text)
+	var current_text: String = get_text()
+	var current_hash: String = _hash_text(current_text)
 	if current_hash != last_text_hash:
 		last_text_hash = current_hash
 		EventBus.file_changed.emit(current_file_path, current_text)
@@ -182,23 +143,25 @@ func _hash_text(full_text: String) -> String:
 	var hash_bytes := hash_ctx.finish()
 	return hash_bytes.hex_encode()
 
-func _on_apply_diff_patch(original_hash: String, file_path: String, operation: String, word_index: int, new_text: String):
+func _on_apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
 	# Only apply if this is the current file
 	if current_file_path != file_path:
 		return
 
-	# Store current cursor position and scroll position
-	var cursor_line := get_caret_line()
+	# Store cursor column and scroll position
 	var cursor_column := get_caret_column()
 	var scroll_pos := get_v_scroll_bar().value
 	var full_text := get_text()
 	var lines := full_text.split("\n")
 
+	# Convert to 0-based for our array
+	var cursor_line := line_number - 1
 	if cursor_line < 0 or cursor_line >= lines.size():
 		return
 
-	# Verify this is the paragraph we expect (original hash matches)
-	if not paragraph_original_hashes.has(cursor_line) or paragraph_original_hashes[cursor_line] != original_hash:
+	# Verify paragraph exists in BookService
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	if para_data.is_empty():
 		return
 
 	var current_paragraph = lines[cursor_line]
@@ -256,8 +219,7 @@ func _on_apply_diff_patch(original_hash: String, file_path: String, operation: S
 		set_caret_column(min(cursor_column, line_length))
 
 		# Update current hash but keep original hash (so more patches can be applied)
-		paragraph_current_hashes[target_line] = _hash_paragraph(current_paragraph)
-		# Re-trigger paragraph selection to update diff display (with same original hash)
-		EventBus.paragraph_selected.emit(original_hash, current_file_path, current_paragraph)
+		# Re-trigger paragraph selection to update diff display
+		EventBus.paragraph_selected.emit(current_file_path, target_line + 1)
 		# Emit file_changed signal since text was modified
 		EventBus.file_changed.emit(current_file_path, get_text())

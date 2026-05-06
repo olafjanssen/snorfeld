@@ -230,7 +230,15 @@ func _queue_task(paragraph_hash: String, paragraph: String, file_content: String
 	_processing_start()
 
 
-func _on_priority_cache_requested(paragraph_hash: String, file_path: String, paragraph: String, file_content: String) -> void:
+func _on_priority_cache_requested(file_path: String, line_number: int) -> void:
+	# Get paragraph from BookService
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	if para_data.is_empty():
+		return
+
+	var paragraph_hash: String = para_data.get("hash", "")
+	var paragraph: String = para_data.get("text", "")
+
 	# Check if already cached
 	if memory_cache.has(paragraph_hash):
 		return
@@ -239,6 +247,12 @@ func _on_priority_cache_requested(paragraph_hash: String, file_path: String, par
 	if queued_keys.has(paragraph_hash):
 		# Remove from queue to re-queue with priority
 		_remove_task_from_queue(paragraph_hash)
+
+	# Get file content from BookService
+	var file_data := BookService.get_file(file_path)
+	var file_content := ""
+	if not file_data.is_empty():
+		file_content = file_data.get("content", "")
 
 	queued_keys[paragraph_hash] = true
 	_queue_task(paragraph_hash, paragraph, file_content, file_path, true)

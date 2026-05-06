@@ -13,8 +13,9 @@ func _ready() -> void:
 	EventBus.run_chapter_character_analyses.connect(_on_run_chapter_character_analyses)
 	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	BookService.project_loaded.connect(_on_project_loaded)
-	BookService.project_unloaded.connect(_on_project_unloaded)
+	if BookService != null:
+		BookService.project_loaded.connect(_on_project_loaded)
+		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name

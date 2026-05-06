@@ -19,8 +19,9 @@ func _ready() -> void:
 	EventBus.index_project_embeddings.connect(_on_index_project_embeddings)
 	EventBus.index_chapter_embeddings.connect(_on_index_chapter_embeddings)
 	EventBus.file_selected.connect(_on_file_selected)
-	BookService.project_loaded.connect(_on_project_loaded)
-	BookService.project_unloaded.connect(_on_project_unloaded)
+	if BookService != null:
+		BookService.project_loaded.connect(_on_project_loaded)
+		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name

@@ -150,15 +150,8 @@ func _scan_file_and_emit(file_path: String) -> void:
 	if not _is_text_file(file_path):
 		return
 
-	var content := FileUtils.read_file(file_path)
-	if content == "":
-		return
-
-	# Split into paragraphs (separated by double newlines)
-	var paragraphs := content.split("\n\n")
-
-	# Emit file_scanned signal with paragraphs and full content for context
-	EventBus.file_scanned.emit(file_path, paragraphs, content)
+	# Note: file_scanned signal removed - use BookService for file content
+	# BookService automatically loads and parses all text files
 
 func _on_item_selected():
 	var item: TreeItem = get_selected()

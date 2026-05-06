@@ -8,8 +8,8 @@ extends Control
 @onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 
 # Store current context for patch application
-var current_paragraph_original_hash: String = ""
 var current_file_path: String = ""
+var current_line_number: int = -1
 var current_paragraph_text: String = ""
 
 # Store cache data for theme refresh
@@ -56,21 +56,25 @@ func _on_theme_changed() -> void:
 	_update_diff_displays()
 
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
-	# Emit signal to apply the patch to the editor
+	# Emit signal with line_number - editor will verify via BookService
 	EventBus.apply_diff_patch.emit(
-		current_paragraph_original_hash,
 		current_file_path,
+		current_line_number,
 		operation,
 		word_index,
 		text
 	)
 
-func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_text: String):
-	current_paragraph_original_hash = original_hash
+func _on_paragraph_selected(file_path: String, line_number: int):
 	current_file_path = file_path
-	current_paragraph_text = paragraph_text
+	current_line_number = line_number
 
-	_current_cache_data = ParagraphService.get_paragraph_cache(original_hash, file_path)
+	# Get paragraph from BookService
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	var para_hash: String = para_data.get("hash", "")
+	current_paragraph_text = para_data.get("text", "")
+
+	_current_cache_data = ParagraphService.get_paragraph_cache(para_hash, file_path)
 
 	# Store texts for theme refresh
 	_corrected_text = ""
@@ -93,9 +97,5 @@ func _on_paragraph_selected(original_hash: String, file_path: String, paragraph_
 		StructureExplanation.text = ""
 
 		# Queue this single paragraph for immediate processing
-		# We need to get the full file content to pass as context
-		var file_content := FileUtils.read_file(file_path)
-		if file_content != "":
-			# Queue with priority - insert at front of queue
-			var paragraph_hash = ParagraphService._hash_paragraph(paragraph_text)
-			EventBus.request_priority_cache.emit(paragraph_hash, file_path, paragraph_text, file_content)
+		# Use line number - ParagraphService will use BookService to get data
+		EventBus.request_priority_cache.emit(file_path, line_number)

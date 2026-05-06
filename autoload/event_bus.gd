@@ -11,15 +11,13 @@ signal request_open_folder
 @warning_ignore("unused_signal")
 signal navigate_to_line(file_path: String, line_number: int)
 
-# File content and scanning
-@warning_ignore("unused_signal")
-signal file_scanned(path: String, paragraphs: Array, file_content: String)
-
 # Paragraph and diff management
+# Carries line number - consumers use BookService to get paragraph data
 @warning_ignore("unused_signal")
-signal paragraph_selected(original_hash: String, file_path: String, current_text: String)
+signal paragraph_selected(file_path: String, line_number: int)
+# Uses line_number instead of hash - consumers use BookService to verify and get paragraph
 @warning_ignore("unused_signal")
-signal apply_diff_patch(original_hash: String, file_path: String, operation: String, word_index: int, new_text: String)
+signal apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, new_text: String)
 @warning_ignore("unused_signal")
 signal diff_span_clicked(operation: String, word_index: int, text: String)
 
@@ -56,8 +54,9 @@ signal cache_queue_updated(queued: int, processing: bool)
 signal cache_task_started(remaining: int)
 @warning_ignore("unused_signal")
 signal cache_task_completed(remaining: int)
+# Carries file_path and line_number - ParagraphService uses BookService to get paragraph data
 @warning_ignore("unused_signal")
-signal request_priority_cache(paragraph_hash: String, file_path: String, paragraph: String, file_content: String)
+signal request_priority_cache(file_path: String, line_number: int)
 @warning_ignore("unused_signal")
 signal cache_cleanup_started
 @warning_ignore("unused_signal")

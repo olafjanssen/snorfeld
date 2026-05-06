@@ -103,7 +103,8 @@ func _add_file(file_path: String) -> void:
 			var level := 0
 			while level < stripped.length() and stripped[level] == "#":
 				level += 1
-			if level == chapter_level and (stripped[level] == " " or stripped[level] == "\t"):
+			# Check bounds before accessing stripped[level]
+			if level < stripped.length() and level == chapter_level and (stripped[level] == " " or stripped[level] == "\t"):
 				# Save previous chapter if exists
 				if current_chapter_id != "":
 					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
@@ -299,6 +300,72 @@ func get_chapter_at_line(file_path: String, line_number: int) -> Dictionary:
 	return {}
 
 
+# Get paragraph at a specific line in a file
+# Returns the paragraph data dictionary or empty dict if not found
+func get_paragraph_at_line(file_path: String, line_number: int) -> Dictionary:
+	if not files.has(file_path):
+		return {}
+
+	# Get all paragraphs for this file
+	var para_ids := get_paragraphs_for_file(file_path)
+	for para_id in para_ids:
+		var para = paragraphs[para_id]
+		var start_line: int = para.get("start_line", 0)
+		var end_line: int = para.get("end_line", 0)
+		if line_number >= start_line and line_number <= end_line:
+			return para
+	return {}
+
+
+# Get paragraph hash at a specific line in a file (convenience method)
+func get_paragraph_hash_at_line(file_path: String, line_number: int) -> String:
+	var para := get_paragraph_at_line(file_path, line_number)
+	return para.get("hash", "")
+
+
+# Get all headings from a file (all levels, not just chapters)
+# Returns array of heading dictionaries with: level, text, line, file
+func get_all_headings_for_file(file_path: String) -> Array:
+	var headings: Array = []
+	if not files.has(file_path):
+		return headings
+
+	var content: String = files[file_path].get("content", "")
+	if content == "":
+		return headings
+
+	var lines: Array = content.split("\n")
+	var line_num: int = 0
+	for line in lines:
+		line_num += 1
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("#"):
+			var level: int = 0
+			while level < stripped.length() and stripped[level] == "#":
+				level += 1
+			if level < stripped.length() and (stripped[level] == " " or stripped[level] == "\t"):
+				var text: String = stripped.substr(level).strip_edges()
+				if text != "":
+					headings.append({
+					"level": level,
+					"text": text,
+					"line": line_num,
+					"file": file_path
+				})
+	return headings
+
+
+# Get all headings from all files in the project
+func get_all_project_headings() -> Array:
+	var all_headings: Array = []
+	var all_files := get_all_files()
+	all_files.sort()
+	for file_path in all_files:
+		var file_headings := get_all_headings_for_file(file_path)
+		all_headings.append_array(file_headings)
+	return all_headings
+
+
 # Cleanup - remove entries that don't exist in the project anymore
 func cleanup() -> void:
 	var project_path := loaded_project_path
@@ -366,7 +433,8 @@ func _determine_chapter_level(content: String) -> int:
 			var level := 0
 			while level < stripped.length() and stripped[level] == "#":
 				level += 1
-			if level >= 1 and level <= 6 and (stripped[level] == " " or stripped[level] == "\t"):
+			# Check bounds before accessing stripped[level]
+			if level >= 1 and level <= 6 and level < stripped.length() and (stripped[level] == " " or stripped[level] == "\t"):
 				level_counts[level] = level_counts.get(level, 0) + 1
 
 	# If no headings, default to level 1
