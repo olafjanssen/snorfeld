@@ -3,8 +3,7 @@ extends Window
 @onready var tab_container: TabContainer = $VBoxContainer/HSplitContainer/TabContainer
 @onready var character_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/CharacterTree
 @onready var object_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/ObjectTree
-@onready var character_sheet: RichTextLabel = $VBoxContainer/HSplitContainer/CharacterSheet
-@onready var object_sheet: RichTextLabel = $VBoxContainer/HSplitContainer/ObjectSheet
+@onready var content_sheet: RichTextLabel = $VBoxContainer/HSplitContainer/ContentSheet
 @onready var status_message: RichTextLabel = $VBoxContainer/PanelContainer/HBoxContainer/StatusMessage
 
 var characters: Array = []
@@ -130,8 +129,8 @@ func _on_tab_changed(tab_index: int):
 			if metadata and metadata.get("type") == "character":
 				_display_character_sheet(metadata["data"])
 		else:
-			character_sheet.text = ""
-		object_sheet.text = ""
+			content_sheet.text = ""
+		content_sheet.text = ""
 	elif tab_index == 1:
 		# Objects tab - refresh object display
 		var selected = object_tree.get_selected()
@@ -140,8 +139,8 @@ func _on_tab_changed(tab_index: int):
 			if metadata and metadata.get("type") == "object":
 				_display_object_sheet(metadata["data"])
 		else:
-			object_sheet.text = ""
-		character_sheet.text = ""
+			content_sheet.text = ""
+		content_sheet.text = ""
 
 func _display_character_sheet(char_data: Dictionary):
 	var full_name = char_data.get("name", "Unknown")
@@ -190,7 +189,7 @@ func _display_character_sheet(char_data: Dictionary):
 			output += "  %s\n" % [notes]
 		output += "\n"
 
-	character_sheet.text = output
+	content_sheet.text = output
 
 
 func _display_object_sheet(obj_data: Dictionary):
@@ -250,7 +249,7 @@ func _display_object_sheet(obj_data: Dictionary):
 			output += "  %s\n" % [notes]
 		output += "\n"
 
-	object_sheet.text = output
+	content_sheet.text = output
 
 
 func _on_folder_opened(_path: String):

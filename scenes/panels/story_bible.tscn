@@ -29,7 +29,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
-split_offsets = PackedInt32Array(250, 0)
+split_offsets = PackedInt32Array(250)
 split_offset = 250
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer" unique_id=853678825]
@@ -40,10 +40,12 @@ tab_0/title = "Characters"
 tab_1/title = "Objects"
 
 [node name="CharacterTree" type="Tree" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=282338754]
+layout_mode = 2
 metadata/_tab_index = 0
 metadata/_tab_name = "Characters"
 
 [node name="ObjectTree" type="Tree" parent="VBoxContainer/HSplitContainer/TabContainer" unique_id=282338755]
+visible = false
 clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
@@ -54,20 +56,11 @@ scroll_horizontal_enabled = false
 metadata/_tab_index = 1
 metadata/_tab_name = "Objects"
 
-[node name="CharacterSheet" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1652980616]
+[node name="ContentSheet" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1652980616]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StoryBibleCharacterSheet"
-bbcode_enabled = true
-meta_underlined = false
-hint_underlined = false
-
-[node name="ObjectSheet" type="RichTextLabel" parent="VBoxContainer/HSplitContainer" unique_id=1652980617]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StoryBibleObjectSheet"
 bbcode_enabled = true
 meta_underlined = false
 hint_underlined = false

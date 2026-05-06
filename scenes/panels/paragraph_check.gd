@@ -69,7 +69,10 @@ func _update_diff_displays() -> void:
 func _on_theme_changed() -> void:
 	_update_diff_displays()
 
-func _on_cache_task_completed(_remaining: int) -> void:
+func _on_cache_task_completed(service_type: String, _remaining: int, _result: Dictionary) -> void:
+	if service_type not in ['grammar','style','structure']:
+		return
+	
 	# When a cache task completes, refresh the display for the current paragraph
 	# This handles the case where we requested analysis for a specific tab
 	if current_paragraph_hash != "" and current_file_path != "":

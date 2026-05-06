@@ -30,7 +30,6 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
-	var file_path: String = payload.get("file_path", "")
 
 	# Extract context from file_content
 	var context_before := ""
@@ -144,29 +143,6 @@ func _on_priority_analysis_requested(service_type: String, file_path: String, pa
 
 	queue_paragraph(paragraph_hash, paragraph, file_content, file_path, true)
 
-func _on_legacy_priority_analysis_requested(file_path: String, line_number: int, analysis_type: int) -> void:
-	if analysis_type != EventBus.AnalysisType.GRAMMAR:
-		return
-	# Get paragraph from BookService
-	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
-	if para_data.is_empty():
-		return
-
-	var paragraph_hash: String = para_data.get("hash", "")
-	var paragraph: String = para_data.get("text", "")
-
-	# Check if already cached
-	if is_cached(paragraph_hash):
-		return
-
-	# Get file content from BookService
-	var file_data := BookService.get_file(file_path)
-	var file_content := ""
-	if not file_data.is_empty():
-		file_content = file_data.get("content", "")
-
-	queue_paragraph(paragraph_hash, paragraph, file_content, file_path, true)
-
 func _on_folder_opened(path: String) -> void:
 	var cache_dir := path.path_join(".snorfeld").path_join(_get_cache_subdir())
 	if FileUtils.dir_exists(cache_dir):
@@ -210,7 +186,7 @@ func _on_run_chapter_analyses() -> void:
 ## ============================================================================
 
 # Clean up cache entries that don't exist in the project anymore
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+func _cleanup_unused_cache_files(cache_path: String, _project_path: String) -> int:
 	var removed_count := 0
 
 	# Get valid hashes from BookService

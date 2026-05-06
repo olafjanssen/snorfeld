@@ -195,26 +195,27 @@ func _process_task(task: Dictionary) -> void:
 	_ensure_cache_loaded(cache_dir)
 
 	# Check if already cached
-	var key := _get_cache_key(task)
-	if memory_cache.has(key):
-		queued_keys.erase(key)
+	var task_key := _get_cache_key(task)
+	if memory_cache.has(task_key):
+		queued_keys.erase(task_key)
 		return
 
 	# Analyze using subclass implementation
+	@warning_ignore("redundant_await")
 	var result := await _analyze(task)
 
 	if result == null or result.is_empty():
-		queued_keys.erase(key)
+		queued_keys.erase(task_key)
 		return
 
 	# Store in memory cache
-	memory_cache[key] = result
+	memory_cache[task_key] = result
 
 	# Save to JSONL file
 	_save_to_jsonl(cache_dir, result)
 
 	# Clean up queue tracking
-	queued_keys.erase(key)
+	queued_keys.erase(task_key)
 
 ## ============================================================================
 ## Utility Methods
