@@ -18,7 +18,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 EventBus="*res://autoload/event_bus.gd"
-ProjectState="*res://autoload/project_state.gd"
 AppConfig="*res://autoload/app_config.gd"
 LLMClient="*res://autoload/llm_client.gd"
 BookService="*res://autoload/book_service.gd"

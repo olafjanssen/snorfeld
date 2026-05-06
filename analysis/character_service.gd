@@ -511,7 +511,7 @@ func _file_exists(path: String) -> bool:
 
 # Get the character cache path for the current project
 func get_cache_path() -> String:
-	var project_path := ProjectState.get_current_path()
+	var project_path := BookService.loaded_project_path
 	if project_path == "":
 		project_path = "res://"
 	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
