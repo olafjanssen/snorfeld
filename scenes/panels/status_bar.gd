@@ -81,13 +81,9 @@ func _on_timer_timeout():
 ## Git Status Integration
 
 func _on_git_operation_started(operation: String):
-	if GitService == null or not is_inside_tree():
-		return
 	_set_status(icon_text + "Git: %s..." % operation, true)
 
 func _on_git_operation_completed(_operation: String, success: bool, message: String):
-	if GitService == null or not is_inside_tree():
-		return
 	if success:
 		_set_status(icon_text + "Git: %s" % message, true)
 	else:

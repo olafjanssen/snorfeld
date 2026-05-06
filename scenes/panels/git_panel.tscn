@@ -1,23 +1,15 @@
 [gd_scene format=3 uid="uid://bkg70qtikji0p"]
 
 [ext_resource type="Script" uid="uid://bc45v60y7kfqi" path="res://scenes/panels/git_panel.gd" id="1"]
-[ext_resource type="Script" uid="uid://c5q8m9p3s7t2u1v4w" path="res://autoload/services/git_service.gd" id="2"]
+[ext_resource type="Script" uid="uid://qeqew60hmmp4" path="res://autoload/services/git_service.gd" id="2"]
 
 [node name="GitPanel" type="Control" unique_id=431570014]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1")
+
 [node name="GitService" type="Node" parent="." unique_id=123456789]
 script = ExtResource("2")
-custom_minimum_size = Vector2(250, 0)
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = -1670.0
-offset_bottom = -480.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-script = ExtResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=997250553]
 layout_mode = 1

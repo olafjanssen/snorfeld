@@ -1,3 +1,4 @@
+class_name ContentCache
 extends Node
 ## ContentCache - Base class for content caching services
 ## Provides common caching functionality for paragraph and character services
