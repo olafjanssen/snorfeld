@@ -194,8 +194,6 @@ vertical_alignment = 1
 meta_underlined = false
 hint_underlined = false
 script = ExtResource("8")
-default_message = null
-display_duration = null
 
 [node name="Spacer2" type="Control" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=1866524598]
 custom_minimum_size = Vector2(16, 0)

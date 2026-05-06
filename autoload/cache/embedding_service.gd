@@ -132,7 +132,6 @@ func _load_paragraph_jsonl_cache(cache_dir: String) -> void:
 	if not FileUtils.file_exists(jsonl_path):
 		return
 
-	print("file:" , jsonl_path)
 	var content := FileUtils.read_file(jsonl_path)
 	var lines := content.split("\n")
 	for line in lines:
@@ -146,7 +145,6 @@ func _load_paragraph_jsonl_cache(cache_dir: String) -> void:
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, false)
 			memory_cache[key] = data
-			print("paragraph: ", memory_cache.size())
 
 
 # Load chapter embeddings JSONL cache file into memory
@@ -155,7 +153,6 @@ func _load_chapter_jsonl_cache(cache_dir: String) -> void:
 	if not FileUtils.file_exists(jsonl_path):
 		return
 
-	print("chapter file: ", jsonl_path)
 	var content := FileUtils.read_file(jsonl_path)
 	var lines := content.split("\n")
 	for line in lines:
@@ -168,7 +165,6 @@ func _load_chapter_jsonl_cache(cache_dir: String) -> void:
 		var text_hash = data.get("text_hash", "")
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, true)
-			print("chapter: ", memory_cache.size())
 			memory_cache[key] = data
 
 
@@ -181,6 +177,14 @@ func _make_cache_key(cache_dir: String, text_hash: String, is_chapter: bool) -> 
 # Get cache directory for a file path
 func _get_cache_dir_for_file(file_path: String) -> String:
 	return file_path.get_base_dir().path_join(".snorfeld").path_join(EMBEDDING_DIR_NAME)
+
+
+
+# Get embedding array from cache data
+func _get_embedding_from_data(data: Dictionary) -> Array:
+	if data.has("embedding"):
+		return data["embedding"]
+	return []
 
 
 # Hash a string for cache key (MD5)
