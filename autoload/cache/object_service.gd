@@ -353,14 +353,20 @@ func _extract_objects_from_text(text: String, chapter_id: String, existing_objec
 	var prompt := """
 You are a helpful writing assistant specializing in object analysis for a novel. Analyze the following chapter text.
 
-Your task is to identify the important objects (Chekhov's guns) that appear in this chapter and provide their complete, consistent profiles. Use the existing object database to maintain consistency.
+Your task is to identify ONLY tangible objects and abstract concepts (Chekhov's guns) that appear in this chapter. DO NOT include characters, people, locations, or places.
 
 IMPORTANT GUIDELINES:
 - Be CONSISTENT: Use the EXACT same object names from existing objects when they reappear
-- Be SELECTIVE: Focus on objects that have thematic relevance, symbolic meaning, or important relationships with characters (Chekhov's guns)
+- Be SELECTIVE: Focus ONLY on tangible physical objects (weapons, heirlooms, gifts, tools) and abstract concepts (ideas, themes, symbols). EXCLUDE all characters, people, locations, cities, countries, and place names.
 - Be COMPACT: Use concise, standardized descriptions
 - Be COMPLETE: Include all relevant information revealed in this chapter
-- Only include objects that are actually described or used in the chapter
+- Only include items that are actually described or used in the chapter
+
+CRITICAL: DO NOT include any of the following:
+- Character names or people
+- Location names (cities, towns, buildings, rooms, etc.)
+- Place names of any kind
+- Proper nouns that refer to people or places
 
 Existing objects for reference:
 %s
@@ -370,10 +376,10 @@ Chapter: %s
 Chapter Text:
 %s
 
-For each important object that appears in this chapter, return its complete profile:
+For each important TANGIBLE OBJECT or ABSTRACT CONCEPT that appears in this chapter, return its complete profile:
 - name: EXACT match with existing objects if they exist
-- object_type: Array of type categories (e.g., ["weapon", "family heirloom", "gift"])
-- description: Physical description and purpose
+- object_type: Array of type categories (e.g., ["weapon", "family heirloom", "gift", "tool", "symbol", "concept", "idea"])
+- description: Physical description and purpose (for tangible objects) or definition (for concepts)
 - thematic_relevance: Array of themes this object represents (e.g., ["power", "betrayal", "hope"])
 - character_relations: Object of {character_name: relationship_description} (how characters interact with this object)
 - symbolic_meaning: Array of symbolic meanings (e.g., ["foreshadowing", "character's fate"])
@@ -388,7 +394,7 @@ Respond with a JSON object:
     {
       "name": "Object Name",
       "object_type": ["type1", "type2"],
-      "description": "Physical description",
+      "description": "Physical description or concept definition",
       "thematic_relevance": ["theme1", "theme2"],
       "character_relations": {"CharacterName": "how they relate to it"},
       "symbolic_meaning": ["meaning1"],
