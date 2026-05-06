@@ -39,7 +39,6 @@ var refresh_timer: Timer
 
 func _ready():
 	EventBus.theme_changed.connect(_on_theme_changed)
-	print("GitPanel: _ready() called, GitService:", GitService)
 	# Connect signals
 	file_list.item_selected.connect(_on_file_selected)
 	file_list.item_activated.connect(_on_file_activated)
@@ -52,7 +51,6 @@ func _ready():
 
 	# Connect GitService signals
 	if GitService != null:
-		print("GitPanel: Connecting GitService signals")
 		EventBus.git_repo_changed.connect(_on_git_repo_changed)
 		EventBus.git_status_updated.connect(_on_git_status_updated)
 
@@ -71,7 +69,6 @@ func _ready():
 		_on_git_repo_changed(GitService.is_git_repo_cached)
 
 func _on_git_repo_changed(is_git_repo: bool):
-	print("GitPanel: _on_git_repo_changed:", is_git_repo)
 	if GitService == null or not is_inside_tree():
 		return
 	if is_git_repo:
@@ -82,9 +79,7 @@ func _on_git_repo_changed(is_git_repo: bool):
 		_set_buttons_enabled(false)
 
 func _on_git_status_updated(status: Dictionary):
-	print("GitPanel: git_status_updated received, files:", status.get("files", []).size(), " is_inside_tree:", is_inside_tree())
 	if GitService == null or not is_inside_tree():
-		print("GitPanel: Skipping update - not in tree")
 		return
 
 	# Update file list
@@ -113,7 +108,6 @@ func _update_file_list():
 		_add_file_to_list(root, file_info["path"], file_info["change_type"], file_info["staged"])
 
 func _add_file_to_list(parent_item, file_path: String, change_type: String, is_staged: bool):
-	print("Adding: ", file_path, " ", change_type, " staged:", is_staged)
 	var item = file_list.create_item(parent_item)
 	var file_name = file_path.get_file()
 
@@ -167,30 +161,21 @@ func _on_file_activated():
 
 func _show_git_diff(file_path: String):
 	_current_diff_file = file_path
-	print("Showing diff for: ", file_path)
 	# Get absolute path
 	var absolute_path = GitService.get_absolute_path(file_path)
-	print("Absolute path: ", absolute_path)
 
 	# Get current file content
 	var current_content := FileUtils.read_file(absolute_path)
-	if current_content != "":
-		print("Current content length: ", current_content.length())
 
 	# Get git version of the file
 	var git_content = GitService.get_file_content_from_git(file_path)
-	print("Git content length: ", git_content.length())
 
 	if git_content != "" and current_content != "":
 		# Use DiffUtility to create a human-readable diff
 		var diff_utility = DiffUtility.new()
 		diff_utility.set_control(self)
-		print("Calculating diff...")
 		var diff_bbcode = diff_utility.calculate_diff(git_content, current_content)
-		print("Diff calculated, length: ", diff_bbcode.length())
 		EventBus.show_git_diff.emit(file_path, diff_bbcode)
-	else:
-		print("Skipping diff - git_content empty:", git_content == "", " current_content empty:", current_content == "")
 
 func _regenerate_diff():
 	if _current_diff_file != "":

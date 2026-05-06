@@ -135,6 +135,4 @@ func _save_file(path: String):
 	file_contents.erase(path)
 	EventBus.file_saved.emit(path)
 
-	print("Saved: ", path)
-
 	is_saving = false

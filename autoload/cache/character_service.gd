@@ -388,16 +388,11 @@ Respond with a JSON object:
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
 				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
-				print("[CharacterService] Token limit reached, retrying %d/%d with max_tokens: %d" % [retry + 1, max_retries, options["max_tokens"]])
-			else:
-				print("[CharacterService] Parse failed, retrying %d/%d" % [retry + 1, max_retries])
-
 			llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 			if llm_response.get("parsed_json", null) != null:
 				return llm_response["parsed_json"]
 
 		push_error("[CharacterService] Failed to parse character extraction response after %d retries" % max_retries)
-		print(llm_response)
 		return {"characters": []}
 
 

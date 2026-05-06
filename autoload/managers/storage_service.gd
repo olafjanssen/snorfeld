@@ -11,9 +11,7 @@ func _ready() -> void:
 	EventBus.folder_opened.connect(_on_folder_opened)
 
 func _on_folder_opened(path: String) -> void:
-	print("[StorageService] Folder opened: %s" % path)
 	current_cache_path = path.path_join(CACHE_DIR_NAME)
-	print("[StorageService] Cache path set to: %s" % current_cache_path)
 	create_folder(current_cache_path)
 
 # Creates a folder for the given directory
@@ -36,7 +34,6 @@ func _remove_directory(path: String) -> bool:
 		push_error("[StorageService] Failed to open directory for removal: %s" % path)
 		return false
 
-	print("[StorageService] Removing directory: %s" % path)
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	while file_name != "":
@@ -48,7 +45,6 @@ func _remove_directory(path: String) -> bool:
 				return false
 		else:
 			# Remove file
-			print("[StorageService] Removing file: %s" % full_path)
 			if DirAccess.remove_absolute(full_path) != OK:
 				push_error("[StorageService] Failed to remove file: %s" % full_path)
 				dir.list_dir_end()
@@ -57,7 +53,6 @@ func _remove_directory(path: String) -> bool:
 	dir.list_dir_end()
 
 	# Remove the now-empty directory
-	print("[StorageService] Removing empty directory: %s" % path)
 	if DirAccess.remove_absolute(path) != OK:
 		push_error("[StorageService] Failed to remove directory: %s" % path)
 		return false
@@ -69,16 +64,13 @@ func clear_cache() -> bool:
 	var cache_path := current_cache_path
 
 	if DirAccess.dir_exists_absolute(cache_path):
-		print("[StorageService] Clearing cache at: %s" % cache_path)
 		if _remove_directory(cache_path):
 			current_cache_path = ""
-			print("[StorageService] Cache cleared successfully")
 			return true
 		else:
 			push_error("[StorageService] Failed to clear cache directory: %s" % [cache_path])
 			return false
 	else:
-		print("[StorageService] Cache doesn't exist, nothing to clear")
 		return true
 
 

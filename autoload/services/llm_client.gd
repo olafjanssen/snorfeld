@@ -162,9 +162,6 @@ func _process_next_queued_request() -> void:
 	current_request_type = request["request_type"]
 	current_completion = request["completion"]
 
-	print("[LLMClient] Making request to: %s" % request["endpoint"])
-	print("[LLMClient] Request body: %s" % JsonUtils.stringify_json(request["request_body"]))
-
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var body_string: String = JsonUtils.stringify_json(request["request_body"])
 	var request_err: int
@@ -176,7 +173,6 @@ func _process_next_queued_request() -> void:
 		request_err = http_request.request(request["endpoint"], headers, HTTPClient.METHOD_POST, body_string)
 
 	if request_err != OK:
-		print("[LLMClient] ERROR: Failed to send request, error code: %d" % request_err)
 		current_completion["response"] = {"error": "Failed to send request", "error_code": request_err}
 		current_completion["completed"] = true
 		current_completion = {}
@@ -184,14 +180,12 @@ func _process_next_queued_request() -> void:
 		_process_next_queued_request()
 		return
 
-	print("[LLMClient] Request sent, waiting for response...")
 	# Wait for the HTTP callback to set the response
 	# The callback will check current_request_type and current_completion
 	# and set the appropriate values
 	while not current_completion["completed"]:
 		await get_tree().process_frame
 
-	print("[LLMClient] Request received response")
 	current_completion = {}
 	processing_request = false
 	_process_next_queued_request()
@@ -200,14 +194,10 @@ func _process_next_queued_request() -> void:
 ## HTTP request completion callback
 ## Sets the response on the current completion object and emits signals for backward compatibility
 func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	print("[LLMClient] HTTP callback: result=%d, response_code=%d" % [result, response_code])
-
 	if current_completion == null or current_completion.is_empty():
-		print("[LLMClient] WARNING: No current completion object for callback")
 		return
 
 	if current_request_type == "check":
-		print("[LLMClient] Check request completed with code: %d" % response_code)
 		var is_running = (response_code == 200)
 		current_completion["response"] = is_running
 		current_completion["completed"] = true
@@ -217,7 +207,6 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 
 	if current_request_type == "embed":
 		var response_body_str: String = body.get_string_from_utf8()
-		print("[LLMClient] Embedding response body received")
 
 		var response_dict: Dictionary
 		if result == OK and response_code == 200:
@@ -231,19 +220,15 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 					response_dict["model"] = json_data.get("model", "")
 					response_dict["success"] = true
 				else:
-					print("[LLMClient] Embedding JSON parse error or missing embedding field")
 					response_dict = {"error": "Failed to parse embedding response or missing embedding", "raw_response": response_body_str}
 					response_dict["success"] = false
 			else:
-				print("[LLMClient] JSON parse error")
 				response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
 				response_dict["success"] = false
 		elif response_code == 0:
-			print("[LLMClient] Connection failed")
 			response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}
 			response_dict["success"] = false
 		else:
-			print("[LLMClient] API embedding request failed with code: %d" % response_code)
 			response_dict = {"error": "API embedding request failed", "error_code": response_code, "response": response_body_str}
 			response_dict["success"] = false
 
@@ -255,7 +240,6 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 
 	# Otherwise it's a generate request
 	var response_body_str: String = body.get_string_from_utf8()
-	print("[LLMClient] Response body received")
 
 	var response_dict: Dictionary
 	if result == OK and response_code == 200:
@@ -263,13 +247,10 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 		if not json_data.is_empty():
 			response_dict = {"json_data": json_data, "raw_response": response_body_str}
 		else:
-			print("[LLMClient] JSON parse error")
 			response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
 	elif response_code == 0:
-		print("[LLMClient] Connection failed")
 		response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}
 	else:
-		print("[LLMClient] API request failed with code: %d" % response_code)
 		response_dict = {"error": "API request failed", "error_code": response_code, "response": response_body_str}
 
 	current_completion["response"] = response_dict

@@ -44,7 +44,6 @@ func _process_task(task: Dictionary):
 
 	# Compute embedding for the text
 	var embedding_model = AppConfig.get_embedding_model()
-	print("[EmbeddingService] Computing embedding for %s (chapter: %s)" % [text_hash, is_chapter])
 
 	var embed_result = await LLMClient.embed(embedding_model, text)
 

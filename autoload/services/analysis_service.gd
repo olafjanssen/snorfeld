@@ -3,7 +3,6 @@ extends Node
 
 # Analyzes text for grammar/spelling corrections
 func analyze_grammar(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
-	print("[AnalysisService] Generating grammar LLM response for paragraph...")
 	# Build context from surrounding text (trim to reasonable size)
 	var context := ""
 	if context_before.length() > 0 or context_after.length() > 0:
