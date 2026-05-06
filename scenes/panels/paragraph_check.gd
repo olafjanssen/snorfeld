@@ -7,6 +7,9 @@ extends Control
 @onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
 @onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 
+var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=-4.0]✲[/pulse] "
+
+
 # Store current context for patch application
 var current_file_path: String = ""
 var current_line_number: int = -1
@@ -137,7 +140,7 @@ func _update_display_for_active_tab(tab_index: int):
 				_corrected_text = _grammar_cache_data.get("corrected", "")
 				GrammarExplanation.text = _grammar_cache_data.get("explanation", "")
 			else:
-				Correction.set_text("Generating analysis... Please wait.")
+				Correction.set_text(icon_text + "Generating analysis...")
 				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.GRAMMAR)
 				return
 		1:  # Style tab
@@ -145,7 +148,7 @@ func _update_display_for_active_tab(tab_index: int):
 				_enhanced_text = _style_cache_data.get("enhanced", "")
 				StyleExplanation.text = _style_cache_data.get("explanation", "")
 			else:
-				Enhancement.set_text("Generating analysis... Please wait.")
+				Correction.set_text(icon_text + "Generating analysis...")
 				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.STYLE)
 				return
 		2:  # Structure tab
@@ -153,7 +156,7 @@ func _update_display_for_active_tab(tab_index: int):
 				_suggestion_text = _structure_cache_data.get("suggestion", "")
 				StructureExplanation.text = _structure_cache_data.get("explanation", "")
 			else:
-				Suggestion.set_text("Generating analysis... Please wait.")
+				Correction.set_text(icon_text + "Generating analysis...")
 				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.STRUCTURE)
 				return
 

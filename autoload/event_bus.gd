@@ -1,141 +1,89 @@
 extends Node
 ## EventBus - Centralized signal bus for the application
 
+@warning_ignore_start("unused_signal")
+
 # Folder and file navigation
-@warning_ignore("unused_signal")
 signal folder_opened(path: String)
-@warning_ignore("unused_signal")
 signal file_selected(path: String)
-@warning_ignore("unused_signal")
 signal request_open_folder
-@warning_ignore("unused_signal")
 signal navigate_to_line(file_path: String, line_number: int)
 
 # Paragraph and diff management
 # Carries line number - consumers use BookService to get paragraph data
-@warning_ignore("unused_signal")
 signal paragraph_selected(file_path: String, line_number: int)
 # Uses line_number instead of hash - consumers use BookService to verify and get paragraph
-@warning_ignore("unused_signal")
 signal apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, new_text: String)
-@warning_ignore("unused_signal")
 signal diff_span_clicked(operation: String, word_index: int, text: String)
 
 # Settings
-@warning_ignore("unused_signal")
 signal open_settings
-@warning_ignore("unused_signal")
 signal settings_closed
 
 # Theme
-@warning_ignore("unused_signal")
 signal theme_changed
 
 # Story Bible
-@warning_ignore("unused_signal")
 signal open_story_bible
 
 # File saving
-@warning_ignore("unused_signal")
 signal request_save_file(path: String)
-@warning_ignore("unused_signal")
 signal file_saved(path: String)
-@warning_ignore("unused_signal")
 signal file_changed(path: String, content: String)
-@warning_ignore("unused_signal")
 signal request_close_file(path: String)
-@warning_ignore("unused_signal")
 signal request_save_all_files
 
 # Paragraph cache progress
-@warning_ignore("unused_signal")
 signal cache_queue_updated(queued: int, processing: bool)
-@warning_ignore("unused_signal")
 signal cache_task_started(remaining: int)
-@warning_ignore("unused_signal")
 signal cache_task_completed(remaining: int)
 
 # Analysis type enum for separate caching
 enum AnalysisType { GRAMMAR, STYLE, STRUCTURE }
 
 # Paragraph analysis signals - carry file_path, line_number, and analysis_type
-@warning_ignore("unused_signal")
 signal request_priority_analysis(file_path: String, line_number: int, analysis_type: int)
-@warning_ignore("unused_signal")
 signal cache_cleanup_started
-@warning_ignore("unused_signal")
 signal cache_cleanup_completed(removed_count: int)
 
 # Analysis triggers
-@warning_ignore("unused_signal")
 signal run_all_analyses
-@warning_ignore("unused_signal")
 signal run_chapter_analyses
 
 # Embedding indexing triggers
-@warning_ignore("unused_signal")
 signal index_project_embeddings
-@warning_ignore("unused_signal")
 signal index_chapter_embeddings
 
 # Character cache progress
-@warning_ignore("unused_signal")
 signal character_cache_queue_updated(queued: int, processing: bool)
-@warning_ignore("unused_signal")
 signal character_cache_task_started(remaining: int)
-@warning_ignore("unused_signal")
 signal character_cache_task_completed(remaining: int)
-@warning_ignore("unused_signal")
 signal request_priority_character_cache(file_path: String, file_content: String)
-@warning_ignore("unused_signal")
 signal run_all_character_analyses
-@warning_ignore("unused_signal")
 signal run_chapter_character_analyses
 
 # Embedding cache progress
-@warning_ignore("unused_signal")
 signal embedding_cache_queue_updated(queued: int, processing: bool)
-@warning_ignore("unused_signal")
 signal embedding_cache_task_started(remaining: int)
-@warning_ignore("unused_signal")
 signal embedding_cache_task_completed(remaining: int)
-@warning_ignore("unused_signal")
 signal request_priority_embedding_cache(text_hash: String, file_path: String, text: String, is_chapter: bool)
 
 # Git integration signals
-@warning_ignore("unused_signal")
 signal git_status_refresh_requested(path: String)
-@warning_ignore("unused_signal")
 signal git_file_status_changed(file_path: String, status: String)
-@warning_ignore("unused_signal")
 signal show_git_diff(file_path: String, diff: String)
-@warning_ignore("unused_signal")
 signal git_status_updated(status: Dictionary)
-@warning_ignore("unused_signal")
 signal git_diff_available(file_path: String, diff: String)
-@warning_ignore("unused_signal")
 signal git_operation_started(operation: String)
-@warning_ignore("unused_signal")
 signal git_operation_completed(operation: String, success: bool, message: String)
-@warning_ignore("unused_signal")
 signal git_repo_changed(is_git_repo: bool)
-@warning_ignore("unused_signal")
 signal file_status_changed(file_path: String, status: String)
-@warning_ignore("unused_signal")
 signal request_open_git_panel
-@warning_ignore("unused_signal")
 signal request_init_git_repo
-@warning_ignore("unused_signal")
 signal request_stage_file(file_path: String)
-@warning_ignore("unused_signal")
 signal request_stage_all
-@warning_ignore("unused_signal")
 signal request_unstage_file(file_path: String)
-@warning_ignore("unused_signal")
 signal request_commit(message: String)
-@warning_ignore("unused_signal")
 signal request_push
-@warning_ignore("unused_signal")
 signal request_pull
-@warning_ignore("unused_signal")
 signal request_fetch
