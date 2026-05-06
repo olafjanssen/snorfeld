@@ -1,25 +1,33 @@
 extends ContentCache
 # Paragraph service - handles caching and analysis of paragraph results
 # Uses BookService for project content model, JSONL format with in-memory cache for efficiency
+# Now supports separate caching for grammar, style, and structure analyses
 
 const PARAGRAPH_DIR_NAME := "paragraph"
-const JSONL_FILENAME := "paragraphs.jsonl"
+const GRAMMAR_JSONL_FILENAME := "grammar.jsonl"
+const STYLE_JSONL_FILENAME := "style.jsonl"
+const STRUCTURE_JSONL_FILENAME := "structure.jsonl"
 
-# In-memory cache: key = paragraph_hash, value = cache data
-var memory_cache: Dictionary = {}
+# In-memory caches: key = paragraph_hash, value = cache data
+var grammar_cache: Dictionary = {}
+var style_cache: Dictionary = {}
+var structure_cache: Dictionary = {}
 # Track which cache directories have been loaded into memory
 var loaded_cache_dirs: Dictionary = {}
-# Track which paragraphs are currently queued (to prevent duplicate queuing)
-var queued_keys: Dictionary = {}
+# Track which paragraphs are currently queued per analysis type (to prevent duplicate queuing)
+var queued_keys_grammar: Dictionary = {}
+var queued_keys_style: Dictionary = {}
+var queued_keys_structure: Dictionary = {}
 
 func _ready() -> void:
-	EventBus.request_priority_cache.connect(_on_priority_cache_requested)
+	EventBus.request_priority_analysis.connect(_on_priority_analysis_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.run_all_analyses.connect(_on_run_all_analyses)
 	EventBus.run_chapter_analyses.connect(_on_run_chapter_analyses)
 	EventBus.file_selected.connect(_on_file_selected)
-	BookService.project_loaded.connect(_on_project_loaded)
-	BookService.project_unloaded.connect(_on_project_unloaded)
+	if BookService != null:
+		BookService.project_loaded.connect(_on_project_loaded)
+		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name
@@ -33,14 +41,38 @@ func _process_task(task: Dictionary):
 	var paragraph: String = task.get("paragraph", "")
 	var file_content: String = task.get("file_content", "")
 	var file_path: String = task.get("file_path", "")
+	var analysis_type: int = task.get("analysis_type", 0)
 
-	# Check if already cached
-	if memory_cache.has(paragraph_hash):
-		queued_keys.erase(paragraph_hash)
+	# Check if already cached for this analysis type
+	if _is_cached(paragraph_hash, analysis_type):
+		_remove_from_queued_keys(paragraph_hash, analysis_type)
 		return
 
-	await _create_and_store_cache(paragraph_hash, paragraph, file_content, file_path)
-	queued_keys.erase(paragraph_hash)
+	await _create_and_store_cache(paragraph_hash, paragraph, file_content, file_path, analysis_type)
+	_remove_from_queued_keys(paragraph_hash, analysis_type)
+
+
+# Check if a paragraph hash is cached for a specific analysis type
+func _is_cached(paragraph_hash: String, analysis_type: int) -> bool:
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			return grammar_cache.has(paragraph_hash)
+		EventBus.AnalysisType.STYLE:
+			return style_cache.has(paragraph_hash)
+		EventBus.AnalysisType.STRUCTURE:
+			return structure_cache.has(paragraph_hash)
+	return false
+
+
+# Remove from queued keys for a specific analysis type
+func _remove_from_queued_keys(paragraph_hash: String, analysis_type: int) -> void:
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			queued_keys_grammar.erase(paragraph_hash)
+		EventBus.AnalysisType.STYLE:
+			queued_keys_style.erase(paragraph_hash)
+		EventBus.AnalysisType.STRUCTURE:
+			queued_keys_structure.erase(paragraph_hash)
 
 
 # Override: Emit queue updated signal
@@ -63,21 +95,22 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 	return file_path.get_base_dir().path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
 
 
-# Ensure a cache directory's JSONL file is loaded into memory
+# Ensure a cache directory's JSONL files are loaded into memory
 func _ensure_cache_loaded(cache_dir: String) -> void:
 	if loaded_cache_dirs.get(cache_dir, false):
 		return
 	if FileUtils.dir_exists(cache_dir):
-		_load_jsonl_cache(cache_dir)
+		_load_grammar_jsonl_cache(cache_dir)
+		_load_style_jsonl_cache(cache_dir)
+		_load_structure_jsonl_cache(cache_dir)
 	loaded_cache_dirs[cache_dir] = true
 
 
-# Load a JSONL cache file into memory
-func _load_jsonl_cache(cache_dir: String) -> void:
-	var jsonl_path := cache_dir.path_join(JSONL_FILENAME)
+# Load grammar JSONL cache file into memory
+func _load_grammar_jsonl_cache(cache_dir: String) -> void:
+	var jsonl_path := cache_dir.path_join(GRAMMAR_JSONL_FILENAME)
 	if not FileUtils.file_exists(jsonl_path):
 		return
-
 	var content := FileUtils.read_file(jsonl_path)
 	var lines := content.split("\n")
 	for line in lines:
@@ -89,11 +122,50 @@ func _load_jsonl_cache(cache_dir: String) -> void:
 			continue
 		var paragraph_hash = data.get("paragraph_hash", "")
 		if paragraph_hash != "":
-			memory_cache[paragraph_hash] = data
+			grammar_cache[paragraph_hash] = data
+
+
+# Load style JSONL cache file into memory
+func _load_style_jsonl_cache(cache_dir: String) -> void:
+	var jsonl_path := cache_dir.path_join(STYLE_JSONL_FILENAME)
+	if not FileUtils.file_exists(jsonl_path):
+		return
+	var content := FileUtils.read_file(jsonl_path)
+	var lines := content.split("\n")
+	for line in lines:
+		line = line.strip_edges()
+		if line == "":
+			continue
+		var data := JsonUtils.parse_json(line)
+		if data == null or data.is_empty():
+			continue
+		var paragraph_hash = data.get("paragraph_hash", "")
+		if paragraph_hash != "":
+			style_cache[paragraph_hash] = data
+
+
+# Load structure JSONL cache file into memory
+func _load_structure_jsonl_cache(cache_dir: String) -> void:
+	var jsonl_path := cache_dir.path_join(STRUCTURE_JSONL_FILENAME)
+	if not FileUtils.file_exists(jsonl_path):
+		return
+	var content := FileUtils.read_file(jsonl_path)
+	var lines := content.split("\n")
+	for line in lines:
+		line = line.strip_edges()
+		if line == "":
+			continue
+		var data := JsonUtils.parse_json(line)
+		if data == null or data.is_empty():
+			continue
+		var paragraph_hash = data.get("paragraph_hash", "")
+		if paragraph_hash != "":
+			structure_cache[paragraph_hash] = data
 
 
 # Creates cache entry and stores in memory + appends to JSONL file
-func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "") -> void:
+# analysis_type: 0=GRAMMAR, 1=STYLE, 2=STRUCTURE
+func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", analysis_type: int = 0) -> void:
 	# Extract context from file_content
 	var context_before := ""
 	var context_after := ""
@@ -106,38 +178,48 @@ func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_con
 			var after_end = min(file_content.length(), after_start + 1000)
 			context_after = file_content.substr(after_start, after_end - after_start)
 
-	# Run analysis
-	var grammar_result = await AnalysisService.analyze_grammar(paragraph, context_before, context_after)
-	var style_result = await AnalysisService.analyze_style(paragraph, context_before, context_after)
-	var structure_result = await AnalysisService.analyze_structure(paragraph, context_before, context_after, file_content)
+	# Run only the requested analysis type
+	var result: Dictionary = {}
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			result = await AnalysisService.analyze_grammar(paragraph, context_before, context_after)
+		EventBus.AnalysisType.STYLE:
+			result = await AnalysisService.analyze_style(paragraph, context_before, context_after)
+		EventBus.AnalysisType.STRUCTURE:
+			result = await AnalysisService.analyze_structure(paragraph, context_before, context_after, file_content)
 
-	# Build cache data
+	# Build cache data for this specific analysis type
 	var data := {
 		"paragraph_hash": paragraph_hash,
-		"source": "",
 		"original_text": paragraph,
-		"analyses": {
-			"grammar": {
-				"corrected": grammar_result.get("corrected", paragraph),
-				"explanation": grammar_result.get("explanation", "")
-			},
-			"style": {
-				"enhanced": style_result.get("enhanced", paragraph),
-				"explanation": style_result.get("explanation", "")
-			},
-			"structure": {
-				"suggestion": structure_result.get("suggestion", ""),
-				"explanation": structure_result.get("explanation", "")
-			}
-		},
-		"llm_model": grammar_result.get("model", "unknown"),
 		"cached_at": Time.get_unix_time_from_system()
 	}
 
-	# Store in memory
-	memory_cache[paragraph_hash] = data
+	# Add analysis-specific fields
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			data["corrected"] = result.get("corrected", paragraph)
+			data["explanation"] = result.get("explanation", "")
+			data["llm_model"] = result.get("model", "unknown")
+		EventBus.AnalysisType.STYLE:
+			data["enhanced"] = result.get("enhanced", paragraph)
+			data["explanation"] = result.get("explanation", "")
+			data["llm_model"] = result.get("model", "unknown")
+		EventBus.AnalysisType.STRUCTURE:
+			data["suggestion"] = result.get("suggestion", "")
+			data["explanation"] = result.get("explanation", "")
+			data["llm_model"] = result.get("model", "unknown")
 
-	# Append to JSONL file
+	# Store in the appropriate memory cache
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			grammar_cache[paragraph_hash] = data
+		EventBus.AnalysisType.STYLE:
+			style_cache[paragraph_hash] = data
+		EventBus.AnalysisType.STRUCTURE:
+			structure_cache[paragraph_hash] = data
+
+	# Append to the appropriate JSONL file
 	# Determine file path for cache location
 	var actual_file_path := file_path
 	if actual_file_path == "" and file_content != "":
@@ -148,7 +230,17 @@ func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_con
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
 
-	var jsonl_path := cache_dir.path_join(JSONL_FILENAME)
+	# Use separate JSONL file for each analysis type
+	var jsonl_filename: String
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			jsonl_filename = GRAMMAR_JSONL_FILENAME
+		EventBus.AnalysisType.STYLE:
+			jsonl_filename = STYLE_JSONL_FILENAME
+		EventBus.AnalysisType.STRUCTURE:
+			jsonl_filename = STRUCTURE_JSONL_FILENAME
+
+	var jsonl_path := cache_dir.path_join(jsonl_filename)
 	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
@@ -159,8 +251,15 @@ func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_con
 		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(data) + "\n")
 
 
-# Queue all paragraphs from BookService for caching
+# Queue all paragraphs from BookService for all analysis types
 func queue_all_paragraphs_for_cache() -> void:
+	_queue_all_for_type(EventBus.AnalysisType.GRAMMAR)
+	_queue_all_for_type(EventBus.AnalysisType.STYLE)
+	_queue_all_for_type(EventBus.AnalysisType.STRUCTURE)
+
+
+# Queue all paragraphs for a specific analysis type
+func _queue_all_for_type(analysis_type: int) -> void:
 	var all_files := BookService.get_all_files()
 	for file_path in all_files:
 		var file_data := BookService.get_file(file_path)
@@ -177,17 +276,24 @@ func queue_all_paragraphs_for_cache() -> void:
 			var para_hash = para_data.get("hash", "")
 			var para_text = para_data.get("text", "")
 
-			if not memory_cache.has(para_hash) and not queued_keys.has(para_hash):
-				queued_keys[para_hash] = true
-				_queue_task(para_hash, para_text, content, file_path)
+			if not _is_cached(para_hash, analysis_type) and not _is_queued(para_hash, analysis_type):
+				_add_to_queued_keys(para_hash, analysis_type)
+				_queue_task(para_hash, para_text, content, file_path, analysis_type)
 				_emit_queue_updated()
 
 	if not processing:
 		_processing_start()
 
 
-# Queue paragraphs from a specific file
+# Queue paragraphs from a specific file for all analysis types
 func queue_file_paragraphs_for_cache(file_path: String) -> void:
+	_queue_file_for_type(file_path, EventBus.AnalysisType.GRAMMAR)
+	_queue_file_for_type(file_path, EventBus.AnalysisType.STYLE)
+	_queue_file_for_type(file_path, EventBus.AnalysisType.STRUCTURE)
+
+
+# Queue paragraphs from a specific file for a specific analysis type
+func _queue_file_for_type(file_path: String, analysis_type: int) -> void:
 	var file_data := BookService.get_file(file_path)
 	if file_data.is_empty():
 		return
@@ -202,19 +308,42 @@ func queue_file_paragraphs_for_cache(file_path: String) -> void:
 		var para_hash = para_data.get("hash", "")
 		var para_text = para_data.get("text", "")
 
-		if not memory_cache.has(para_hash) and not queued_keys.has(para_hash):
-			queued_keys[para_hash] = true
-			_queue_task(para_hash, para_text, content, file_path)
+		if not _is_cached(para_hash, analysis_type) and not _is_queued(para_hash, analysis_type):
+			_add_to_queued_keys(para_hash, analysis_type)
+			_queue_task(para_hash, para_text, content, file_path, analysis_type)
 			_emit_queue_updated()
 
 	if not processing:
 		_processing_start()
 
 
+# Check if a paragraph is queued for a specific analysis type
+func _is_queued(paragraph_hash: String, analysis_type: int) -> bool:
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			return queued_keys_grammar.has(paragraph_hash)
+		EventBus.AnalysisType.STYLE:
+			return queued_keys_style.has(paragraph_hash)
+		EventBus.AnalysisType.STRUCTURE:
+			return queued_keys_structure.has(paragraph_hash)
+	return false
+
+
+# Add to queued keys for a specific analysis type
+func _add_to_queued_keys(paragraph_hash: String, analysis_type: int) -> void:
+	match analysis_type:
+		EventBus.AnalysisType.GRAMMAR:
+			queued_keys_grammar[paragraph_hash] = true
+		EventBus.AnalysisType.STYLE:
+			queued_keys_style[paragraph_hash] = true
+		EventBus.AnalysisType.STRUCTURE:
+			queued_keys_structure[paragraph_hash] = true
+
+
 # Queue a specific paragraph for caching (priority)
-func _queue_task(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", priority: bool = false) -> void:
+func _queue_task(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", analysis_type: int = 0, priority: bool = false) -> void:
 	queue_mutex.lock()
-	var task = {"hash": paragraph_hash, "paragraph": paragraph, "file_content": file_content, "file_path": file_path}
+	var task = {"hash": paragraph_hash, "paragraph": paragraph, "file_content": file_content, "file_path": file_path, "analysis_type": analysis_type}
 	if priority:
 		task_queue.insert(0, task)
 	else:
@@ -230,7 +359,7 @@ func _queue_task(paragraph_hash: String, paragraph: String, file_content: String
 	_processing_start()
 
 
-func _on_priority_cache_requested(file_path: String, line_number: int) -> void:
+func _on_priority_analysis_requested(file_path: String, line_number: int, analysis_type: int) -> void:
 	# Get paragraph from BookService
 	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
 	if para_data.is_empty():
@@ -239,14 +368,14 @@ func _on_priority_cache_requested(file_path: String, line_number: int) -> void:
 	var paragraph_hash: String = para_data.get("hash", "")
 	var paragraph: String = para_data.get("text", "")
 
-	# Check if already cached
-	if memory_cache.has(paragraph_hash):
+	# Check if already cached for this analysis type
+	if _is_cached(paragraph_hash, analysis_type):
 		return
 
-	# Check if already queued
-	if queued_keys.has(paragraph_hash):
+	# Check if already queued for this analysis type
+	if _is_queued(paragraph_hash, analysis_type):
 		# Remove from queue to re-queue with priority
-		_remove_task_from_queue(paragraph_hash)
+		_remove_task_from_queue(paragraph_hash, analysis_type)
 
 	# Get file content from BookService
 	var file_data := BookService.get_file(file_path)
@@ -254,16 +383,16 @@ func _on_priority_cache_requested(file_path: String, line_number: int) -> void:
 	if not file_data.is_empty():
 		file_content = file_data.get("content", "")
 
-	queued_keys[paragraph_hash] = true
-	_queue_task(paragraph_hash, paragraph, file_content, file_path, true)
+	_add_to_queued_keys(paragraph_hash, analysis_type)
+	_queue_task(paragraph_hash, paragraph, file_content, file_path, analysis_type, true)
 
 
-# Remove a task from the queue by paragraph_hash
-func _remove_task_from_queue(paragraph_hash: String) -> void:
+# Remove a task from the queue by paragraph_hash and analysis_type
+func _remove_task_from_queue(paragraph_hash: String, analysis_type: int) -> void:
 	queue_mutex.lock()
 	var new_queue := []
 	for task in task_queue:
-		if task["hash"] == paragraph_hash:
+		if task["hash"] == paragraph_hash and task.get("analysis_type", 0) == analysis_type:
 			continue
 		new_queue.append(task)
 	task_queue = new_queue
@@ -287,10 +416,14 @@ func _on_project_loaded(path: String) -> void:
 
 
 func _on_project_unloaded() -> void:
-	# Clear in-memory cache when project is unloaded
-	memory_cache.clear()
+	# Clear in-memory caches when project is unloaded
+	grammar_cache.clear()
+	style_cache.clear()
+	structure_cache.clear()
 	loaded_cache_dirs.clear()
-	queued_keys.clear()
+	queued_keys_grammar.clear()
+	queued_keys_style.clear()
+	queued_keys_structure.clear()
 
 
 func _on_run_all_analyses() -> void:
@@ -307,18 +440,49 @@ func _on_run_chapter_analyses() -> void:
 	queue_file_paragraphs_for_cache(current_file_path)
 
 
-# Get cached data for a paragraph by its hash
-func get_paragraph_cache(paragraph_hash: String, file_path: String = "") -> Dictionary:
-	return memory_cache.get(paragraph_hash, {})
+# Get cached grammar analysis for a paragraph by its hash
+func get_grammar_cache(paragraph_hash: String) -> Dictionary:
+	return grammar_cache.get(paragraph_hash, {})
+
+
+# Get cached style analysis for a paragraph by its hash
+func get_style_cache(paragraph_hash: String) -> Dictionary:
+	return style_cache.get(paragraph_hash, {})
+
+
+# Get cached structure analysis for a paragraph by its hash
+func get_structure_cache(paragraph_hash: String) -> Dictionary:
+	return structure_cache.get(paragraph_hash, {})
+
+
+# Backward compatibility: get any cache (checks all types)
+func get_paragraph_cache(paragraph_hash: String, _file_path: String = "") -> Dictionary:
+	if grammar_cache.has(paragraph_hash):
+		return grammar_cache[paragraph_hash]
+	if style_cache.has(paragraph_hash):
+		return style_cache[paragraph_hash]
+	if structure_cache.has(paragraph_hash):
+		return structure_cache[paragraph_hash]
+	return {}
 
 
 # Clean up cache entries that don't exist in the project anymore
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+func _cleanup_unused_cache_files(cache_path: String, _project_path: String) -> int:
 	# Use BookService to check which paragraphs still exist
 	var removed_count := 0
 
-	# Get all paragraph hashes from cache files in this directory
-	var cache_file_path := cache_path.path_join(JSONL_FILENAME)
+	# Clean up all 3 cache types
+	removed_count += _cleanup_cache_file(cache_path, GRAMMAR_JSONL_FILENAME, grammar_cache, queued_keys_grammar)
+	removed_count += _cleanup_cache_file(cache_path, STYLE_JSONL_FILENAME, style_cache, queued_keys_style)
+	removed_count += _cleanup_cache_file(cache_path, STRUCTURE_JSONL_FILENAME, structure_cache, queued_keys_structure)
+
+	return removed_count
+
+
+# Clean up a single cache file
+func _cleanup_cache_file(cache_path: String, filename: String, cache_dict: Dictionary, queued_dict: Dictionary) -> int:
+	var removed_count := 0
+	var cache_file_path := cache_path.path_join(filename)
 	if not FileUtils.file_exists(cache_file_path):
 		return 0
 
@@ -339,25 +503,32 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 	# Check which hashes are still in the project using BookService
 	for para_hash in hashes_in_cache:
 		if not BookService.has_paragraph(para_hash):
-			memory_cache.erase(para_hash)
+			cache_dict.erase(para_hash)
+			queued_dict.erase(para_hash)
 			removed_count += 1
 
 	# Rewrite the JSONL file
-	_rewrite_jsonl_file(cache_path)
+	_rewrite_jsonl_file(cache_path, filename, cache_dict)
 
 	return removed_count
 
 
-# Rewrite the JSONL file for a cache directory from current memory state
-func _rewrite_jsonl_file(cache_dir: String) -> void:
-	var jsonl_path := cache_dir.path_join(JSONL_FILENAME)
+# Rewrite a JSONL file for a cache directory from current memory state
+func _rewrite_jsonl_file(cache_dir: String, filename: String, cache_dict: Dictionary) -> void:
+	var jsonl_path := cache_dir.path_join(filename)
 	var content := ""
-	# Write all entries that belong to this cache directory
-	# For now, we write all entries - this could be optimized
-	for para_hash in memory_cache:
-		var data = memory_cache[para_hash]
+	# Write all entries that belong to this cache dictionary
+	for para_hash in cache_dict:
+		var data = cache_dict[para_hash]
 		content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(jsonl_path, content)
+
+
+# Rewrite all JSONL files for a cache directory
+func _rewrite_all_jsonl_files(cache_dir: String) -> void:
+	_rewrite_jsonl_file(cache_dir, GRAMMAR_JSONL_FILENAME, grammar_cache)
+	_rewrite_jsonl_file(cache_dir, STYLE_JSONL_FILENAME, style_cache)
+	_rewrite_jsonl_file(cache_dir, STRUCTURE_JSONL_FILENAME, structure_cache)
 
 
 # Creates an MD5 hash from a paragraph string

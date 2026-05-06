@@ -204,11 +204,11 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 		# Emit for backward compatibility
 		check_complete.emit(is_running)
 		return
+	
+	var response_body_str: String = body.get_string_from_utf8()
+	var response_dict: Dictionary
 
-	if current_request_type == "embed":
-		var response_body_str: String = body.get_string_from_utf8()
-
-		var response_dict: Dictionary
+	if current_request_type == "embed":	
 		if result == OK and response_code == 200:
 			var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
 			if not json_data.is_empty():
@@ -239,9 +239,6 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 		return
 
 	# Otherwise it's a generate request
-	var response_body_str: String = body.get_string_from_utf8()
-
-	var response_dict: Dictionary
 	if result == OK and response_code == 200:
 		var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
 		if not json_data.is_empty():

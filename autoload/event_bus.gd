@@ -54,9 +54,13 @@ signal cache_queue_updated(queued: int, processing: bool)
 signal cache_task_started(remaining: int)
 @warning_ignore("unused_signal")
 signal cache_task_completed(remaining: int)
-# Carries file_path and line_number - ParagraphService uses BookService to get paragraph data
+
+# Analysis type enum for separate caching
+enum AnalysisType { GRAMMAR, STYLE, STRUCTURE }
+
+# Paragraph analysis signals - carry file_path, line_number, and analysis_type
 @warning_ignore("unused_signal")
-signal request_priority_cache(file_path: String, line_number: int)
+signal request_priority_analysis(file_path: String, line_number: int, analysis_type: int)
 @warning_ignore("unused_signal")
 signal cache_cleanup_started
 @warning_ignore("unused_signal")

@@ -30,7 +30,7 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
-func _on_project_loaded(path: String) -> void:
+func _on_project_loaded(_path: String) -> void:
 	pass  # Project loaded, BookService is ready
 
 

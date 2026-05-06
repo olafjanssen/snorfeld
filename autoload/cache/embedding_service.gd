@@ -314,7 +314,7 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
-func _on_project_loaded(path: String) -> void:
+func _on_project_loaded(_path: String) -> void:
 	pass  # Project loaded, BookService is ready
 
 
@@ -402,32 +402,13 @@ func get_all_paragraph_embeddings(file_path: String) -> Array:
 
 
 # Clean up cache entries that don't have corresponding source files in the project
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> int:
 	# Already ensured cache is loaded by caller
 	var removed_count := 0
-	var project_files := FileUtils.get_all_text_files(project_path)
 
-	# Identify entries to remove from this cache_dir
-	var keys_to_remove: Array = []
-	for key in memory_cache:
-		if not key.begins_with(cache_path + ":"):
-			continue
-		# Check if the source file still exists
-		var parts: Array = key.split(":")
-		if parts.size() >= 3:
-			var is_chapter_str: String = parts[1]
-			var is_chapter: bool = is_chapter_str == "chapter"
-			var text_hash: String = parts[2]
-
-			# For now, we keep all embeddings during cleanup
-			# as they are tied to the directory structure
-			# A more sophisticated approach would verify the actual content
-			pass
-
-	# For embeddings, we keep them all for now as they're small and tied to directories
-	# Rewrite the JSONL files for this cache_dir from current memory state
-	_rewrite_jsonl_files(cache_path)
-
+	# For now, we keep all embeddings during cleanup
+	# as they are tied to the directory structure
+	# A more sophisticated approach would verify the actual content
 	return removed_count
 
 

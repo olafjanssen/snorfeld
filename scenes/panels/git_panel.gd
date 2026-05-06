@@ -78,7 +78,7 @@ func _on_git_repo_changed(is_git_repo: bool):
 		file_list.clear()
 		_set_buttons_enabled(false)
 
-func _on_git_status_updated(status: Dictionary):
+func _on_git_status_updated(_status: Dictionary):
 	if GitService == null or not is_inside_tree():
 		return
 
