@@ -13,6 +13,8 @@ func _ready() -> void:
 	EventBus.run_chapter_character_analyses.connect(_on_run_chapter_character_analyses)
 	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
+	BookService.project_loaded.connect(_on_project_loaded)
+	BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name
@@ -25,6 +27,14 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_started.emit()
 		var removed_count := cleanup_unused_character_files(cache_path, path)
 		EventBus.cache_cleanup_completed.emit(removed_count)
+
+
+func _on_project_loaded(path: String) -> void:
+	pass  # Project loaded, BookService is ready
+
+
+func _on_project_unloaded() -> void:
+	pass  # Project unloaded
 
 
 # Override: Process a single task
@@ -99,18 +109,15 @@ func _on_priority_character_cache_requested(file_path: String, file_content: Str
 
 
 func _on_run_all_character_analyses() -> void:
-	# Queue all text files in the project for character analysis
-	var project_path := ProjectState.get_current_path()
-	if project_path == "":
-		return
-	var text_files: Array = FileUtils.get_all_text_files(project_path)
-	# Sort files alphabetically to process in order
-	text_files.sort()
-	for file_path in text_files:
-		var file := FileAccess.open(file_path, FileAccess.READ)
-		if file:
-			var content := file.get_as_text()
-			file.close()
+	# Queue all text files from BookService for character analysis
+	var all_files := BookService.get_all_files()
+	all_files.sort()
+	for file_path in all_files:
+		var file_data := BookService.get_file(file_path)
+		if file_data.is_empty():
+			continue
+		var content = file_data.get("content", "")
+		if content != "":
 			queue_characters_for_cache(file_path, content)
 
 
@@ -126,7 +133,13 @@ func _on_file_selected(path: String) -> void:
 func _on_run_chapter_character_analyses() -> void:
 	if current_character_file_path == "":
 		return
-	queue_characters_for_cache(current_character_file_path, current_character_file_content)
+	# Get content from BookService if available
+	var file_data := BookService.get_file(current_character_file_path)
+	if file_data.is_empty():
+		if current_character_file_content != "":
+			queue_characters_for_cache(current_character_file_path, current_character_file_content)
+	else:
+		queue_characters_for_cache(current_character_file_path, file_data.get("content", current_character_file_content))
 
 
 # Extracts characters from file content and creates/updates cache files

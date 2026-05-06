@@ -7,8 +7,8 @@ extends Node
 # - chapters: Dictionary of chapter_id -> ChapterData
 # - paragraphs: Dictionary of paragraph_hash -> ParagraphData
 
-const CHAPTER_ID_PREFIX := "chap_"
-const PARAGRAPH_ID_PREFIX := "para_"
+const CHAPTER_ID_PREFIX := "ch_"
+const PARAGRAPH_ID_PREFIX := "p_"
 
 # Main content store
 var files: Dictionary = {}
@@ -82,6 +82,9 @@ func _add_file(file_path: String) -> void:
 	}
 	files[file_path] = file_data
 
+	# Determine chapter level for this file
+	var chapter_level := _determine_chapter_level(content)
+
 	# Parse chapters from markdown headings
 	var chapter_id_counter := 0
 	var current_chapter_id: String = ""
@@ -95,12 +98,12 @@ func _add_file(file_path: String) -> void:
 		line_num += 1
 		var stripped := line.strip_edges()
 
-		# Check for chapter heading (level 1)
+		# Check for chapter heading (dynamic level)
 		if stripped.begins_with("#") and stripped.length() > 1:
 			var level := 0
 			while level < stripped.length() and stripped[level] == "#":
 				level += 1
-			if level == 1 and (stripped[level] == " " or stripped[level] == "\t"):
+			if level == chapter_level and (stripped[level] == " " or stripped[level] == "\t"):
 				# Save previous chapter if exists
 				if current_chapter_id != "":
 					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
@@ -123,26 +126,32 @@ func _add_file(file_path: String) -> void:
 				paragraph_start_line = line_num
 			continue
 
-		# Accumulate paragraph text (separated by double newlines)
-		if current_chapter_id != "":
-			if current_paragraph_text == "":
-				paragraph_start_line = line_num
-			else:
-				current_paragraph_text += "\n"
-			current_paragraph_text += line
+		# Line-based paragraphs: each non-empty line is a separate paragraph
+		if stripped != "":
+			# Save previous paragraph if exists
+			if current_paragraph_text != "":
+				if current_chapter_id != "":
+					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+				else:
+					_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+			# Start new paragraph
+			current_paragraph_text = stripped
+			paragraph_start_line = line_num
 		else:
-			# Outside chapters, still track paragraphs for the file
-			if current_paragraph_text == "":
-				paragraph_start_line = line_num
-			else:
-				current_paragraph_text += "\n"
-			current_paragraph_text += line
+			# Empty line - save previous paragraph if exists
+			if current_paragraph_text != "":
+				if current_chapter_id != "":
+					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+				else:
+					_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+				current_paragraph_text = ""
 
-	# Save the last paragraph
-	if current_chapter_id != "":
-		_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num)
-	else:
-		_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num)
+	# Save the last paragraph if it has content
+	if current_paragraph_text != "":
+		if current_chapter_id != "":
+			_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num)
+		else:
+			_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num)
 
 
 # Save a paragraph for a chapter
@@ -342,6 +351,54 @@ func _on_file_saved(file_path: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path)
 		content_changed.emit()
+
+
+# Determine the heading level to use as chapter level
+# Returns the level (1-6) that should be treated as chapters
+func _determine_chapter_level(content: String) -> int:
+	var level_counts: Dictionary = {}
+	var lines := content.split("\n")
+
+	# Count headings by level
+	for line in lines:
+		var stripped := line.strip_edges()
+		if stripped.begins_with("#"):
+			var level := 0
+			while level < stripped.length() and stripped[level] == "#":
+				level += 1
+			if level >= 1 and level <= 6 and (stripped[level] == " " or stripped[level] == "\t"):
+				level_counts[level] = level_counts.get(level, 0) + 1
+
+	# If no headings, default to level 1
+	if level_counts.is_empty():
+		return 1
+
+	# If only one level, use that
+	if level_counts.size() == 1:
+		return level_counts.keys()[0]
+
+	# Multiple levels - determine chapter level
+	# Heuristic: if level 1 has very few headings (< 25% of total) and level 2 exists, use level 2
+	# Otherwise, use level 1
+	var total_headings := 0
+	for count in level_counts.values():
+		total_headings += count
+
+	if total_headings == 0:
+		return 1
+
+	# If level 1 exists and has few headings, check if level 2 is more common
+	if level_counts.has(1):
+		var level1_count = level_counts[1]
+		var level1_ratio = level1_count / total_headings
+
+		# If level 1 has less than 25% of headings and level 2 exists with more
+		if level1_ratio < 0.25 and level_counts.has(2):
+			if level_counts[2] > level1_count:
+				return 2
+
+	# Default to level 1
+	return 1
 
 
 # Hash text using MD5

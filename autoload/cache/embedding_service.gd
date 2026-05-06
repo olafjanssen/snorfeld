@@ -19,6 +19,8 @@ func _ready() -> void:
 	EventBus.index_project_embeddings.connect(_on_index_project_embeddings)
 	EventBus.index_chapter_embeddings.connect(_on_index_chapter_embeddings)
 	EventBus.file_selected.connect(_on_file_selected)
+	BookService.project_loaded.connect(_on_project_loaded)
+	BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name
@@ -311,16 +313,30 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
+func _on_project_loaded(path: String) -> void:
+	pass  # Project loaded, BookService is ready
+
+
+func _on_project_unloaded() -> void:
+	pass  # Project unloaded
+
+
 func _on_index_project_embeddings() -> void:
-	# Queue all paragraphs from all text files in the project for embedding
-	var project_path := ProjectState.get_current_path()
-	if project_path == "":
-		return
-	var text_files := FileUtils.get_all_text_files(project_path)
-	for file_path in text_files:
-		var content := FileUtils.read_file(file_path)
+	# Queue all paragraphs from BookService for embedding
+	var all_files := BookService.get_all_files()
+	all_files.sort()
+	for file_path in all_files:
+		var file_data := BookService.get_file(file_path)
+		if file_data.is_empty():
+			continue
+		var content = file_data.get("content", "")
 		if content != "":
-			var paragraphs := content.split("\n\n")
+			# Get paragraphs from BookService
+			var para_ids := BookService.get_paragraphs_for_file(file_path)
+			var paragraphs := []
+			for para_id in para_ids:
+				var para_data = BookService.get_paragraph(para_id)
+				paragraphs.append(para_data.get("text", ""))
 			queue_paragraphs_for_embedding(file_path, paragraphs, content)
 			# Also queue chapter-level embedding
 			queue_chapter_for_embedding(file_path, content)
@@ -334,9 +350,25 @@ func _on_file_selected(path: String) -> void:
 func _on_index_chapter_embeddings() -> void:
 	if current_file_path == "":
 		return
-	var paragraphs := current_file_content.split("\n\n")
-	queue_paragraphs_for_embedding(current_file_path, paragraphs, current_file_content)
-	queue_chapter_for_embedding(current_file_path, current_file_content)
+	# Get content and paragraphs from BookService if available
+	var file_data := BookService.get_file(current_file_path)
+	var content := current_file_content
+	if file_data.is_empty():
+		if current_file_content == "":
+			return
+		content = current_file_content
+	else:
+		content = file_data.get("content", current_file_content)
+
+	# Get paragraphs from BookService
+	var para_ids := BookService.get_paragraphs_for_file(current_file_path)
+	var paragraphs := []
+	for para_id in para_ids:
+		var para_data = BookService.get_paragraph(para_id)
+		paragraphs.append(para_data.get("text", ""))
+
+	queue_paragraphs_for_embedding(current_file_path, paragraphs, content)
+	queue_chapter_for_embedding(current_file_path, content)
 
 
 # Get cached embedding for a paragraph by its hash
