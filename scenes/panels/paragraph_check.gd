@@ -74,9 +74,9 @@ func _on_cache_task_completed(_remaining: int) -> void:
 	# This handles the case where we requested analysis for a specific tab
 	if current_paragraph_hash != "" and current_file_path != "":
 		# Reload the cache for the current paragraph
-		_grammar_cache_data = ParagraphService.get_grammar_cache(current_paragraph_hash)
-		_style_cache_data = ParagraphService.get_style_cache(current_paragraph_hash)
-		_structure_cache_data = ParagraphService.get_structure_cache(current_paragraph_hash)
+		_grammar_cache_data = GrammarService.get_grammar_cache(current_paragraph_hash)
+		_style_cache_data = StyleService.get_style_cache(current_paragraph_hash)
+		_structure_cache_data = StructureService.get_structure_cache(current_paragraph_hash)
 
 		# Update display for the current active tab
 		var active_tab = $TabContainer.get_current_tab()
@@ -107,9 +107,9 @@ func _on_paragraph_selected(file_path: String, line_number: int):
 	_suggestion_text = ""
 
 	# Load ALL cache types for this paragraph
-	_grammar_cache_data = ParagraphService.get_grammar_cache(current_paragraph_hash)
-	_style_cache_data = ParagraphService.get_style_cache(current_paragraph_hash)
-	_structure_cache_data = ParagraphService.get_structure_cache(current_paragraph_hash)
+	_grammar_cache_data = GrammarService.get_grammar_cache(current_paragraph_hash)
+	_style_cache_data = StyleService.get_style_cache(current_paragraph_hash)
+	_structure_cache_data = StructureService.get_structure_cache(current_paragraph_hash)
 
 	# Get the active tab
 	var active_tab = $TabContainer.get_current_tab()
@@ -141,7 +141,7 @@ func _update_display_for_active_tab(tab_index: int):
 				GrammarExplanation.text = _grammar_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.GRAMMAR)
+				EventBus.request_priority_analysis.emit("grammar", current_file_path, {"line_number": current_line_number})
 				return
 		1:  # Style tab
 			if _style_cache_data:
@@ -149,7 +149,7 @@ func _update_display_for_active_tab(tab_index: int):
 				StyleExplanation.text = _style_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.STYLE)
+				EventBus.request_priority_analysis.emit("style", current_file_path, {"line_number": current_line_number})
 				return
 		2:  # Structure tab
 			if _structure_cache_data:
@@ -157,7 +157,7 @@ func _update_display_for_active_tab(tab_index: int):
 				StructureExplanation.text = _structure_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit(current_file_path, current_line_number, EventBus.AnalysisType.STRUCTURE)
+				EventBus.request_priority_analysis.emit("structure", current_file_path, {"line_number": current_line_number})
 				return
 
 	_update_diff_displays()

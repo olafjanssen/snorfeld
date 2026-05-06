@@ -26,17 +26,12 @@ func _connect_global_signals():
 	# File saving
 	EventBus.file_saved.connect(_on_file_saved)
 
-	# Paragraph cache progress
-	EventBus.cache_queue_updated.connect(_on_cache_queue_updated)
-	EventBus.cache_task_started.connect(_on_cache_task_started)
-	EventBus.cache_task_completed.connect(_on_cache_task_completed)
-	EventBus.cache_cleanup_started.connect(_on_cache_cleanup_started)
-	EventBus.cache_cleanup_completed.connect(_on_cache_cleanup_completed)
-
-	# Embedding cache progress
-	EventBus.embedding_cache_queue_updated.connect(_on_embedding_cache_queue_updated)
-	EventBus.embedding_cache_task_started.connect(_on_embedding_cache_task_started)
-	EventBus.embedding_cache_task_completed.connect(_on_embedding_cache_task_completed)
+	# Unified cache progress signals (all services use this now)
+	EventBus.cache_queue_updated.connect(_on_unified_cache_queue_updated)
+	EventBus.cache_task_started.connect(_on_unified_cache_task_started)
+	EventBus.cache_task_completed.connect(_on_unified_cache_task_completed)
+	EventBus.unified_cache_cleanup_started.connect(_on_unified_cache_cleanup_started)
+	EventBus.unified_cache_cleanup_completed.connect(_on_unified_cache_cleanup_completed)
 
 	# Git integration
 	EventBus.git_operation_started.connect(_on_git_operation_started)
@@ -49,41 +44,28 @@ func _on_folder_opened(path: String):
 func _on_file_saved(path: String):
 	_set_status(icon_text + "Saved: %s" % path)
 
-func _on_cache_queue_updated(queued: int, _processing: bool):
+# Unified cache progress handlers (all services use this now)
+func _on_unified_cache_queue_updated(service_type: String, queued: int, _processing: bool):
 	if queued > 0:
-		_set_status(icon_text + "Analysis: %d paragraphs queued" % queued, false)
+		_set_status(icon_text + "[%s] %d queued" % [service_type, queued], false)
 
-func _on_cache_task_started(remaining: int):
-	_set_status(icon_text + "Processing analysis: %d remaining" % remaining, true)
+func _on_unified_cache_task_started(service_type: String, remaining: int):
+	_set_status(icon_text + "[%s] Processing: %d remaining" % [service_type, remaining], true)
 
-func _on_cache_task_completed(remaining: int):
+func _on_unified_cache_task_completed(service_type: String, remaining: int, _result: Dictionary):
 	if remaining > 0:
-		_set_status(icon_text + "Analysis processed: %d remaining" % remaining, true)
+		_set_status(icon_text + "[%s] Processed: %d remaining" % [service_type, remaining], true)
 	else:
-		_set_status(icon_text + "Analysis complete", true)
+		_set_status(icon_text + "[%s] Complete" % [service_type], true)
 
-func _on_cache_cleanup_started():
-	_set_status(icon_text + "Cleaning up old cache files...", true)
+func _on_unified_cache_cleanup_started(service_type: String):
+	_set_status(icon_text + "[%s] Cleaning up old cache files..." % [service_type], true)
 
-func _on_cache_cleanup_completed(removed_count: int):
+func _on_unified_cache_cleanup_completed(service_type: String, removed_count: int):
 	if removed_count > 0:
-		_set_status(icon_text + "Cache cleanup: removed %d orphaned files" % removed_count)
+		_set_status(icon_text + "[%s] Cache cleanup: removed %d orphaned files" % [service_type, removed_count])
 	else:
-		_set_status(icon_text + "Cache cleanup: nothing to remove")
-
-# Embedding cache progress handlers
-func _on_embedding_cache_queue_updated(queued: int, _processing: bool):
-	if queued > 0:
-		_set_status(icon_text + "Indexing embeddings: %d queued" % queued, false)
-
-func _on_embedding_cache_task_started(remaining: int):
-	_set_status(icon_text + "Indexing embeddings: %d remaining" % remaining, true)
-
-func _on_embedding_cache_task_completed(remaining: int):
-	if remaining > 0:
-		_set_status(icon_text + "Indexing embeddings: %d remaining" % remaining, true)
-	else:
-		_set_status(icon_text + "Embedding indexing complete", true)
+		_set_status(icon_text + "[%s] Cache cleanup: nothing to remove" % [service_type])
 
 func _set_status(message: String, persistent: bool = false):
 	text = message

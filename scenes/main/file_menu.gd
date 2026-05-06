@@ -3,8 +3,12 @@ extends PopupMenu
 const OPEN_FOLDER_ID: int = 0
 const SETTINGS_ID: int = 2
 const STORY_BIBLE_ID: int = 3
-const RUN_ALL_ANALYSES_ID: int = 200
-const RUN_CHAPTER_ANALYSES_ID: int = 201
+const RUN_ALL_GRAMMAR_ANALYSES_ID: int = 206
+const RUN_CHAPTER_GRAMMAR_ANALYSES_ID: int = 207
+const RUN_ALL_STYLE_ANALYSES_ID: int = 208
+const RUN_CHAPTER_STYLE_ANALYSES_ID: int = 209
+const RUN_ALL_STRUCTURE_ANALYSES_ID: int = 210
+const RUN_CHAPTER_STRUCTURE_ANALYSES_ID: int = 211
 const RUN_ALL_CHARACTER_ANALYSES_ID: int = 202
 const RUN_CHAPTER_CHARACTER_ANALYSES_ID: int = 203
 const RUN_ALL_OBJECT_ANALYSES_ID: int = 204
@@ -18,8 +22,14 @@ func _ready():
 	add_item("Settings...", SETTINGS_ID)
 	add_item("Story Bible", STORY_BIBLE_ID)
 	add_separator()
-	add_item("Run All Analyses", RUN_ALL_ANALYSES_ID)
-	add_item("Run Chapter Analyses", RUN_CHAPTER_ANALYSES_ID)
+	add_item("Run All Grammar Analyses", RUN_ALL_GRAMMAR_ANALYSES_ID)
+	add_item("Run Chapter Grammar Analyses", RUN_CHAPTER_GRAMMAR_ANALYSES_ID)
+	add_separator()
+	add_item("Run All Style Analyses", RUN_ALL_STYLE_ANALYSES_ID)
+	add_item("Run Chapter Style Analyses", RUN_CHAPTER_STYLE_ANALYSES_ID)
+	add_separator()
+	add_item("Run All Structure Analyses", RUN_ALL_STRUCTURE_ANALYSES_ID)
+	add_item("Run Chapter Structure Analyses", RUN_CHAPTER_STRUCTURE_ANALYSES_ID)
 	add_separator()
 	add_item("Run All Character Analyses", RUN_ALL_CHARACTER_ANALYSES_ID)
 	add_item("Run Chapter Character Analyses", RUN_CHAPTER_CHARACTER_ANALYSES_ID)
@@ -41,21 +51,29 @@ func _on_item_pressed(id: int):
 		EventBus.open_settings.emit()
 	elif id == STORY_BIBLE_ID:
 		EventBus.open_story_bible.emit()
-	elif id == RUN_ALL_ANALYSES_ID:
-		EventBus.run_all_analyses.emit()
-	elif id == RUN_CHAPTER_ANALYSES_ID:
-		EventBus.run_chapter_analyses.emit()
+	elif id == RUN_ALL_GRAMMAR_ANALYSES_ID:
+		EventBus.start_analysis.emit("GRAMMAR", "project")
+	elif id == RUN_CHAPTER_GRAMMAR_ANALYSES_ID:
+		EventBus.start_analysis.emit("GRAMMAR", "chapter")
+	elif id == RUN_ALL_STYLE_ANALYSES_ID:
+		EventBus.start_analysis.emit("STYLE", "project")
+	elif id == RUN_CHAPTER_STYLE_ANALYSES_ID:
+		EventBus.start_analysis.emit("STYLE", "chapter")
+	elif id == RUN_ALL_STRUCTURE_ANALYSES_ID:
+		EventBus.start_analysis.emit("STRUCTURE", "project")
+	elif id == RUN_CHAPTER_STRUCTURE_ANALYSES_ID:
+		EventBus.start_analysis.emit("STRUCTURE", "chapter")
 	elif id == RUN_ALL_CHARACTER_ANALYSES_ID:
-		EventBus.run_all_character_analyses.emit()
+		EventBus.start_analysis.emit("CHARACTER", "project")
 	elif id == RUN_CHAPTER_CHARACTER_ANALYSES_ID:
-		EventBus.run_chapter_character_analyses.emit()
+		EventBus.start_analysis.emit("CHARACTER", "chapter")
 	elif id == RUN_ALL_OBJECT_ANALYSES_ID:
-		EventBus.run_all_object_analyses.emit()
+		EventBus.start_analysis.emit("OBJECT", "project")
 	elif id == RUN_CHAPTER_OBJECT_ANALYSES_ID:
-		EventBus.run_chapter_object_analyses.emit()
+		EventBus.start_analysis.emit("OBJECT", "chapter")
 	elif id == INDEX_PROJECT_EMBEDDINGS_ID:
-		EventBus.index_project_embeddings.emit()
+		EventBus.start_analysis.emit("EMBEDDING", "project")
 	elif id == INDEX_CHAPTER_EMBEDDINGS_ID:
-		EventBus.index_chapter_embeddings.emit()
+		EventBus.start_analysis.emit("EMBEDDING", "chapter")
 	elif id == 1:
 		get_tree().quit()

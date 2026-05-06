@@ -9,9 +9,7 @@ var current_object_file_path: String = ""
 var current_object_file_content: String = ""
 
 func _ready() -> void:
-	EventBus.request_priority_object_cache.connect(_on_priority_object_cache_requested)
-	EventBus.run_all_object_analyses.connect(_on_run_all_object_analyses)
-	EventBus.run_chapter_object_analyses.connect(_on_run_chapter_object_analyses)
+	EventBus.start_analysis.connect(_on_start_analysis)
 	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	if BookService != null:
@@ -26,9 +24,9 @@ func _get_cache_subdir() -> String:
 func _on_folder_opened(path: String) -> void:
 	var cache_path := path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
 	if DirAccess.dir_exists_absolute(cache_path):
-		EventBus.cache_cleanup_started.emit()
+		EventBus.unified_cache_cleanup_started.emit("object")
 		var removed_count := cleanup_unused_object_files(cache_path, path)
-		EventBus.cache_cleanup_completed.emit(removed_count)
+		EventBus.unified_cache_cleanup_completed.emit("object", removed_count)
 
 
 func _on_project_loaded(_path: String) -> void:
@@ -53,17 +51,17 @@ func _process_task(task: Dictionary):
 
 # Override: Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.object_cache_queue_updated.emit(task_queue.size(), processing)
+	EventBus.cache_queue_updated.emit("object", task_queue.size(), processing)
 
 
 # Override: Emit task started signal
 func _emit_task_started(remaining: int) -> void:
-	EventBus.object_cache_task_started.emit(remaining)
+	EventBus.cache_task_started.emit("object", remaining)
 
 
 # Override: Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.object_cache_task_completed.emit(remaining)
+	EventBus.cache_task_completed.emit("object", remaining, {})
 
 
 # Handle file scanned event - queue objects for caching
@@ -111,6 +109,14 @@ func _on_priority_object_cache_requested(file_path: String, file_content: String
 		_create_cache_directory(cache_path)
 	_queue_task(cache_path, file_path, file_content, true)
 
+
+func _on_start_analysis(service_type: String, scope: String) -> void:
+	if service_type != "OBJECT":
+		return
+	if scope == "project":
+		_on_run_all_object_analyses()
+	elif scope == "chapter":
+		_on_run_chapter_object_analyses()
 
 func _on_run_all_object_analyses() -> void:
 	# Queue all text files from BookService for object analysis

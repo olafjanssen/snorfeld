@@ -7,28 +7,15 @@ func analyze_grammar(paragraph: String, context_before: String = "", context_aft
 	var context := ""
 	if context_before.length() > 0 or context_after.length() > 0:
 		# Take up to 100 words before and after
-		var before_words := _get_words(context_before, 100)
-		var after_words := _get_words(context_after, 100)
+		var before_words := PromptTemplates.get_words(context_before, 100)
+		var after_words := PromptTemplates.get_words(context_after, 100)
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call LLM to get spelling/grammar corrections with explanations
-	var prompt := """
-You are a helpful writing assistant. Analyze the following text and provide:
-1. A corrected version with improved spelling and grammar (keep the original meaning), be aware the text may contain dialogue between \"...\" and MarkDown markup.
-2. A brief explanation of the changes made
-
-Context:
-%s
-
-Paragraph to analyze:
-%s
-
-Respond with a JSON object containing 'corrected' and 'explanation' fields:
-{
-  "corrected": "[corrected text]",
-  "explanation": "[brief explanation of changes]"
-}
-""" % [context, paragraph]
+	# Format prompt using template
+	var prompt := PromptTemplates.format_prompt(PromptTemplates.GRAMMAR_PROMPT, {
+		"context": context,
+		"paragraph": paragraph
+	})
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
 	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
@@ -65,28 +52,15 @@ func analyze_style(paragraph: String, context_before: String = "", context_after
 	var context := ""
 	if context_before.length() > 0 or context_after.length() > 0:
 		# Take up to 100 words before and after
-		var before_words := _get_words(context_before, 100)
-		var after_words := _get_words(context_after, 100)
+		var before_words := PromptTemplates.get_words(context_before, 100)
+		var after_words := PromptTemplates.get_words(context_after, 100)
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call LLM to get stylistic improvements with explanations
-	var prompt := """
-You are a helpful writing assistant. Analyze the following text and provide:
-1. An enhanced version with improved style, flow, and readability (keep the original meaning)
-2. A brief explanation of the stylistic improvements made
-
-Context:
-%s
-
-Paragraph to analyze:
-%s
-
-Respond with a JSON object containing 'enhanced' and 'explanation' fields:
-{
-  "enhanced": "[enhanced text]",
-  "explanation": "[brief explanation of stylistic changes]"
-}
-""" % [context, paragraph]
+	# Format prompt using template
+	var prompt := PromptTemplates.format_prompt(PromptTemplates.STYLE_PROMPT, {
+		"context": context,
+		"paragraph": paragraph
+	})
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
 	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
@@ -117,48 +91,24 @@ Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 	}
 
 
-# Helper function to get first N words from text
-func _get_words(text: String, max_words: int) -> String:
-	var words := text.split(" ", false)
-	if words.size() <= max_words:
-		return text
-	var result_words := []
-	for i in range(min(words.size(), max_words)):
-		result_words.append(words[i])
-	return " ".join(result_words)
-
-
 # Analyzes text for structural/plot/pacing enhancements
 func analyze_structure(paragraph: String, context_before: String = "", context_after: String = "", full_chapter: String = "") -> Dictionary:
 	# Build context - use full chapter if available, otherwise use before/after
 	var context := ""
 	if full_chapter.length() > 0:
 		# Use full chapter as context, trimmed to reasonable size
-		context = "Full chapter context:\n%s...\n\n" % _get_words(full_chapter, 500)
+		context = "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, 500)
 	elif context_before.length() > 0 or context_after.length() > 0:
 		# Fall back to before/after context
-		var before_words := _get_words(context_before, 200)
-		var after_words := _get_words(context_after, 200)
+		var before_words := PromptTemplates.get_words(context_before, 200)
+		var after_words := PromptTemplates.get_words(context_after, 200)
 		context = "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
 
-	# Call LLM to get structural suggestions
-	var prompt := """
-You are a helpful writing assistant specializing in story structure. Analyze the following text and provide:
-1. A rewrite for this paragraph to improve plot, pacing, or structural flow
-2. A brief explanation of how this suggestion enhances the narrative
-
-Context:
-%s
-
-Paragraph to analyze:
-%s
-
-Respond with a JSON object containing 'suggestion' and 'explanation' fields:
-{
-  "suggestion": "[structural suggestion]",
-  "explanation": "[brief explanation of the structural improvement]"
-}
-""" % [context, paragraph]
+	# Format prompt using template
+	var prompt := PromptTemplates.format_prompt(PromptTemplates.STRUCTURE_PROMPT, {
+		"context": context,
+		"paragraph": paragraph
+	})
 
 	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
 	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)

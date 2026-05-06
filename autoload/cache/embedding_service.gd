@@ -14,8 +14,8 @@ var loaded_cache_dirs := {}
 var queued_keys := {}
 
 func _ready() -> void:
-	EventBus.request_priority_embedding_cache.connect(_on_priority_embedding_cache_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
+	EventBus.start_analysis.connect(_on_start_analysis)
 	EventBus.index_project_embeddings.connect(_on_index_project_embeddings)
 	EventBus.index_chapter_embeddings.connect(_on_index_chapter_embeddings)
 	EventBus.file_selected.connect(_on_file_selected)
@@ -105,17 +105,17 @@ func _process_task(task: Dictionary):
 
 # Override: Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.embedding_cache_queue_updated.emit(task_queue.size(), processing)
+	EventBus.cache_queue_updated.emit("embedding", task_queue.size(), processing)
 
 
 # Override: Emit task started signal
 func _emit_task_started(remaining: int) -> void:
-	EventBus.embedding_cache_task_started.emit(remaining)
+	EventBus.cache_task_started.emit("embedding", remaining)
 
 
 # Override: Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.embedding_cache_task_completed.emit(remaining)
+	EventBus.cache_task_completed.emit("embedding", remaining, {})
 
 
 # Ensure a cache directory's JSONL files are loaded into memory
@@ -305,10 +305,18 @@ func _on_folder_opened(path: String) -> void:
 	if FileUtils.dir_exists(cache_dir):
 		# Ensure cache is loaded before cleanup
 		_ensure_cache_loaded(cache_dir)
-		EventBus.cache_cleanup_started.emit()
+		EventBus.unified_cache_cleanup_started.emit("embedding")
 		var removed_count := _cleanup_unused_cache_files(cache_dir, path)
-		EventBus.cache_cleanup_completed.emit(removed_count)
+		EventBus.unified_cache_cleanup_completed.emit("embedding", removed_count)
 
+
+func _on_start_analysis(service_type: String, scope: String) -> void:
+	if service_type != "EMBEDDING":
+		return
+	if scope == "project":
+		_on_index_project_embeddings()
+	elif scope == "chapter":
+		_on_index_chapter_embeddings()
 
 func _on_index_project_embeddings() -> void:
 	# Queue all paragraphs from BookService for embedding
