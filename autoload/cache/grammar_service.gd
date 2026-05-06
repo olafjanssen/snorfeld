@@ -23,6 +23,51 @@ func _ready() -> void:
 		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
+# Analyzes text for grammar/spelling corrections
+func analyze_grammar(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
+	# Build context from surrounding text (trim to reasonable size)
+	var context := ""
+	if context_before.length() > 0 or context_after.length() > 0:
+		# Take up to 100 words before and after
+		var before_words := PromptTemplates.get_words(context_before, 100)
+		var after_words := PromptTemplates.get_words(context_after, 100)
+		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
+
+	# Format prompt using template
+	var prompt := PromptTemplates.format_prompt(PromptTemplates.GRAMMAR_PROMPT, {
+		"context": context,
+		"paragraph": paragraph
+	})
+
+	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+
+	var corrected_text: String = paragraph
+	var explanation: String = ""
+	var model: String = AppConfig.get_llm_model()
+
+	if llm_response.get("parsed_json", null) != null:
+		# The LLMClient.generate_json already parsed the JSON for us
+		var parsed = llm_response["parsed_json"]
+		if parsed is Dictionary:
+			if parsed.has("corrected") and parsed["corrected"] is String:
+				corrected_text = parsed["corrected"]
+			if parsed.has("explanation") and parsed["explanation"] is String:
+				explanation = parsed["explanation"]
+		else:
+			print("[GrammarService] WARNING: Grammar LLM returned non-Dictionary JSON: %s" % parsed)
+	else:
+		print("[GrammarService] WARNING: Grammar LLM response error or not JSON")
+		if llm_response.has("error"):
+			print("[GrammarService] Grammar LLM Error: %s" % llm_response["error"])
+
+	return {
+		"corrected": corrected_text,
+		"explanation": explanation,
+		"model": model
+	}
+
+
 # Override: Analyze a paragraph and return grammar cache data
 func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
@@ -42,7 +87,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 			context_after = file_content.substr(after_start, after_end - after_start)
 
 	# Call LLM to analyze grammar
-	var result = await AnalysisService.analyze_grammar(paragraph, context_before, context_after)
+	var result = await analyze_grammar(paragraph, context_before, context_after)
 
 	# Build cache data
 	return {

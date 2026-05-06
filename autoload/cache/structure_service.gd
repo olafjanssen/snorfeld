@@ -23,6 +23,53 @@ func _ready() -> void:
 		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
+# Analyzes text for structural/plot/pacing enhancements
+func analyze_structure(paragraph: String, context_before: String = "", context_after: String = "", full_chapter: String = "") -> Dictionary:
+	# Build context - use full chapter if available, otherwise use before/after
+	var context := ""
+	if full_chapter.length() > 0:
+		# Use full chapter as context, trimmed to reasonable size
+		context = "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, 500)
+	elif context_before.length() > 0 or context_after.length() > 0:
+		# Fall back to before/after context
+		var before_words := PromptTemplates.get_words(context_before, 200)
+		var after_words := PromptTemplates.get_words(context_after, 200)
+		context = "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
+
+	# Format prompt using template
+	var prompt := PromptTemplates.format_prompt(PromptTemplates.STRUCTURE_PROMPT, {
+		"context": context,
+		"paragraph": paragraph
+	})
+
+	var options := {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+
+	var suggestion: String = ""
+	var explanation: String = ""
+	var model: String = AppConfig.get_llm_model()
+
+	if llm_response.get("parsed_json", null) != null:
+		var parsed = llm_response["parsed_json"]
+		if parsed is Dictionary:
+			if parsed.has("suggestion") and parsed["suggestion"] is String:
+				suggestion = parsed["suggestion"]
+			if parsed.has("explanation") and parsed["explanation"] is String:
+				explanation = parsed["explanation"]
+		else:
+			print("[StructureService] WARNING: Structure LLM returned non-Dictionary JSON: %s" % parsed)
+	else:
+		print("[StructureService] WARNING: Structure LLM response error or not JSON")
+		if llm_response.has("error"):
+			print("[StructureService] Structure LLM Error: %s" % llm_response["error"])
+
+	return {
+		"suggestion": suggestion,
+		"explanation": explanation,
+		"model": model
+	}
+
+
 # Override: Analyze a paragraph and return structure cache data
 func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
@@ -42,7 +89,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 			context_after = file_content.substr(after_start, after_end - after_start)
 
 	# Call LLM to analyze structure (use full chapter as context if available)
-	var result = await AnalysisService.analyze_structure(paragraph, context_before, context_after, file_content)
+	var result = await analyze_structure(paragraph, context_before, context_after, file_content)
 
 	# Build cache data
 	return {
