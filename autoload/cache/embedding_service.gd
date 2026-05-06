@@ -394,9 +394,42 @@ func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> 
 	# Already ensured cache is loaded by caller
 	var removed_count := 0
 
-	# For now, we keep all embeddings during cleanup
-	# as they are tied to the directory structure
-	# A more sophisticated approach would verify the actual content
+	# Get valid hashes from BookService
+	var valid_paragraph_hashes := BookService.get_all_paragraph_hashes()
+	var valid_chapter_hashes := BookService.get_all_chapter_hashes()
+
+	# Convert to sets for faster lookup
+	var valid_paragraph_set := {}
+	for content_hash in valid_paragraph_hashes:
+		valid_paragraph_set[content_hash] = true
+	var valid_chapter_set := {}
+	for content_hash in valid_chapter_hashes:
+		valid_chapter_set[content_hash] = true
+
+	# Remove cache entries that don't have corresponding source
+	var keys_to_remove := []
+	for key in memory_cache:
+		# Parse key format: cache_dir:paragraph:text_hash or cache_dir:chapter:text_hash
+		var parts = key.split(":")
+		if parts.size() >= 3:
+			var is_chapter = parts[1] == "chapter"
+			var text_hash = parts[2]
+
+			if is_chapter:
+				if not valid_chapter_set.has(text_hash):
+					keys_to_remove.append(key)
+			else:
+				if not valid_paragraph_set.has(text_hash):
+					keys_to_remove.append(key)
+
+	# Remove from memory cache
+	for key in keys_to_remove:
+		memory_cache.erase(key)
+		removed_count += 1
+
+	# Rewrite JSONL files to persist cleanup
+	_rewrite_jsonl_files(_cache_path)
+
 	return removed_count
 
 
