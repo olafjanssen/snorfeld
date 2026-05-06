@@ -19,9 +19,6 @@ func _ready() -> void:
 	EventBus.index_project_embeddings.connect(_on_index_project_embeddings)
 	EventBus.index_chapter_embeddings.connect(_on_index_chapter_embeddings)
 	EventBus.file_selected.connect(_on_file_selected)
-	if BookService != null:
-		BookService.project_loaded.connect(_on_project_loaded)
-		BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name
@@ -91,14 +88,17 @@ func _process_task(task: Dictionary):
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
 
+	var save_data = data.duplicate()
+	save_data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
+
 	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
-		file.store_string(JsonUtils.stringify_json(data) + "\n")
+		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
 		file.close()
 	else:
 		# File doesn't exist yet, create it
-		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(data) + "\n")
+		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(save_data) + "\n")
 
 	queued_keys.erase(key)
 
@@ -146,7 +146,9 @@ func _load_paragraph_jsonl_cache(cache_dir: String) -> void:
 		var text_hash = data.get("text_hash", "")
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, false)
-			memory_cache[key] = data
+			var cache_data = data.duplicate()
+			cache_data["embedding"] = Marshalls.base64_to_variant(data["embedding"])
+			memory_cache[key] = cache_data
 
 
 # Load chapter embeddings JSONL cache file into memory
@@ -167,7 +169,9 @@ func _load_chapter_jsonl_cache(cache_dir: String) -> void:
 		var text_hash = data.get("text_hash", "")
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, true)
-			memory_cache[key] = data
+			var cache_data = data.duplicate()
+			cache_data["embedding"] = Marshalls.base64_to_variant(data["embedding"])
+			memory_cache[key] = cache_data
 
 
 # Create cache key from directory, hash, and whether it's a chapter
@@ -179,14 +183,6 @@ func _make_cache_key(cache_dir: String, text_hash: String, is_chapter: bool) -> 
 # Get cache directory for a file path
 func _get_cache_dir_for_file(file_path: String) -> String:
 	return file_path.get_base_dir().path_join(".snorfeld").path_join(EMBEDDING_DIR_NAME)
-
-
-
-# Get embedding array from cache data
-func _get_embedding_from_data(data: Dictionary) -> Array:
-	if data.has("embedding"):
-		return data["embedding"]
-	return []
 
 
 # Hash a string for cache key (MD5)
@@ -314,14 +310,6 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
-func _on_project_loaded(_path: String) -> void:
-	pass  # Project loaded, BookService is ready
-
-
-func _on_project_unloaded() -> void:
-	pass  # Project unloaded
-
-
 func _on_index_project_embeddings() -> void:
 	# Queue all paragraphs from BookService for embedding
 	var all_files := BookService.get_all_files()
@@ -418,7 +406,8 @@ func _rewrite_jsonl_files(cache_dir: String) -> void:
 	var paragraph_content := ""
 	for key in memory_cache:
 		if key.begins_with(cache_dir + ":paragraph:"):
-			var data = memory_cache[key]
+			var data = memory_cache[key].duplicate()
+			data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
 			paragraph_content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(cache_dir.path_join(PARAGRAPH_JSONL_FILENAME), paragraph_content)
 
@@ -426,7 +415,8 @@ func _rewrite_jsonl_files(cache_dir: String) -> void:
 	var chapter_content := ""
 	for key in memory_cache:
 		if key.begins_with(cache_dir + ":chapter:"):
-			var data = memory_cache[key]
+			var data = memory_cache[key].duplicate()
+			data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
 			chapter_content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(cache_dir.path_join(CHAPTER_JSONL_FILENAME), chapter_content)
 
@@ -467,7 +457,7 @@ func compute_and_cache_paragraph_embedding(paragraph: String, file_path: String)
 	else:
 		return {"error": "Could not find embedding vector in response"}
 
-	# Build cache data
+	# Build cache data - store embedding as Variant in memory
 	var data := {
 		"text_hash": paragraph_hash,
 		"text": paragraph,
@@ -480,18 +470,21 @@ func compute_and_cache_paragraph_embedding(paragraph: String, file_path: String)
 	# Store in memory
 	memory_cache[key] = data
 
-	# Save to file
+	# Save to file - convert embedding to base64 for JSON storage
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
+
+	var save_data = data.duplicate()
+	save_data["embedding"] = Marshalls.variant_to_base64(embedding_vector)
 
 	var jsonl_path := cache_dir.path_join(PARAGRAPH_JSONL_FILENAME)
 	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
-		file.store_string(JsonUtils.stringify_json(data) + "\n")
+		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
 		file.close()
 	else:
-		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(data) + "\n")
+		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(save_data) + "\n")
 
 	return data
 
@@ -527,7 +520,7 @@ func compute_and_cache_chapter_embedding(file_path: String) -> Dictionary:
 	else:
 		return {"error": "Could not find embedding vector in response"}
 
-	# Build cache data
+	# Build cache data - store embedding as Variant in memory
 	var data := {
 		"text_hash": chapter_hash,
 		"text": file_content,
@@ -540,17 +533,20 @@ func compute_and_cache_chapter_embedding(file_path: String) -> Dictionary:
 	# Store in memory
 	memory_cache[key] = data
 
-	# Save to file
+	# Save to file - convert embedding to base64 for JSON storage
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
+
+	var save_data = data.duplicate()
+	save_data["embedding"] = Marshalls.variant_to_base64(embedding_vector)
 
 	var jsonl_path := cache_dir.path_join(CHAPTER_JSONL_FILENAME)
 	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
-		file.store_string(JsonUtils.stringify_json(data) + "\n")
+		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
 		file.close()
 	else:
-		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(data) + "\n")
+		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(save_data) + "\n")
 
 	return data
