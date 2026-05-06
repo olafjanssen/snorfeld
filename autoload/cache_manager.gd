@@ -4,12 +4,12 @@ extends Node
 ## that instantiates them as children, reducing the autoload count.
 
 # Preloaded service scripts
-const GrammarServiceScript = preload("res://autoload/cache/grammar_service.gd")
-const StyleServiceScript = preload("res://autoload/cache/style_service.gd")
-const StructureServiceScript = preload("res://autoload/cache/structure_service.gd")
-const CharacterServiceScript = preload("res://autoload/cache/character_service.gd")
-const ObjectServiceScript = preload("res://autoload/cache/object_service.gd")
-const EmbeddingServiceScript = preload("res://autoload/cache/embedding_service.gd")
+const GrammarServiceScript = preload("res://cache/grammar_service.gd")
+const StyleServiceScript = preload("res://cache/style_service.gd")
+const StructureServiceScript = preload("res://cache/structure_service.gd")
+const CharacterServiceScript = preload("res://cache/character_service.gd")
+const ObjectServiceScript = preload("res://cache/object_service.gd")
+const EmbeddingServiceScript = preload("res://cache/embedding_service.gd")
 
 # Public references to child services
 var GrammarService: Node

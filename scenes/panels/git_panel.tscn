@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bkg70qtikji0p"]
 
 [ext_resource type="Script" uid="uid://bc45v60y7kfqi" path="res://scenes/panels/git_panel.gd" id="1"]
-[ext_resource type="Script" uid="uid://qeqew60hmmp4" path="res://autoload/services/git_service.gd" id="2"]
+[ext_resource type="Script" uid="uid://qeqew60hmmp4" path="res://managers/git_service.gd" id="2"]
 
 [node name="GitPanel" type="Control" unique_id=431570014]
 layout_mode = 3
