@@ -22,7 +22,7 @@ func _ready():
 	$VBoxContainer/WindowBar/HBoxContainer/MenuButton.connect("pressed", _on_menu_open_button_pressed)
 
 	EventBus.theme_changed.connect(_update_icon_colors)
-	EventBus.open_story_bible.connect(_open_story_bible)
+	CommandBus.open_story_bible.connect(_open_story_bible)
 
 func _open_story_bible():
 	if story_bible != null:
@@ -39,7 +39,7 @@ func _on_sidebar_right_button_pressed():
 	$VBoxContainer/HSplitContainer/ParagraphCheck.visible = !$VBoxContainer/HSplitContainer/ParagraphCheck.visible
 
 func _on_folder_open_button_pressed():
-	EventBus.request_open_folder.emit()
+	CommandBus.open_folder.emit()
 
 func _on_menu_open_button_pressed():
 	EventBus.open_settings.emit()

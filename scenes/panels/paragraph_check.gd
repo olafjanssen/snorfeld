@@ -72,7 +72,7 @@ func _on_theme_changed() -> void:
 func _on_cache_task_completed(service_type: String, _remaining: int, _result: Dictionary) -> void:
 	if service_type not in ['grammar','style','structure']:
 		return
-	
+
 	# When a cache task completes, refresh the display for the current paragraph
 	# This handles the case where we requested analysis for a specific tab
 	if current_paragraph_hash != "" and current_file_path != "":
@@ -87,7 +87,7 @@ func _on_cache_task_completed(service_type: String, _remaining: int, _result: Di
 
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
 	# Emit signal with line_number - editor will verify via BookService
-	EventBus.apply_diff_patch.emit(
+	CommandBus.apply_diff_patch.emit(
 		current_file_path,
 		current_line_number,
 		operation,
@@ -144,7 +144,7 @@ func _update_display_for_active_tab(tab_index: int):
 				GrammarExplanation.text = _grammar_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit("grammar", current_file_path, {"line_number": current_line_number})
+				CommandBus.priority_analysis.emit("grammar", current_file_path, {"line_number": current_line_number})
 				return
 		1:  # Style tab
 			if _style_cache_data:
@@ -152,7 +152,7 @@ func _update_display_for_active_tab(tab_index: int):
 				StyleExplanation.text = _style_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit("style", current_file_path, {"line_number": current_line_number})
+				CommandBus.priority_analysis.emit("style", current_file_path, {"line_number": current_line_number})
 				return
 		2:  # Structure tab
 			if _structure_cache_data:
@@ -160,7 +160,7 @@ func _update_display_for_active_tab(tab_index: int):
 				StructureExplanation.text = _structure_cache_data.get("explanation", "")
 			else:
 				Correction.set_text(icon_text + "Generating analysis...")
-				EventBus.request_priority_analysis.emit("structure", current_file_path, {"line_number": current_line_number})
+				CommandBus.priority_analysis.emit("structure", current_file_path, {"line_number": current_line_number})
 				return
 
 	_update_diff_displays()

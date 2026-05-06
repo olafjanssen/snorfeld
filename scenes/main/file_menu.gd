@@ -46,34 +46,34 @@ func _ready():
 
 func _on_item_pressed(id: int):
 	if id == OPEN_FOLDER_ID:
-		EventBus.request_open_folder.emit()
+		CommandBus.open_folder.emit()
 	elif id == SETTINGS_ID:
 		EventBus.open_settings.emit()
 	elif id == STORY_BIBLE_ID:
-		EventBus.open_story_bible.emit()
+		CommandBus.open_story_bible.emit()
 	elif id == RUN_ALL_GRAMMAR_ANALYSES_ID:
-		EventBus.start_analysis.emit("GRAMMAR", "project")
+		CommandBus.start_analysis.emit("GRAMMAR", "project")
 	elif id == RUN_CHAPTER_GRAMMAR_ANALYSES_ID:
-		EventBus.start_analysis.emit("GRAMMAR", "chapter")
+		CommandBus.start_analysis.emit("GRAMMAR", "chapter")
 	elif id == RUN_ALL_STYLE_ANALYSES_ID:
-		EventBus.start_analysis.emit("STYLE", "project")
+		CommandBus.start_analysis.emit("STYLE", "project")
 	elif id == RUN_CHAPTER_STYLE_ANALYSES_ID:
-		EventBus.start_analysis.emit("STYLE", "chapter")
+		CommandBus.start_analysis.emit("STYLE", "chapter")
 	elif id == RUN_ALL_STRUCTURE_ANALYSES_ID:
-		EventBus.start_analysis.emit("STRUCTURE", "project")
+		CommandBus.start_analysis.emit("STRUCTURE", "project")
 	elif id == RUN_CHAPTER_STRUCTURE_ANALYSES_ID:
-		EventBus.start_analysis.emit("STRUCTURE", "chapter")
+		CommandBus.start_analysis.emit("STRUCTURE", "chapter")
 	elif id == RUN_ALL_CHARACTER_ANALYSES_ID:
-		EventBus.start_analysis.emit("CHARACTER", "project")
+		CommandBus.start_analysis.emit("CHARACTER", "project")
 	elif id == RUN_CHAPTER_CHARACTER_ANALYSES_ID:
-		EventBus.start_analysis.emit("CHARACTER", "chapter")
+		CommandBus.start_analysis.emit("CHARACTER", "chapter")
 	elif id == RUN_ALL_OBJECT_ANALYSES_ID:
-		EventBus.start_analysis.emit("OBJECT", "project")
+		CommandBus.start_analysis.emit("OBJECT", "project")
 	elif id == RUN_CHAPTER_OBJECT_ANALYSES_ID:
-		EventBus.start_analysis.emit("OBJECT", "chapter")
+		CommandBus.start_analysis.emit("OBJECT", "chapter")
 	elif id == INDEX_PROJECT_EMBEDDINGS_ID:
-		EventBus.start_analysis.emit("EMBEDDING", "project")
+		CommandBus.start_analysis.emit("EMBEDDING", "project")
 	elif id == INDEX_CHAPTER_EMBEDDINGS_ID:
-		EventBus.start_analysis.emit("EMBEDDING", "chapter")
+		CommandBus.start_analysis.emit("EMBEDDING", "chapter")
 	elif id == 1:
 		get_tree().quit()

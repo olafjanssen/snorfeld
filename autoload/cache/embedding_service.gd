@@ -15,9 +15,7 @@ var queued_keys := {}
 
 func _ready() -> void:
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.start_analysis.connect(_on_start_analysis)
-	EventBus.index_project_embeddings.connect(_on_index_project_embeddings)
-	EventBus.index_chapter_embeddings.connect(_on_index_chapter_embeddings)
+	CommandBus.start_analysis.connect(_on_start_analysis)
 	EventBus.file_selected.connect(_on_file_selected)
 
 
@@ -316,11 +314,11 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 	if service_type != "EMBEDDING":
 		return
 	if scope == "project":
-		_on_index_project_embeddings()
+		_index_project_embeddings()
 	elif scope == "chapter":
-		_on_index_chapter_embeddings()
+		_index_chapter_embeddings()
 
-func _on_index_project_embeddings() -> void:
+func _index_project_embeddings() -> void:
 	# Queue all paragraphs from BookService for embedding
 	var all_files := BookService.get_all_files()
 	all_files.sort()
@@ -346,7 +344,7 @@ func _on_file_selected(path: String) -> void:
 	current_file_content = FileUtils.read_file(path)
 
 
-func _on_index_chapter_embeddings() -> void:
+func _index_chapter_embeddings() -> void:
 	if current_file_path == "":
 		return
 	# Get content and paragraphs from BookService if available

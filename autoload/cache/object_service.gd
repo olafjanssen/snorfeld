@@ -9,7 +9,7 @@ var current_object_file_path: String = ""
 var current_object_file_content: String = ""
 
 func _ready() -> void:
-	EventBus.start_analysis.connect(_on_start_analysis)
+	CommandBus.start_analysis.connect(_on_start_analysis)
 	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	if BookService != null:

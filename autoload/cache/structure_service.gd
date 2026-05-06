@@ -14,11 +14,9 @@ func _get_cache_filename() -> String:
 	return "structure.jsonl"
 
 func _ready() -> void:
-	EventBus.request_priority_analysis.connect(_on_priority_analysis_requested)
+	CommandBus.priority_analysis.connect(_on_priority_analysis_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.start_analysis.connect(_on_start_analysis)
-	EventBus.run_all_analyses.connect(_on_run_all_analyses)
-	EventBus.run_chapter_analyses.connect(_on_run_chapter_analyses)
+	CommandBus.start_analysis.connect(_on_start_analysis)
 	EventBus.file_selected.connect(_on_file_selected)
 	if BookService != null:
 		BookService.project_loaded.connect(_on_project_loaded)
@@ -169,19 +167,11 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 		if current_file_path != "":
 			queue_file_paragraphs(current_file_path)
 
-func _on_run_all_analyses() -> void:
-	queue_all_paragraphs()
-
 func _on_file_selected(path: String) -> void:
 	current_file_path = path
 	current_file_content = FileUtils.read_file(path)
 
-func _on_run_chapter_analyses() -> void:
-	if current_file_path == "":
-		return
-	queue_file_paragraphs(current_file_path)
-
-## ============================================================================
+## ========================================================================================================================================================
 ## Cleanup
 ## ============================================================================
 

@@ -33,9 +33,9 @@ var last_dir_state: Dictionary = {}
 
 func _ready():
 	item_selected.connect(_on_item_selected)
-	EventBus.request_open_folder.connect(_on_open_folder_requested)
+	CommandBus.open_folder.connect(_on_open_folder_requested)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.git_file_status_changed.connect(_on_git_file_status_changed)
+	EventBus.file_status_changed.connect(_on_git_file_status_changed)
 	EventBus.theme_changed.connect(_on_theme_changed)
 
 	# Load icon textures

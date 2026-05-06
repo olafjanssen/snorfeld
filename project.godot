@@ -34,6 +34,7 @@ CharacterService="*res://autoload/cache/character_service.gd"
 ObjectService="*res://autoload/cache/object_service.gd"
 EmbeddingService="*res://autoload/cache/embedding_service.gd"
 ThemeManager="*res://autoload/managers/theme_manager.gd"
+CommandBus="*uid://bq4mholrhrila"
 
 [display]
 

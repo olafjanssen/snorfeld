@@ -19,11 +19,10 @@ var file_contents := {}
 
 func _ready():
 	# Connect to global signals
-	EventBus.request_save_file.connect(_on_request_save_file)
+	CommandBus.save_file.connect(_on_save_file)
 	EventBus.file_changed.connect(_on_file_changed)
-	EventBus.request_close_file.connect(_on_request_close_file)
 	EventBus.file_selected.connect(_on_file_selected)
-	EventBus.request_save_all_files.connect(_on_request_save_all_files)
+	CommandBus.save_all_files.connect(_on_save_all_files)
 
 	# Connect to tree signals for application close
 	var root = get_tree().root
@@ -38,7 +37,7 @@ func _exit_tree():
 	pending_saves.clear()
 	file_contents.clear()
 
-func _on_request_save_file(path: String):
+func _on_save_file(path: String):
 	# Cancel any pending debounced save for this file
 	if pending_saves.has(path):
 		pending_saves[path].stop()
@@ -76,24 +75,20 @@ func _on_debounced_save_timeout(path: String):
 		pending_saves.erase(path)
 	_save_file(path)
 
-func _on_request_close_file(path: String):
-	# Save file before closing it
-	_save_file(path)
-
 func _on_file_selected(path: String):
 	# Save current file before switching to another
 	if current_file_path != "" and current_file_path != path and has_unsaved_changes:
 		_save_file(current_file_path)
 	current_file_path = path
 
-func _on_request_save_all_files():
+func _on_save_all_files():
 	# Save all files that have pending changes
 	for path in file_contents.keys():
 		_save_file(path)
 
 func _on_tree_exiting():
 	# Request all editors to emit their final content
-	EventBus.request_save_all_files.emit()
+	CommandBus.save_all_files.emit()
 	# Then save all files that have pending changes
 	for path in file_contents.keys():
 		_save_file(path)

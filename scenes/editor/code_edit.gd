@@ -11,10 +11,10 @@ func _ready():
 	syntax_highlighter = highlighter
 
 	EventBus.file_selected.connect(_on_file_selected)
-	EventBus.apply_diff_patch.connect(_on_apply_diff_patch)
-	EventBus.request_save_all_files.connect(_on_request_save_all_files)
+	CommandBus.apply_diff_patch.connect(_on_apply_diff_patch_command)
+	CommandBus.save_all_files.connect(_on_save_all_files)
 	EventBus.show_git_diff.connect(_on_show_git_diff)
-	EventBus.navigate_to_line.connect(_on_navigate_to_line)
+	CommandBus.navigate_to_line.connect(_on_navigate_to_line_command)
 	if BookService != null:
 		BookService.content_changed.connect(_on_book_content_changed)
 
@@ -35,7 +35,7 @@ func _exit_tree():
 		file_check_timer = null
 	# Note: syntax_highlighter is a RefCounted object and is managed automatically
 
-func _on_request_save_all_files():
+func _on_save_all_files():
 	# Emit final file_changed with current content before shutdown
 	if current_file_path != "" and FileUtils.file_exists(current_file_path):
 		EventBus.file_changed.emit(current_file_path, get_text())
@@ -69,7 +69,7 @@ func _on_file_check_timeout():
 func _on_show_git_diff(_path: String, _diff: String):
 	visible = false
 
-func _on_navigate_to_line(file_path: String, line_number: int):
+func _on_navigate_to_line_command(file_path: String, line_number: int):
 	if current_file_path == file_path:
 		var line_count = get_line_count()
 		var target_line = clamp(line_number - 1, 0, line_count - 1)
@@ -99,7 +99,7 @@ func _on_file_selected(path: String):
 	if current_file_path != "" and current_file_path != path:
 		var current_content = get_text()
 		EventBus.file_changed.emit(current_file_path, current_content)
-		EventBus.request_save_file.emit(current_file_path)
+		CommandBus.save_file.emit(current_file_path)
 
 	current_file_path = path
 	last_text = ""
@@ -137,7 +137,7 @@ func _on_text_changed():
 
 
 
-func _on_apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
+func _on_apply_diff_patch_command(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
 	# Only apply if this is the current file
 	if current_file_path != file_path:
 		return

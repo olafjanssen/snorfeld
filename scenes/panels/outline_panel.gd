@@ -105,5 +105,5 @@ func _on_item_selected():
 	if metadata.get("type", "") == "heading":
 		var file_path = metadata["file"]
 		var line_num = metadata["line"]
-		EventBus.navigate_to_line.emit(file_path, line_num)
+		CommandBus.navigate_to_line.emit(file_path, line_num)
 		EventBus.file_selected.emit(file_path)
