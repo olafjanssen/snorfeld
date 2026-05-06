@@ -11,7 +11,9 @@
 	- [x] Allow switching between light/dark/OS-auto mode
 - [ ] Statistics
   - [ ] Create paragraph and chapter embeddings
-	
+- [ ] Architectural design
+  - [ ] Create a book service that can give an entire overview of the structure of the project
+
 ## Features Done
 - [x] LLM Generation
   - [x] Show LLM status and progress in status bar

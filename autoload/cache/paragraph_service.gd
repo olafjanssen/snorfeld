@@ -1,11 +1,11 @@
 extends ContentCache
 # Paragraph service - handles caching and analysis of paragraph results
-# Uses JSONL format with in-memory cache for efficiency
+# Uses BookService for project content model, JSONL format with in-memory cache for efficiency
 
 const PARAGRAPH_DIR_NAME := "paragraph"
 const JSONL_FILENAME := "paragraphs.jsonl"
 
-# In-memory cache: key = "%s:%s" % [cache_dir, paragraph_hash], value = cache data
+# In-memory cache: key = paragraph_hash, value = cache data
 var memory_cache: Dictionary = {}
 # Track which cache directories have been loaded into memory
 var loaded_cache_dirs: Dictionary = {}
@@ -18,6 +18,8 @@ func _ready() -> void:
 	EventBus.run_all_analyses.connect(_on_run_all_analyses)
 	EventBus.run_chapter_analyses.connect(_on_run_chapter_analyses)
 	EventBus.file_selected.connect(_on_file_selected)
+	BookService.project_loaded.connect(_on_project_loaded)
+	BookService.project_unloaded.connect(_on_project_unloaded)
 
 
 # Override: Get cache subdirectory name
@@ -27,21 +29,18 @@ func _get_cache_subdir() -> String:
 
 # Override: Process a single task
 func _process_task(task: Dictionary):
-	var cache_dir: String = task["cache_dir"]
 	var paragraph_hash: String = task["hash"]
-
-	# Ensure this directory's cache is loaded into memory
-	_ensure_cache_loaded(cache_dir)
+	var paragraph: String = task.get("paragraph", "")
+	var file_content: String = task.get("file_content", "")
+	var file_path: String = task.get("file_path", "")
 
 	# Check if already cached
-	var key := _make_cache_key(cache_dir, paragraph_hash)
-	if memory_cache.has(key):
+	if memory_cache.has(paragraph_hash):
+		queued_keys.erase(paragraph_hash)
 		return
 
-	var paragraph = task.get("paragraph", "")
-	var file_content = task.get("file_content", "")
-	await _create_and_store_cache(cache_dir, paragraph_hash, paragraph, file_content)
-	queued_keys.erase(key)
+	await _create_and_store_cache(paragraph_hash, paragraph, file_content, file_path)
+	queued_keys.erase(paragraph_hash)
 
 
 # Override: Emit queue updated signal
@@ -59,6 +58,11 @@ func _emit_task_completed(remaining: int) -> void:
 	EventBus.cache_task_completed.emit(remaining)
 
 
+# Get cache directory for a file path
+func _get_cache_dir_for_file(file_path: String) -> String:
+	return file_path.get_base_dir().path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
+
+
 # Ensure a cache directory's JSONL file is loaded into memory
 func _ensure_cache_loaded(cache_dir: String) -> void:
 	if loaded_cache_dirs.get(cache_dir, false):
@@ -66,8 +70,6 @@ func _ensure_cache_loaded(cache_dir: String) -> void:
 	if FileUtils.dir_exists(cache_dir):
 		_load_jsonl_cache(cache_dir)
 	loaded_cache_dirs[cache_dir] = true
-
-
 
 
 # Load a JSONL cache file into memory
@@ -87,29 +89,11 @@ func _load_jsonl_cache(cache_dir: String) -> void:
 			continue
 		var paragraph_hash = data.get("paragraph_hash", "")
 		if paragraph_hash != "":
-			var key := _make_cache_key(cache_dir, paragraph_hash)
-			memory_cache[key] = data
-
-
-# Create cache key from directory and hash
-func _make_cache_key(cache_dir: String, paragraph_hash: String) -> String:
-	return "%s:%s" % [cache_dir, paragraph_hash]
-
-
-# Get cache directory for a file path
-func _get_cache_dir_for_file(file_path: String) -> String:
-	return file_path.get_base_dir().path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
-
-
-
+			memory_cache[paragraph_hash] = data
 
 
 # Creates cache entry and stores in memory + appends to JSONL file
-func _create_and_store_cache(cache_dir: String, paragraph_hash: String, paragraph: String, file_content: String) -> void:
-	# Ensure directory exists
-	if not FileUtils.dir_exists(cache_dir):
-		_create_cache_directory(cache_dir)
-
+func _create_and_store_cache(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "") -> void:
 	# Extract context from file_content
 	var context_before := ""
 	var context_after := ""
@@ -150,11 +134,20 @@ func _create_and_store_cache(cache_dir: String, paragraph_hash: String, paragrap
 		"cached_at": Time.get_unix_time_from_system()
 	}
 
-	# Store in memory (overwrite null placeholder if present)
-	var key := _make_cache_key(cache_dir, paragraph_hash)
-	memory_cache[key] = data
+	# Store in memory
+	memory_cache[paragraph_hash] = data
 
 	# Append to JSONL file
+	# Determine file path for cache location
+	var actual_file_path := file_path
+	if actual_file_path == "" and file_content != "":
+		# Try to infer from current_file_path
+		actual_file_path = current_file_path
+
+	var cache_dir := _get_cache_dir_for_file(actual_file_path) if actual_file_path != "" else ".snorfeld/paragraph"
+	if not FileUtils.dir_exists(cache_dir):
+		_create_cache_directory(cache_dir)
+
 	var jsonl_path := cache_dir.path_join(JSONL_FILENAME)
 	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
@@ -166,52 +159,62 @@ func _create_and_store_cache(cache_dir: String, paragraph_hash: String, paragrap
 		FileUtils.write_file(jsonl_path, JsonUtils.stringify_json(data) + "\n")
 
 
-# Handle file scanned event - queue paragraphs for caching
-func queue_paragraphs_for_cache(file_path: String, paragraphs: Array, file_content: String = "") -> void:
-	var cache_dir := _get_cache_dir_for_file(file_path)
+# Queue all paragraphs from BookService for caching
+func queue_all_paragraphs_for_cache() -> void:
+	var all_files := BookService.get_all_files()
+	for file_path in all_files:
+		var file_data := BookService.get_file(file_path)
+		if file_data.is_empty():
+			continue
+		var content = file_data.get("content", "")
+		if content == "":
+			continue
 
-	# Ensure cache directory exists
-	if not FileUtils.dir_exists(cache_dir):
-		_create_cache_directory(cache_dir)
+		# Get paragraphs from BookService
+		var para_ids := BookService.get_paragraphs_for_file(file_path)
+		for para_id in para_ids:
+			var para_data = BookService.get_paragraph(para_id)
+			var para_hash = para_data.get("hash", "")
+			var para_text = para_data.get("text", "")
 
-	# Ensure this directory's cache is loaded
-	_ensure_cache_loaded(cache_dir)
+			if not memory_cache.has(para_hash) and not queued_keys.has(para_hash):
+				queued_keys[para_hash] = true
+				_queue_task(para_hash, para_text, content, file_path)
+				_emit_queue_updated()
 
-	# Queue tasks for each paragraph
-	for paragraph in paragraphs:
-		var paragraph_hash := _hash_paragraph(paragraph)
-		var key := _make_cache_key(cache_dir, paragraph_hash)
-
-		# Only queue if not already in memory cache or queued
-		if not memory_cache.has(key) and not queued_keys.has(key):
-			queued_keys[key] = true
-			_queue_task(cache_dir, paragraph_hash, paragraph, file_content, false)
-			_emit_queue_updated()
-
-	# Start processing if not already running
 	if not processing:
 		_processing_start()
 
 
-# Remove a task from the queue by cache_dir and paragraph_hash
-func _remove_task_from_queue(cache_dir: String, paragraph_hash: String) -> void:
-	queue_mutex.lock()
-	var key := _make_cache_key(cache_dir, paragraph_hash)
-	var new_queue := []
-	for task in task_queue:
-		if task["cache_dir"] == cache_dir and task["hash"] == paragraph_hash:
-			# Skip this task - it will be re-queued with priority
-			continue
-		new_queue.append(task)
-	task_queue = new_queue
-	queued_keys.erase(key)
-	queue_mutex.unlock()
+# Queue paragraphs from a specific file
+func queue_file_paragraphs_for_cache(file_path: String) -> void:
+	var file_data := BookService.get_file(file_path)
+	if file_data.is_empty():
+		return
+	var content = file_data.get("content", "")
+	if content == "":
+		return
+
+	# Get paragraphs from BookService
+	var para_ids := BookService.get_paragraphs_for_file(file_path)
+	for para_id in para_ids:
+		var para_data = BookService.get_paragraph(para_id)
+		var para_hash = para_data.get("hash", "")
+		var para_text = para_data.get("text", "")
+
+		if not memory_cache.has(para_hash) and not queued_keys.has(para_hash):
+			queued_keys[para_hash] = true
+			_queue_task(para_hash, para_text, content, file_path)
+			_emit_queue_updated()
+
+	if not processing:
+		_processing_start()
 
 
-# Queue a task for paragraph cache creation
-func _queue_task(cache_dir: String, paragraph_hash: String, paragraph: String, file_content: String, priority: bool = false) -> void:
+# Queue a specific paragraph for caching (priority)
+func _queue_task(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", priority: bool = false) -> void:
 	queue_mutex.lock()
-	var task = {"cache_dir": cache_dir, "hash": paragraph_hash, "paragraph": paragraph, "file_content": file_content}
+	var task = {"hash": paragraph_hash, "paragraph": paragraph, "file_content": file_content, "file_path": file_path}
 	if priority:
 		task_queue.insert(0, task)
 	else:
@@ -228,22 +231,29 @@ func _queue_task(cache_dir: String, paragraph_hash: String, paragraph: String, f
 
 
 func _on_priority_cache_requested(paragraph_hash: String, file_path: String, paragraph: String, file_content: String) -> void:
-	var cache_dir := _get_cache_dir_for_file(file_path)
-	_ensure_cache_loaded(cache_dir)
-	if not FileUtils.dir_exists(cache_dir):
-		_create_cache_directory(cache_dir)
-	var key := _make_cache_key(cache_dir, paragraph_hash)
-
-	# If already cached, skip
-	if memory_cache.has(key):
+	# Check if already cached
+	if memory_cache.has(paragraph_hash):
 		return
 
-	# If already queued, promote it to priority by removing and re-queuing
-	if queued_keys.has(key):
-		_remove_task_from_queue(cache_dir, paragraph_hash)
+	# Check if already queued
+	if queued_keys.has(paragraph_hash):
+		# Remove from queue to re-queue with priority
+		_remove_task_from_queue(paragraph_hash)
 
-	queued_keys[key] = true
-	_queue_task(cache_dir, paragraph_hash, paragraph, file_content, true)
+	queued_keys[paragraph_hash] = true
+	_queue_task(paragraph_hash, paragraph, file_content, file_path, true)
+
+
+# Remove a task from the queue by paragraph_hash
+func _remove_task_from_queue(paragraph_hash: String) -> void:
+	queue_mutex.lock()
+	var new_queue := []
+	for task in task_queue:
+		if task["hash"] == paragraph_hash:
+			continue
+		new_queue.append(task)
+	task_queue = new_queue
+	queue_mutex.unlock()
 
 
 func _on_folder_opened(path: String) -> void:
@@ -256,60 +266,69 @@ func _on_folder_opened(path: String) -> void:
 		EventBus.cache_cleanup_completed.emit(removed_count)
 
 
+func _on_project_loaded(path: String) -> void:
+	# Load cache for this project
+	var cache_dir := path.path_join(".snorfeld").path_join(PARAGRAPH_DIR_NAME)
+	_ensure_cache_loaded(cache_dir)
+
+
+func _on_project_unloaded() -> void:
+	# Clear in-memory cache when project is unloaded
+	memory_cache.clear()
+	loaded_cache_dirs.clear()
+	queued_keys.clear()
+
+
 func _on_run_all_analyses() -> void:
-	# Queue all paragraphs from all text files in the project
-	var project_path := ProjectState.get_current_path()
-	if project_path == "":
-		return
-	var text_files := FileUtils.get_all_text_files(project_path)
-	for file_path in text_files:
-		var content := FileUtils.read_file(file_path)
-		if content != "":
-			var paragraphs := content.split("\n\n")
-			queue_paragraphs_for_cache(file_path, paragraphs, content)
+	queue_all_paragraphs_for_cache()
 
 
 func _on_file_selected(path: String) -> void:
 	current_file_path = path
-	current_file_content = FileUtils.read_file(path)
 
 
 func _on_run_chapter_analyses() -> void:
 	if current_file_path == "":
 		return
-	var paragraphs := current_file_content.split("\n\n")
-	queue_paragraphs_for_cache(current_file_path, paragraphs, current_file_content)
+	queue_file_paragraphs_for_cache(current_file_path)
 
 
 # Get cached data for a paragraph by its hash
-func get_paragraph_cache(paragraph_hash: String, file_path: String) -> Dictionary:
-	var cache_dir := _get_cache_dir_for_file(file_path)
-	_ensure_cache_loaded(cache_dir)
-	var key := _make_cache_key(cache_dir, paragraph_hash)
-	return memory_cache.get(key, {})
+func get_paragraph_cache(paragraph_hash: String, file_path: String = "") -> Dictionary:
+	return memory_cache.get(paragraph_hash, {})
 
 
-# Clean up cache entries that don't have corresponding source files in the project
+# Clean up cache entries that don't exist in the project anymore
 func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
-	# Already ensured cache is loaded by caller
+	# Use BookService to check which paragraphs still exist
 	var removed_count := 0
-	var project_files := FileUtils.get_all_text_files(project_path)
 
-	# Identify entries to remove from this cache_dir
-	var keys_to_remove := []
-	for key in memory_cache:
-		if not key.begins_with(cache_path + ":"):
+	# Get all paragraph hashes from cache files in this directory
+	var cache_file_path := cache_path.path_join(JSONL_FILENAME)
+	if not FileUtils.file_exists(cache_file_path):
+		return 0
+
+	var content := FileUtils.read_file(cache_file_path)
+	var lines := content.split("\n")
+	var hashes_in_cache := []
+
+	for line in lines:
+		line = line.strip_edges()
+		if line == "":
 			continue
-		var paragraph_hash = key.substr(cache_path.length() + 1)
-		if not _is_paragraph_in_project(paragraph_hash, project_files):
-			keys_to_remove.append(key)
+		var data := JsonUtils.parse_json(line)
+		if data != null and not data.is_empty():
+			var para_hash = data.get("paragraph_hash", "")
+			if para_hash != "":
+				hashes_in_cache.append(para_hash)
+
+	# Check which hashes are still in the project using BookService
+	for para_hash in hashes_in_cache:
+		if not BookService.has_paragraph(para_hash):
+			memory_cache.erase(para_hash)
 			removed_count += 1
 
-	# Remove from memory
-	for key in keys_to_remove:
-		memory_cache.erase(key)
-
-	# Rewrite the JSONL file for this cache_dir from current memory state
+	# Rewrite the JSONL file
 	_rewrite_jsonl_file(cache_path)
 
 	return removed_count
@@ -319,25 +338,12 @@ func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> in
 func _rewrite_jsonl_file(cache_dir: String) -> void:
 	var jsonl_path := cache_dir.path_join(JSONL_FILENAME)
 	var content := ""
-	for key in memory_cache:
-		if key.begins_with(cache_dir + ":"):
-			var data = memory_cache[key]
-			content += JsonUtils.stringify_json(data) + "\n"
+	# Write all entries that belong to this cache directory
+	# For now, we write all entries - this could be optimized
+	for para_hash in memory_cache:
+		var data = memory_cache[para_hash]
+		content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(jsonl_path, content)
-
-
-# Check if a paragraph exists in any project file
-func _is_paragraph_in_project(paragraph_hash: String, project_files: Array) -> bool:
-	for file_path in project_files:
-		var file := FileAccess.open(file_path, FileAccess.READ)
-		if file:
-			var content := file.get_as_text()
-			file.close()
-			var paragraphs := content.split("\n\n")
-			for paragraph in paragraphs:
-				if _hash_paragraph(paragraph.strip_edges()) == paragraph_hash:
-					return true
-	return false
 
 
 # Creates an MD5 hash from a paragraph string
