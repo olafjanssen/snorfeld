@@ -1,15 +1,15 @@
 extends Node
-## CacheManager - Central manager for all cache services
+## AnalysisManager - Central manager for all text analysis services
 ## This consolidates multiple autoload singletons into a single autoload
 ## that instantiates them as children, reducing the autoload count.
 
 # Preloaded service scripts
-const GrammarServiceScript = preload("res://cache/grammar_service.gd")
-const StyleServiceScript = preload("res://cache/style_service.gd")
-const StructureServiceScript = preload("res://cache/structure_service.gd")
-const CharacterServiceScript = preload("res://cache/character_service.gd")
-const ObjectServiceScript = preload("res://cache/object_service.gd")
-const EmbeddingServiceScript = preload("res://cache/embedding_service.gd")
+const GrammarServiceScript = preload("res://analysis/grammar_service.gd")
+const StyleServiceScript = preload("res://analysis/style_service.gd")
+const StructureServiceScript = preload("res://analysis/structure_service.gd")
+const CharacterServiceScript = preload("res://analysis/character_service.gd")
+const ObjectServiceScript = preload("res://analysis/object_service.gd")
+const EmbeddingServiceScript = preload("res://analysis/embedding_service.gd")
 
 # Public references to child services
 var GrammarService: Node

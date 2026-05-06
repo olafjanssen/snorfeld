@@ -77,9 +77,9 @@ func _on_cache_task_completed(service_type: String, _remaining: int, _result: Di
 	# This handles the case where we requested analysis for a specific tab
 	if current_paragraph_hash != "" and current_file_path != "":
 		# Reload the cache for the current paragraph
-		_grammar_cache_data = CacheManager.GrammarService.get_grammar_cache(current_paragraph_hash)
-		_style_cache_data = CacheManager.StyleService.get_style_cache(current_paragraph_hash)
-		_structure_cache_data = CacheManager.StructureService.get_structure_cache(current_paragraph_hash)
+		_grammar_cache_data = AnalysisManager.GrammarService.get_grammar_cache(current_paragraph_hash)
+		_style_cache_data = AnalysisManager.StyleService.get_style_cache(current_paragraph_hash)
+		_structure_cache_data = AnalysisManager.StructureService.get_structure_cache(current_paragraph_hash)
 
 		# Update display for the current active tab
 		var active_tab = $TabContainer.get_current_tab()
@@ -109,10 +109,10 @@ func _on_paragraph_selected(file_path: String, line_number: int):
 	_enhanced_text = ""
 	_suggestion_text = ""
 
-	# Load ALL cache types for this paragraph
-	_grammar_cache_data = CacheManager.GrammarService.get_grammar_cache(current_paragraph_hash)
-	_style_cache_data = CacheManager.StyleService.get_style_cache(current_paragraph_hash)
-	_structure_cache_data = CacheManager.StructureService.get_structure_cache(current_paragraph_hash)
+	# Load ALL analysis types for this paragraph
+	_grammar_cache_data = AnalysisManager.GrammarService.get_grammar_cache(current_paragraph_hash)
+	_style_cache_data = AnalysisManager.StyleService.get_style_cache(current_paragraph_hash)
+	_structure_cache_data = AnalysisManager.StructureService.get_structure_cache(current_paragraph_hash)
 
 	# Get the active tab
 	var active_tab = $TabContainer.get_current_tab()

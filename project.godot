@@ -24,7 +24,7 @@ LLMClient="*res://autoload/llm_client.gd"
 BookService="*res://autoload/book_service.gd"
 ThemeManager="*res://autoload/theme_manager.gd"
 CommandBus="*uid://bq4mholrhrila"
-CacheManager="*res://autoload/cache_manager.gd"
+AnalysisManager="*res://autoload/analysis_manager.gd"
 
 [display]
 

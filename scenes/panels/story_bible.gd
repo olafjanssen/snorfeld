@@ -32,11 +32,11 @@ func _notification(what):
 		queue_free()
 
 func _load_characters():
-	characters = CacheManager.CharacterService.get_all_project_characters()
+	characters = AnalysisManager.CharacterService.get_all_project_characters()
 	_build_character_tree()
 
 func _load_objects():
-	objects = CacheManager.ObjectService.get_all_project_objects()
+	objects = AnalysisManager.ObjectService.get_all_project_objects()
 	_build_object_tree()
 
 func _update_status_message():
