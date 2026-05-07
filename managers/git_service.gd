@@ -87,7 +87,7 @@ func get_git_root() -> String:
 
 func _execute_git_command(args: Array, cwd: String = "") -> Array:
 	if git_executable == "":
-		print("[GitService] ERROR - Git executable not configured")
+		push_error("[GitService] Git executable not configured")
 		return ["", "Git executable not configured"]
 
 	var full_args = args.duplicate()
@@ -137,17 +137,17 @@ func init_git_repo(path: String) -> bool:
 
 func get_status(base_path: String = "") -> Dictionary:
 	if git_executable == "":
-		print("[GitService] ERROR - Git not found")
+		push_error("[GitService] Git not found")
 		return {"error": "Git not found"}
 
 	var repo_path = base_path if base_path else git_root
 	if not repo_path:
-		print("[GitService] ERROR - No git repository path")
+		push_error("[GitService] No git repository path")
 		return {"error": "No git repository"}
 
 	var output = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
 	if output[0] == "":
-		print("[GitService] ERROR - ", output[1])
+		push_error("[GitService] %s" % output[1])
 		return {"error": output[1]}
 
 	var status = {

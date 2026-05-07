@@ -164,7 +164,7 @@ func _extract_and_cache_objects(cache_path: String, file_path: String, file_cont
 	var extraction_result = await _extract_objects_from_text(file_content, chapter_id, existing_objects_json)
 
 	if extraction_result == null or not extraction_result.has("objects"):
-		print("[ObjectService] Failed to extract objects from file: %s" % file_path)
+		push_error("[ObjectService] Failed to extract objects from file: %s" % file_path)
 		return false
 
 	var objects: Array = extraction_result["objects"]
@@ -423,7 +423,7 @@ Respond with a JSON object:
 	else:
 		# Retry up to 3 times on failure
 		var max_retries := 3
-		for retry in range(max_retries):
+		for _i in range(max_retries):
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
 				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2

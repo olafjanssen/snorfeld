@@ -63,7 +63,7 @@ func _do_rebuild_outline_tree() -> void:
 
 		# Add indentation based on heading level
 		var indent_text = ""
-		for i in range(max(level - 1, 0)):
+		for _i in range(max(level - 1, 0)):
 			indent_text += "  "
 
 		# Add symbol prefix based on level for better visual hierarchy

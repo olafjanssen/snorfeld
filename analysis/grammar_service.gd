@@ -55,11 +55,11 @@ func analyze_grammar(paragraph: String, context_before: String = "", context_aft
 			if parsed.has("explanation") and parsed["explanation"] is String:
 				explanation = parsed["explanation"]
 		else:
-			print("[GrammarService] WARNING: Grammar LLM returned non-Dictionary JSON: %s" % parsed)
+			push_warning("[GrammarService] LLM returned non-Dictionary JSON: %s" % parsed)
 	else:
-		print("[GrammarService] WARNING: Grammar LLM response error or not JSON")
+		push_warning("[GrammarService] LLM response error or not JSON")
 		if llm_response.has("error"):
-			print("[GrammarService] Grammar LLM Error: %s" % llm_response["error"])
+			push_error("[GrammarService] LLM Error: %s" % llm_response["error"])
 
 	return {
 		"corrected": corrected_text,

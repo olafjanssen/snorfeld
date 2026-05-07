@@ -30,11 +30,7 @@ const THEME_EXT := ".tres"
 
 
 func _run():
-	var result := _compile_all_themes()
-	if result:
-		print("Theme compilation successful!")
-	else:
-		print("Theme compilation completed with warnings.")
+	_compile_all_themes()
 
 
 ## Compile all ThemeDefinition resources found in DEFINITIONS_PATH
@@ -55,20 +51,13 @@ func _compile_all_themes() -> bool:
 			var output_name = file_name.replace(DEFINITION_EXT, THEME_EXT)
 			var output_path = OUTPUT_PATH + output_name
 
-			print("Compiling: %s -> %s" % [file_name, output_name])
-
 			var def = load(def_path)
 			if def == null:
 				push_error("Could not load ThemeDefinition: %s" % def_path)
 				success = false
 			else:
-				print()
-				print("  Loaded ThemeDefinition, control_overrides type:", typeof(def.control_overrides))
-				print("  control_overrides size:", def.control_overrides.size())
-				if def.control_overrides.size() > 0:
-					print("  Keys:", def.control_overrides.keys())
-				else:
-					print("  WARNING: control_overrides is EMPTY")
+				if def.control_overrides.size() == 0:
+					push_warning("control_overrides is EMPTY for %s" % file_name)
 
 				var theme = _compile_theme(def)
 				if theme != null:
@@ -77,8 +66,6 @@ func _compile_all_themes() -> bool:
 					if err != OK:
 						push_error("Failed to save compiled theme: %s" % output_path)
 						success = false
-					else:
-						print("  Saved: %s" % output_path)
 				else:
 					push_error("Failed to compile theme from: %s" % def_path)
 					success = false
@@ -180,7 +167,6 @@ func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dic
 	# Apply base type for custom control types
 	if overrides.has("base_type"):
 		var base_type = overrides["base_type"]
-		print("Base type:", base_type)
 		if base_type is String:
 			theme.set_type_variation(control_type, base_type)
 

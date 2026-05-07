@@ -39,6 +39,10 @@ window/per_pixel_transparency/allowed=true
 
 project/assembly_name="snorfeld"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdscript-linter/plugin.cfg")
+
 [gui]
 
 theme/custom="uid://byvp4t6w5eo1n"

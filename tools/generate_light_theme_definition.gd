@@ -497,11 +497,7 @@ func _run():
 		}
 	}
 
-	print(def.control_overrides.size(), def.control_overrides.keys())
-
 	DirAccess.remove_absolute("res://themes/light.theme_definition.tres")
 	var err = ResourceSaver.save(def, "res://themes/light.theme_definition.tres")
-	if err == OK:
-		print("Successfully generated light.theme_definition.tres")
-	else:
-		push_error("Failed to save theme definition")
+	if err != OK:
+		push_error("Failed to save theme definition: light.theme_definition.tres")

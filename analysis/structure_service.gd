@@ -57,11 +57,11 @@ func analyze_structure(paragraph: String, context_before: String = "", context_a
 			if parsed.has("explanation") and parsed["explanation"] is String:
 				explanation = parsed["explanation"]
 		else:
-			print("[StructureService] WARNING: Structure LLM returned non-Dictionary JSON: %s" % parsed)
+			push_warning("[StructureService] LLM returned non-Dictionary JSON: %s" % parsed)
 	else:
-		print("[StructureService] WARNING: Structure LLM response error or not JSON")
+		push_warning("[StructureService] LLM response error or not JSON")
 		if llm_response.has("error"):
-			print("[StructureService] Structure LLM Error: %s" % llm_response["error"])
+			push_error("[StructureService] LLM Error: %s" % llm_response["error"])
 
 	return {
 		"suggestion": suggestion,

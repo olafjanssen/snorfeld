@@ -161,7 +161,7 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 	var extraction_result = await _extract_characters_from_text(file_content, chapter_id, existing_characters_json)
 
 	if extraction_result == null or not extraction_result.has("characters"):
-		print("[CharacterService] Failed to extract characters from file: %s" % file_path)
+		push_error("[CharacterService] Failed to extract characters from file: %s" % file_path)
 		return false
 
 	var characters: Array = extraction_result["characters"]
@@ -404,7 +404,7 @@ Respond with a JSON object:
 	else:
 		# Retry up to 3 times on failure
 		var max_retries := 3
-		for retry in range(max_retries):
+		for _i in range(max_retries):
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
 				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2

@@ -67,7 +67,7 @@ func _run():
 			"bg_color": "bg_lighter",
 			"border_color": "border_primary",
 			"border_width_all": 1
-		},		
+		},
 		"StyleBoxFlat_tabcontainer_panel": {
 			"type": "StyleBoxFlat",
 			"bg_color": "bg_secondary",
@@ -492,7 +492,5 @@ func _run():
 
 	DirAccess.remove_absolute("res://themes/dark.theme_definition.tres")
 	var err = ResourceSaver.save(def, "res://themes/dark.theme_definition.tres")
-	if err == OK:
-		print("Successfully generated dark.theme_definition.tres")
-	else:
-		push_error("Failed to save theme definition")
+	if err != OK:
+		push_error("Failed to save theme definition: dark.theme_definition.tres")

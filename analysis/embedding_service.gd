@@ -46,12 +46,12 @@ func _process_task(task: Dictionary):
 	var embed_result = await LLMClient.embed(embedding_model, text)
 
 	if embed_result.get("error", null) != null:
-		print("[EmbeddingService] ERROR: Failed to compute embedding: %s" % embed_result.get("error", "Unknown error"))
+		push_error("[EmbeddingService] Failed to compute embedding: %s" % embed_result.get("error", "Unknown error"))
 		queued_keys.erase(key)
 		return
 
 	if not embed_result.has("embedding") and not embed_result.has("json_data"):
-		print("[EmbeddingService] ERROR: No embedding in response")
+		push_error("[EmbeddingService] No embedding in response")
 		queued_keys.erase(key)
 		return
 
@@ -62,7 +62,7 @@ func _process_task(task: Dictionary):
 	elif embed_result.has("json_data") and embed_result["json_data"].has("embedding"):
 		embedding_vector = embed_result["json_data"]["embedding"]
 	else:
-		print("[EmbeddingService] ERROR: Could not find embedding vector in response")
+		push_error("[EmbeddingService] Could not find embedding vector in response")
 		queued_keys.erase(key)
 		return
 
