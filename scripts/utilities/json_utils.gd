@@ -28,15 +28,10 @@ static func stringify_json(data: Dictionary, pretty: bool = false) -> String:
 ## @param file_path Path to the JSON file
 ## @return Dictionary with parsed data, or empty dict on error
 static func parse_json_file(file_path: String) -> Dictionary:
-	if not FileAccess.file_exists(file_path):
-		push_error("JSON file not found: %s" % file_path)
+	var content := FileUtils.read_file(file_path)
+	if content == "":
+		push_error("JSON file not found or empty: %s" % file_path)
 		return {}
-	var file := FileAccess.open(file_path, FileAccess.READ)
-	if file == null:
-		push_error("Failed to open JSON file: %s" % file_path)
-		return {}
-	var content := file.get_as_text()
-	file.close()
 	return parse_json(content)
 
 ## Write Dictionary to JSON file
@@ -46,21 +41,4 @@ static func parse_json_file(file_path: String) -> Dictionary:
 ## @return bool true on success, false on error
 static func write_json_file(file_path: String, data: Dictionary, pretty: bool = false) -> bool:
 	var json_string := stringify_json(data, pretty)
-	if json_string == "":
-		return false
-
-	# Ensure parent directory exists
-	var dir_path := file_path.get_base_dir()
-	if not DirAccess.dir_exists_absolute(dir_path):
-		var err := DirAccess.make_dir_recursive_absolute(dir_path)
-		if err != OK:
-			push_error("Failed to create directory: %s" % dir_path)
-			return false
-
-	var file := FileAccess.open(file_path, FileAccess.WRITE)
-	if file == null:
-		push_error("Failed to open file for writing: %s" % file_path)
-		return false
-	file.store_string(json_string)
-	file.close()
-	return true
+	return FileUtils.write_file(file_path, json_string)

@@ -59,7 +59,7 @@ func _on_file_check_timeout():
 			last_modified_time = current_mod_time
 
 			# Reload the file
-			var content: String = FileUtils.get_file_as_string(current_file_path)
+			var content: String = FileUtils.read_file(current_file_path)
 			set_text(content)
 			last_text = content
 
@@ -82,7 +82,7 @@ func _on_navigate_to_line_command(file_path: String, line_number: int):
 	else:
 		current_file_path = file_path
 		last_text = ""
-		var content: String = FileUtils.get_file_as_string(file_path)
+		var content: String = FileUtils.read_file(file_path)
 		if content != "":
 			last_text = content
 			last_modified_time = FileUtils.get_modified_time(file_path)
@@ -107,7 +107,7 @@ func _on_file_selected(path: String):
 
 	current_file_path = path
 	last_text = ""
-	var content: String = FileUtils.get_file_as_string(path)
+	var content: String = FileUtils.read_file(path)
 	if content != "":
 		set_text(content)
 		last_text = content

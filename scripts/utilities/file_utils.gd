@@ -3,16 +3,6 @@ extends RefCounted
 ## FileUtils - Utility class for file operations
 ## Usage: FileUtils.read_file(path), FileUtils.write_file(path, content), etc.
 
-## File type checking
-
-static func is_text_file(file_path: String) -> bool:
-	var lower_path := file_path.to_lower()
-	return (
-		lower_path.ends_with(".txt") or
-		lower_path.ends_with(".md") or
-		lower_path.ends_with(".markdown")
-	)
-
 ## File reading
 
 static func read_file(file_path: String) -> String:
@@ -24,11 +14,6 @@ static func read_file(file_path: String) -> String:
 	var content := file.get_as_text()
 	file.close()
 	return content
-
-## Get file as string (alias for read_file)
-
-static func get_file_as_string(file_path: String) -> String:
-	return read_file(file_path)
 
 ## File writing
 
@@ -87,6 +72,13 @@ static func get_files_by_extension(base_path: String, extension: String) -> Arra
 	dir.list_dir_end()
 	return files
 
+# Text file extensions (same as file_explorer.gd)
+const TEXT_FILE_EXTENSIONS: Array = [
+	'txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml',
+	'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp',
+	'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst'
+]
+
 ## Recursive text file scanning
 static func get_all_text_files(base_path: String) -> Array:
 	var text_files := []
@@ -104,10 +96,18 @@ static func get_all_text_files(base_path: String) -> Array:
 				text_files += get_all_text_files(full_path)
 		else:
 			# Only include text files
-			if is_text_file(file_name):
+			if _is_text_file_extension(file_name):
 				text_files.append(full_path)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	# Sort files alphabetically for consistent processing order
 	text_files.sort()
 	return text_files
+
+
+## Check if a file has a text file extension
+static func _is_text_file_extension(file_path: String) -> bool:
+	for ext: String in TEXT_FILE_EXTENSIONS:
+		if file_path.to_lower().ends_with(".%s" % ext):
+			return true
+	return false
