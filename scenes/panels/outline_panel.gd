@@ -3,29 +3,20 @@ extends Control
 
 @onready var outline_tree: Tree = $VBoxContainer/OutlineTree
 
-# Current project path
-var current_path: String = ""
 var rebuild_scheduled: bool = false
 
 func _ready():
 	outline_tree.item_selected.connect(_on_item_selected)
-	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.project_loaded.connect(_on_project_loaded)
 	EventBus.project_unloaded.connect(_on_project_unloaded)
 	EventBus.content_changed.connect(_rebuild_outline_tree)
 
 
-func _on_folder_opened(path: String):
-	current_path = path
-
-
-func _on_project_loaded(path: String):
-	current_path = path
+func _on_project_loaded(_path: String):
 	_rebuild_outline_tree()
 
 
 func _on_project_unloaded():
-	current_path = ""
 	outline_tree.clear()
 
 
@@ -76,9 +67,6 @@ func _do_rebuild_outline_tree() -> void:
 			"text": heading.get("text", "")
 		})
 
-		# Set icons based on level
-		_set_icon_for_level(heading_item, level)
-
 ## Get indentation string for a heading level
 func _get_indent_for_level(level: int) -> String:
 	var indent_text: String = ""
@@ -94,15 +82,6 @@ func _get_prefix_for_level(level: int) -> String:
 		return "○ "
 	else:
 		return "▪ "
-
-## Set icon for a heading level
-func _set_icon_for_level(item: TreeItem, level: int):
-	if level == LEVEL_1:
-		item.set_icon(0, load("res://icons/h1.svg") if ResourceLoader.exists("res://icons/h1.svg") else null)
-	elif level == LEVEL_2:
-		item.set_icon(0, load("res://icons/h2.svg") if ResourceLoader.exists("res://icons/h2.svg") else null)
-	elif level <= MAX_INDENT_LEVEL:
-		item.set_icon(0, load("res://icons/h3.svg") if ResourceLoader.exists("res://icons/h3.svg") else null)
 
 
 func _on_item_selected():
