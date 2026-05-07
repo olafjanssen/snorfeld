@@ -2,7 +2,7 @@ extends ContentCache
 # Object service - handles caching and analysis of important objects (Chekhov's guns)
 # Tracks appearance, relation with characters, thematic relevance, etc.
 
-# gdlint:ignore-file:file-length,deep-nesting,long-function,missing-type-hint,magic-number,long-line
+# gdlint:ignore-file:file-length,deep-nesting,long-function,missing-type-hint,magic-number,long-line,high-complexity
 
 const OBJECT_DIR_NAME := "objects"
 

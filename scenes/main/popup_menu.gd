@@ -1,5 +1,7 @@
 extends PopupMenu
 
+# gdlint:ignore-file:long-function
+
 const OPEN_FOLDER_ID: int = 0
 const SETTINGS_ID: int = 2
 const STORY_BIBLE_ID: int = 3

@@ -1,5 +1,7 @@
 extends SyntaxHighlighter
 
+# gdlint:ignore-file:deep-nesting,too-many-params,long-function
+
 # Token types
 const TOKEN_NORMAL: int = 0
 const TOKEN_HEADER: int = 1

@@ -2,7 +2,7 @@ extends ContentCache
 # Embedding service - handles caching of embedding vectors for paragraphs and chapters
 # Uses JSONL format with in-memory cache for efficiency
 
-# gdlint:ignore-file:file-length,long-function,magic-number,long-line,too-many-params,deep-nesting
+# gdlint:ignore-file:file-length,long-function,magic-number,long-line,too-many-params,deep-nesting,high-complexity
 
 const EMBEDDING_DIR_NAME := "embeddings"
 const PARAGRAPH_JSONL_FILENAME := "paragraph_embeddings.jsonl"

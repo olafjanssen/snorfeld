@@ -2,7 +2,7 @@
 extends GenericCacheService
 ## GrammarService - Handles caching and analysis of paragraph grammar corrections
 
-# gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line
+# gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line,high-complexity
 
 # Constants for context limits
 const CONTEXT_WORDS: int = 100

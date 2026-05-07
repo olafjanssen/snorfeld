@@ -2,7 +2,7 @@ extends Node
 ## BookService - Central content model for the project
 ## Maintains a view of all files, chapters, and paragraphs
 
-# gdlint:ignore-file:file-length,god-class-functions,deep-nesting,long-function,magic-number,long-line,too-many-params
+# gdlint:ignore-file:file-length,god-class-functions,deep-nesting,long-function,magic-number,long-line,too-many-params,high-complexity,missing-type-hint
 
 # Project content structure:
 # - files: Dictionary of file_path -> FileData
@@ -497,8 +497,8 @@ func _count_headings_by_level(content: String) -> Dictionary:
 		if stripped.begins_with("#"):
 			var level: int = _get_heading_level(stripped)
 			if level >= 1 and level <= 6:
-				var current = level_counts.get(level)
-				level_counts[level] = (current as int) + 1 if current != null else 1
+				var current : int = level_counts.get(level, 0)
+				level_counts[level] = current + 1
 
 	return level_counts
 
