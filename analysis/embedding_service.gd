@@ -415,18 +415,13 @@ func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Arra
 	for para_data in paragraph_data_list:
 		var paragraph_hash: String = para_data.get("hash", "")
 		var paragraph_text: String = para_data.get("text", "")
-		var key := _make_cache_key(cache_dir, paragraph_hash, false)
-
-		# Only queue if not already in memory cache or queued
-		if not memory_cache.has(key) and not queued_keys.has(key):
-			queued_keys[key] = true
-			var payload: Dictionary = {
-				"cache_dir": cache_dir,
-				"hash": paragraph_hash,
-				"text": paragraph_text,
-				"is_chapter": false
-			}
-			queue_task(payload, false)
+		var payload: Dictionary = {
+			"cache_dir": cache_dir,
+			"hash": paragraph_hash,
+			"text": paragraph_text,
+			"is_chapter": false
+		}
+		queue_task(payload, false)
 
 	# Start processing if not already running
 	if not processing:
@@ -452,18 +447,13 @@ func queue_chapter_for_embedding(file_path: String) -> void:
 	var chapter_hash: String = file_data.get("hash", "")
 	var file_content: String = file_data.get("content", "")
 
-	var key := _make_cache_key(cache_dir, chapter_hash, true)
-
-	# Only queue if not already in memory cache or queued
-	if not memory_cache.has(key) and not queued_keys.has(key):
-		queued_keys[key] = true
-		var payload: Dictionary = {
-			"cache_dir": cache_dir,
-			"hash": chapter_hash,
-			"text": file_content,
-			"is_chapter": true
-		}
-		queue_task(payload, false)
+	var payload: Dictionary = {
+		"cache_dir": cache_dir,
+		"hash": chapter_hash,
+		"text": file_content,
+		"is_chapter": true
+	}
+	queue_task(payload, false)
 
 	# Start processing if not already running
 	if not processing:
@@ -488,19 +478,6 @@ func _on_priority_embedding_cache_requested(text_hash: String, file_path: String
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
 
-	var key := _make_cache_key(cache_dir, text_hash, is_chapter)
-
-	# If already cached, skip
-	if memory_cache.has(key):
-		if queued_keys.has(key):
-			queued_keys.erase(key)
-		return
-
-	# If already queued, promote it to priority by removing and re-queuing
-	if queued_keys.has(key):
-		queued_keys.erase(key)
-
-	queued_keys[key] = true
 	var payload: Dictionary = {
 		"cache_dir": cache_dir,
 		"hash": text_hash,
