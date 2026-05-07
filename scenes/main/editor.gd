@@ -41,8 +41,8 @@ func _on_folder_open_button_pressed():
 	CommandBus.open_folder.emit()
 
 func _on_menu_open_button_pressed():
-	$File.popup()
-	$File.position = Vector2i(get_window().position.x + get_window().size.x - $File.size.x,get_window().position.y + 44)
+	$PopupMenu.popup()
+	$PopupMenu.position = Vector2i(get_window().position.x + get_window().size.x - $PopupMenu.size.x,get_window().position.y + 44)
 
 func _update_icon_colors():
 	var icon_color = get_theme_color("font_color", "Button")
