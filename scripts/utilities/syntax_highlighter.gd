@@ -32,7 +32,7 @@ func _get_token_color(index: int) -> Color:
 # gdlint:ignore-function:long-function
 func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var text: String = get_text_edit().get_line(line)
-	var length: int = len(text)
+	var length: int = text.length()
 
 	var tokens: Dictionary = {}
 	var pos: int = 0
@@ -41,32 +41,45 @@ func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var in_dialog: bool = false
 
 	while pos < length:
+		# Process header tokens at the start of a line
 		if pos == 0:
 			pos = _process_header_tokens(text, length, tokens, pos)
 			if pos >= length:
-				continue
+				break
 
-		var new_pos: int
+		# Process inline markers
+		var marker_found: bool = false
 
-		new_pos = _process_bold(text, length, tokens, pos, in_bold)
-		if new_pos != -1:
+		# Check for bold markers (**)
+		if pos + 1 < length and text.substr(pos, 2) == "**":
+			tokens[pos] = {"color": _get_token_color(TOKEN_BOLD if not in_bold else TOKEN_NORMAL)}
 			in_bold = !in_bold
-			pos = new_pos
-			continue
+			pos += 2
+			marker_found = true
 
-		new_pos = _process_italic(text, tokens, pos, in_italic)
-		if new_pos != -1:
+		# Check for italic markers (* or _)
+		elif text[pos] == "*" or text[pos] == "_":
+			tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC if not in_italic else TOKEN_NORMAL)}
 			in_italic = !in_italic
-			pos = new_pos
-			continue
+			pos += 1
+			marker_found = true
 
-		new_pos = _process_dialog(text, length, tokens, pos, in_dialog)
-		if new_pos != -1:
+		# Check for dialog quotes (")
+		elif text[pos] == "\"":
+			tokens[pos] = {"color": _get_token_color(TOKEN_DIALOG if not in_dialog else TOKEN_NORMAL)}
 			in_dialog = !in_dialog
-			pos = new_pos
-			continue
+			pos += 1
+			marker_found = true
 
-		pos += 1
+		if not marker_found:
+			# Color regular text based on active states
+			if in_dialog:
+				tokens[pos] = {"color": _get_token_color(TOKEN_DIALOG)}
+			elif in_bold:
+				tokens[pos] = {"color": _get_token_color(TOKEN_BOLD)}
+			elif in_italic:
+				tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC)}
+			pos += 1
 
 	return tokens
 
@@ -76,34 +89,7 @@ func _process_header_tokens(text: String, length: int, tokens: Dictionary, pos: 
 		if pos + i <= length and text.substr(pos, i) == "#".repeat(i) and (pos + i < length and text[pos + i] == " "):
 			for j in range(i):
 				tokens[pos + j] = {"color": _get_token_color(TOKEN_HEADER)}
+			# Space after # is part of the header
+			tokens[pos + i] = {"color": _get_token_color(TOKEN_HEADER)}
 			return pos + i + 1
 	return pos
-
-## Process bold markdown tokens (**)
-## Returns new position or -1 if not processed
-# gdlint:ignore-function:too-many-params
-func _process_bold(text: String, length: int, tokens: Dictionary, pos: int, in_bold: bool) -> int:
-	if pos + 1 < length and text.substr(pos, 2) == "**":
-		tokens[pos] = {"color": _get_token_color(TOKEN_BOLD if not in_bold else TOKEN_NORMAL)}
-		return pos + 2
-	return -1
-
-## Process italic markdown tokens (* or _)
-## Returns new position or -1 if not processed
-func _process_italic(text: String, tokens: Dictionary, pos: int, in_italic: bool) -> int:
-	if text[pos] == "*" or text[pos] == "_":
-		tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC if not in_italic else TOKEN_NORMAL)}
-		return pos + 1
-	return -1
-
-## Process dialog quotes
-## Returns new position or -1 if not processed
-# gdlint:ignore-function:too-many-params
-func _process_dialog(text: String, length: int, tokens: Dictionary, pos: int, in_dialog: bool) -> int:
-	if text[pos] == "\"":
-		if in_dialog and pos + 1 < length:
-			tokens[pos+1] = {"color": _get_token_color(TOKEN_DIALOG)}
-		elif not in_dialog and pos - 1 >= 0:
-			tokens[pos-1] = {"color": _get_token_color(TOKEN_NORMAL)}
-		return pos + 1
-	return -1

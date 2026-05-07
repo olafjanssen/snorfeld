@@ -38,8 +38,10 @@ func _rebuild_outline_tree() -> void:
 
 
 const MAX_INDENT_LEVEL: int = 3
+const LEVEL_1: int = 1
+const LEVEL_2: int = 2
 
-# gdlint:ignore-function:long-function,magic-number
+# gdlint:ignore-function:long-function
 func _do_rebuild_outline_tree() -> void:
 	rebuild_scheduled = false
 	outline_tree.clear()
@@ -87,18 +89,18 @@ func _get_indent_for_level(level: int) -> String:
 
 ## Get prefix symbol for a heading level
 func _get_prefix_for_level(level: int) -> String:
-	if level == 1:
+	if level == LEVEL_1:
 		return "● "
-	elif level == 2:
+	elif level == LEVEL_2:
 		return "○ "
 	else:
 		return "▪ "
 
 ## Set icon for a heading level
 func _set_icon_for_level(item: TreeItem, level: int):
-	if level == 1:
+	if level == LEVEL_1:
 		item.set_icon(0, load("res://icons/h1.svg") if ResourceLoader.exists("res://icons/h1.svg") else null)
-	elif level == 2:
+	elif level == LEVEL_2:
 		item.set_icon(0, load("res://icons/h2.svg") if ResourceLoader.exists("res://icons/h2.svg") else null)
 	elif level <= MAX_INDENT_LEVEL:
 		item.set_icon(0, load("res://icons/h3.svg") if ResourceLoader.exists("res://icons/h3.svg") else null)

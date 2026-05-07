@@ -1,6 +1,6 @@
 extends Node
 
-# gdlint:ignore-file:file-length,god-class-functions,high-complexity,long-function,magic-number
+# gdlint:ignore-file:file-length,god-class-functions,high-complexity,long-function
 ## GitService - Core git operations using OS.execute()
 ## Uses 'which' (Unix) or 'where' (Windows) to locate Git executable.
 
@@ -12,6 +12,9 @@ var last_status_refresh: float = 0.0
 const STATUS_REFRESH_COOLDOWN: float = 1.0
 var git_executable: String = ""
 const CONFIG_FILE: String = "user://git_config.cfg"
+
+# Git status format: first N characters are status indicators (staged, unstaged)
+const GIT_STATUS_PREFIX_LENGTH: int = 3
 
 ### Initialization
 
@@ -181,11 +184,11 @@ func get_status(base_path: String = "") -> Dictionary:
 	}
 
 	for line in output[0].split("\n"):
-		if line.length() < 3:
+		if line.length() < GIT_STATUS_PREFIX_LENGTH:
 			continue
 		var staged_char: String = line[0]
 		var unstaged_char: String = line[1]
-		var file_path: String = line.substr(3)
+		var file_path: String = line.substr(GIT_STATUS_PREFIX_LENGTH)
 
 		# Untracked files (?? ) are never staged
 		var is_staged: bool = staged_char != " " and not (staged_char == "?" and unstaged_char == "?")
