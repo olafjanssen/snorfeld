@@ -1,4 +1,4 @@
-extends ContentCache
+extends AnalysisService
 # Object service - handles caching and analysis of important objects (Chekhov's guns)
 # Tracks appearance, relation with characters, thematic relevance, etc.
 
@@ -6,48 +6,91 @@ extends ContentCache
 
 const OBJECT_DIR_NAME := "objects"
 
-# Track the current file for object analysis
-var current_object_file_path: String = ""
-var current_object_file_content: String = ""
-
 func _ready() -> void:
+	# Configure service properties
+	service_name = "object"
+	cache_subdir = OBJECT_DIR_NAME
+	cache_filename = "objects.jsonl"
+
+	# Enable merging - same object can appear in multiple chapters
+	should_merge_on_duplicate = true
+
+	# Configure merge strategies for object fields
+	merge_strategies = {
+		"name": MergeUtils.MergeStrategy.REPLACE,
+		"object_type": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"description": MergeUtils.MergeStrategy.CONCAT,
+		"thematic_relevance": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"character_relations": MergeUtils.MergeStrategy.DICT_MERGE,
+		"symbolic_meaning": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"aliases": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"appearances": MergeUtils.MergeStrategy.ARRAY_APPEND,
+		"notes": MergeUtils.MergeStrategy.DICT_MERGE,
+	}
+
+	# Call parent _ready for base signal connections
+	# Base class connects: priority_analysis, project_loaded, project_unloaded
+	super()
+
+	# Connect service-specific signals
 	CommandBus.start_analysis.connect(_on_start_analysis)
-	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.project_loaded.connect(_on_project_loaded)
-	EventBus.project_unloaded.connect(_on_project_unloaded)
+	EventBus.file_selected.connect(_on_file_selected)
 
 
-# Override: Get cache subdirectory name
-func _get_cache_subdir() -> String:
-	return OBJECT_DIR_NAME
+## ============================================================================
+## Cache Key Management
+## ============================================================================
 
-func _on_folder_opened(path: String) -> void:
-	var cache_path: String = path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
-	if DirAccess.dir_exists_absolute(cache_path):
-		EventBus.analysis_cleanup_started.emit("object")
-		var removed_count: int = cleanup_unused_object_files(cache_path, path)
-		EventBus.analysis_cleanup_completed.emit("object", removed_count)
-
-
-func _on_project_loaded(_path: String) -> void:
-	pass  # Project loaded, BookService is ready
+# Override: Get cache key from payload
+# For objects, the key is the MD5 hash of the canonical object name
+func _get_cache_key(payload: Dictionary) -> String:
+	var name: String = payload.get("name", "")
+	if name != "":
+		return _hash_object(name)
+	return payload.get("hash", "")
 
 
-func _on_project_unloaded() -> void:
-	pass  # Project unloaded
+# Override: Get cache key from loaded data
+func _get_cache_key_from_data(data: Dictionary) -> String:
+	if data.has("name"):
+		return _hash_object(data["name"])
+	return ""
+
+# Get the cache directory for a file path
+func _get_cache_dir_for_file(file_path: String) -> String:
+	return file_path.get_base_dir().path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+
+# Creates an MD5 hash from an object name string
+func _hash_object(object_name: String) -> String:
+	return HashingUtils.hash_md5(object_name)
 
 
-# Override: Process a single task
-func _process_task(task: Dictionary):
-	var cache_path: String = task["cache_path"]
-	var file_path: String = task["file_path"]
-	var file_content: String = task["file_content"]
+## ============================================================================
+## Analysis
+## ============================================================================
 
-	# Process the task - extract objects and create/update cache files
-	var success: bool = await _extract_and_cache_objects(cache_path, file_path, file_content)
-	if not success:
-		push_warning("[ObjectService] Failed to process file: %s, but continuing with next task" % file_path)
+# Override: Analyze a file and extract objects
+func _analyze(payload: Dictionary) -> Dictionary:
+	var cache_path: String = payload.get("cache_path", "")
+	var file_path: String = payload.get("file_path", "")
+	var file_content: String = payload.get("file_content", "")
+
+	# Process the task - extract objects and return cache data
+	return await _extract_and_cache_objects(cache_path, file_path, file_content)
+
+
+## ============================================================================
+## Task Processing Overrides
+## ============================================================================
+
+# Override: Process a single task - delegates to _analyze
+func _process_task(task: Dictionary) -> void:
+	var result := await _analyze(task)
+	if result != null and not result.is_empty():
+		# The _analyze method returns data that should be cached
+		# But for objects, _extract_and_cache_objects already handles saving
+		pass
 
 
 # Override: Emit queue updated signal
@@ -65,50 +108,61 @@ func _emit_task_completed(remaining: int) -> void:
 	EventBus.analysis_task_completed.emit("object", remaining)
 
 
+## ============================================================================
+## Queue Management
+## ============================================================================
+
 # Handle file scanned event - queue objects for caching
 func queue_objects_for_cache(file_path: String, file_content: String = "") -> void:
 	# Get the base directory from the file path
-	var dir_path: String = file_path.get_base_dir()
-	var cache_path: String = dir_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+	var cache_path: String = _get_cache_dir_for_file(file_path)
 
-	# Ensure cache exists for this directory
-	if not DirAccess.dir_exists_absolute(cache_path):
+	# Ensure cache directory exists
+	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 
-	# Extract objects from the file content using LLM
-	_queue_task(cache_path, file_path, file_content)
-	_emit_queue_updated()
+	# Check if already cached or queued
+	var file_hash: String = HashingUtils.hash_md5(file_content)
+	if is_cached(file_hash) and not should_merge_on_duplicate:
+		return
 
-	# Start processing if not already running
-	if not processing:
-		await _processing_start()
+	# Queue task
+	var payload: Dictionary = {"cache_path": cache_path, "file_path": file_path, "file_content": file_content}
+	queue_task(payload, false)
 
 
 # Queue a task for object extraction and cache creation
 func _queue_task(cache_path: String, file_path: String, file_content: String, priority: bool = false) -> void:
-	queue_mutex.lock()
-	var task: Dictionary = {"cache_path": cache_path, "file_path": file_path, "file_content": file_content}
-	if priority:
-		task_queue.insert(0, task)
-	else:
-		task_queue.append(task)
-	queue_mutex.unlock()
-	_emit_queue_updated()
-
-	# If already processing, just return - the processing loop will pick up new tasks
-	if processing:
-		return
-
-	# Otherwise start processing
-	await _processing_start()
+	var payload: Dictionary = {"cache_path": cache_path, "file_path": file_path, "file_content": file_content}
+	queue_task(payload, priority)
 
 
 func _on_priority_object_cache_requested(file_path: String, file_content: String) -> void:
-	var dir_path: String = file_path.get_base_dir()
-	var cache_path: String = dir_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
-	if not DirAccess.dir_exists_absolute(cache_path):
+	var cache_path: String = _get_cache_dir_for_file(file_path)
+	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 	_queue_task(cache_path, file_path, file_content, true)
+
+
+## ============================================================================
+## Signal Handlers
+## ============================================================================
+
+func _on_folder_opened(path: String) -> void:
+	var cache_path: String = path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+	if DirAccess.dir_exists_absolute(cache_path):
+		_ensure_cache_loaded(cache_path)
+		EventBus.analysis_cleanup_started.emit("object")
+		var removed_count: int = _cleanup_unused_cache_files(cache_path, path)
+		EventBus.analysis_cleanup_completed.emit("object", removed_count)
+
+
+func _on_project_loaded(_path: String) -> void:
+	pass  # Project loaded, BookService is ready
+
+
+func _on_project_unloaded() -> void:
+	pass  # Project unloaded
 
 
 func _on_start_analysis(service_type: String, scope: String) -> void:
@@ -118,6 +172,7 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 		_on_run_all_object_analyses()
 	elif scope == "chapter":
 		_on_run_chapter_object_analyses()
+
 
 func _on_run_all_object_analyses() -> void:
 	# Queue all text files from BookService for object analysis
@@ -131,6 +186,10 @@ func _on_run_all_object_analyses() -> void:
 		if content != "":
 			queue_objects_for_cache(file_path, content)
 
+
+# Track the current file for object analysis
+var current_object_file_path: String = ""
+var current_object_file_content: String = ""
 
 func _on_file_selected(path: String) -> void:
 	current_object_file_path = path
@@ -153,14 +212,19 @@ func _on_run_chapter_object_analyses() -> void:
 		queue_objects_for_cache(current_object_file_path, file_data.get("content", current_object_file_content))
 
 
+## ============================================================================
+## Object Extraction and Caching
+## ============================================================================
+
 # Extracts objects from file content and creates/updates cache files
-func _extract_and_cache_objects(cache_path: String, file_path: String, file_content: String) -> bool:
+func _extract_and_cache_objects(cache_path: String, file_path: String, file_content: String) -> Dictionary:
 	var chapter_id: String = file_path.get_file().get_basename()
+	_ensure_cache_loaded(cache_path)
 	var existing_objects_json: String = _load_existing_objects_json(cache_path)
 
 	var extraction_result: Dictionary = await _extract_objects_from_text(file_content, chapter_id, existing_objects_json)
 	if not _is_valid_extraction(extraction_result):
-		return false
+		return {}
 
 	var success: bool = true
 	for obj_data in extraction_result["objects"]:
@@ -168,12 +232,21 @@ func _extract_and_cache_objects(cache_path: String, file_path: String, file_cont
 		if obj_name == "":
 			continue
 		var canonical_name: String = _get_canonical_object_name(obj_name, cache_path)
-		var obj_file_path: String = _get_object_file_path(cache_path, canonical_name)
-		var existing_data: Dictionary = _load_object_data(obj_file_path)
+		var obj_hash: String = _hash_object(canonical_name)
+
+		# Load existing data from memory cache
+		var existing_data: Dictionary = memory_cache.get(obj_hash, {})
+
+		# Merge with existing data and add chapter-specific fields
 		var updated_data: Dictionary = _merge_object_data(existing_data, obj_data, chapter_id)
-		if not _save_object_data(obj_file_path, updated_data):
-			success = false
-	return success
+
+		# Store in memory cache
+		memory_cache[obj_hash] = updated_data
+
+	# Save all to JSONL
+	_rewrite_jsonl_file(cache_path)
+
+	return {"success": true, "object_count": extraction_result["objects"].size()}
 
 
 func _is_valid_extraction(extraction_result: Dictionary) -> bool:
@@ -184,187 +257,82 @@ func _is_valid_extraction(extraction_result: Dictionary) -> bool:
 
 
 func _get_canonical_object_name(obj_name: String, cache_path: String) -> String:
-	var existing_file_path: String = _find_matching_object_file(obj_name, cache_path)
-	if existing_file_path == "":
-		return obj_name
-
-	var read_file: FileAccess = FileAccess.open(existing_file_path, FileAccess.READ)
-	if not read_file:
-		return obj_name
-
-	var content: String = read_file.get_as_text()
-	read_file.close()
-	var json: JSON = JSON.new()
-	if json.parse(content) != OK:
-		return obj_name
-
-	var object_data: Dictionary = json.get_data()
-	var canonical_name: String = object_data.get("name", obj_name)
-	# Add new alias
-	if not object_data.get("aliases", []).has(obj_name):
-		var aliases: Array = object_data.get("aliases", [])
-		if not aliases.has(obj_name):
-			aliases.append(obj_name)
-			object_data["aliases"] = aliases
-		_save_object_data(existing_file_path, object_data)
-	return canonical_name
-
-
-func _get_object_file_path(cache_path: String, canonical_name: String) -> String:
-	var obj_hash: String = _hash_object(canonical_name)
-	return cache_path.path_join("%s.json" % obj_hash)
-
-
-func _load_object_data(obj_file_path: String) -> Dictionary:
-	if not _file_exists(obj_file_path):
-		return {}
-	var read_file: FileAccess = FileAccess.open(obj_file_path, FileAccess.READ)
-	if not read_file:
-		return {}
-	var content: String = read_file.get_as_text()
-	read_file.close()
-	var json: JSON = JSON.new()
-	if json.parse(content) == OK:
-		return json.get_data()
-	return {}
-
-
-func _save_object_data(obj_file_path: String, data: Dictionary) -> bool:
-	var file: FileAccess = FileAccess.open(obj_file_path, FileAccess.WRITE)
-	if not file:
-		push_error("[ObjectService] Failed to save object file: %s" % obj_file_path)
-		return false
-	var json_str: String = JSON.stringify(data)
-	file.store_string(json_str)
-	file.close()
-	return true
+	# Check for fuzzy matches with existing objects in memory cache
+	var best_match_key: String = _find_matching_object_key(obj_name)
+	if best_match_key != "":
+		var existing_data: Dictionary = memory_cache[best_match_key]
+		var canonical_name: String = existing_data.get("name", obj_name)
+		# Add new alias to existing object
+		if not existing_data.get("aliases", []).has(obj_name):
+			var aliases: Array = existing_data.get("aliases", []).duplicate()
+			if not aliases.has(obj_name):
+				aliases.append(obj_name)
+				existing_data["aliases"] = aliases
+				memory_cache[best_match_key] = existing_data
+		return canonical_name
+	return obj_name
 
 
 # Load all existing objects as JSON string for LLM context
 func _load_existing_objects_json(cache_path: String) -> String:
 	var existing_objs: Array = []
-	var dir: DirAccess = DirAccess.open(cache_path)
-	if dir:
-		dir.list_dir_begin()
-		var file_name: String = dir.get_next()
-		while file_name != "":
-			if file_name.ends_with(".json"):
-				var obj_file_path: String = cache_path.path_join(file_name)
-				var file: FileAccess = FileAccess.open(obj_file_path, FileAccess.READ)
-				if file:
-					var content: String = file.get_as_text()
-					file.close()
-					var json: JSON = JSON.new()
-					if json.parse(content) == OK:
-						var obj_data: Dictionary = json.get_data()
-						# Create a clean version without bookkeeping fields
-						var clean_obj: Dictionary = {}
-						clean_obj["name"] = obj_data.get("name", "")
-						if obj_data.has("object_type"):
-							clean_obj["object_type"] = obj_data["object_type"]
-						if obj_data.has("description"):
-							clean_obj["description"] = obj_data["description"]
-						if obj_data.has("thematic_relevance"):
-							clean_obj["thematic_relevance"] = obj_data["thematic_relevance"]
-						if obj_data.has("character_relations"):
-							clean_obj["character_relations"] = obj_data["character_relations"]
-						if obj_data.has("aliases"):
-							clean_obj["aliases"] = obj_data["aliases"]
-						existing_objs.append(clean_obj)
-			file_name = dir.get_next()
-		dir.list_dir_end()
+	_ensure_cache_loaded(cache_path)
+	for key in memory_cache:
+		var obj_data: Dictionary = memory_cache[key]
+		# Create a clean version without bookkeeping fields
+		var clean_obj: Dictionary = {}
+		clean_obj["name"] = obj_data.get("name", "")
+		if obj_data.has("object_type"):
+			clean_obj["object_type"] = obj_data["object_type"]
+		if obj_data.has("description"):
+			clean_obj["description"] = obj_data["description"]
+		if obj_data.has("thematic_relevance"):
+			clean_obj["thematic_relevance"] = obj_data["thematic_relevance"]
+		if obj_data.has("character_relations"):
+			clean_obj["character_relations"] = obj_data["character_relations"]
+		if obj_data.has("aliases"):
+			clean_obj["aliases"] = obj_data["aliases"]
+		existing_objs.append(clean_obj)
 
 	if existing_objs.size() > 0:
 		return JSON.stringify(existing_objs)
 	return "[]"
 
 
+## ============================================================================
+## Merge Logic
+## ============================================================================
+
 # Merge arrays without duplicates
 func _merge_arrays(existing: Array, new: Array) -> Array:
-	var merged := []
-	var seen: Dictionary = {}
-	for item in existing:
-		if not seen.has(item):
-			merged.append(item)
-			seen[item] = true
-	for item in new:
-		if not seen.has(item):
-			merged.append(item)
-			seen[item] = true
-	return merged
+	return MergeUtils.merge_arrays_unique(existing, new)
 
 
 # Merge character relations dictionaries
 func _merge_character_relations(existing: Dictionary, new: Dictionary) -> Dictionary:
-	var merged := existing.duplicate()
-	for key in new:
-		merged[key] = new[key]
-	return merged
+	return MergeUtils.merge_dictionaries(existing, new)
 
 
 # Merge object data from LLM with existing data, adding chapter-specific fields
 func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, chapter_id: String) -> Dictionary:
-	var updated_data: Dictionary = {}
+	# Use the merge strategies configured in the service
+	var merged = MergeUtils.merge_data_with_strategies(existing_data, new_obj_data, merge_strategies)
 
-	# Start with existing data
-	if existing_data.size() > 0:
-		updated_data = existing_data.duplicate()
+	# Special handling for aliases - filter out any that match the canonical name
+	if merged.has("aliases") and merged.has("name"):
+		var canonical_name: String = merged["name"]
+		var filtered_aliases: Array = []
+		for alias in merged["aliases"]:
+			if alias != canonical_name:
+				filtered_aliases.append(alias)
+		merged["aliases"] = filtered_aliases
 
-	# Overwrite/merge fields from new data
-	# Name - use new if provided, otherwise keep existing
-	if new_obj_data.has("name"):
-		updated_data["name"] = new_obj_data["name"]
+	return merged
 
-	# Merge object_type
-	updated_data["object_type"] = _merge_arrays(existing_data.get("object_type", []), new_obj_data.get("object_type", []))
 
-	# Merge description - concatenate if both exist
-	var existing_desc: String = existing_data.get("description", "")
-	var new_desc: String = new_obj_data.get("description", "")
-	if existing_desc != "" and new_desc != "":
-		updated_data["description"] = existing_desc + " " + new_desc
-	elif new_desc != "":
-		updated_data["description"] = new_desc
-
-	# Merge thematic_relevance
-	updated_data["thematic_relevance"] = _merge_arrays(existing_data.get("thematic_relevance", []), new_obj_data.get("thematic_relevance", []))
-
-	# Merge character_relations
-	updated_data["character_relations"] = _merge_character_relations(existing_data.get("character_relations", {}), new_obj_data.get("character_relations", {}))
-
-	# Merge aliases - filter out any that match the canonical name
-	var merged_aliases: Array = _merge_arrays(existing_data.get("aliases", []), new_obj_data.get("aliases", []))
-	var canonical_name: String = updated_data.get("name", "")
-	var filtered_aliases: Array = []
-	for alias in merged_aliases:
-		if alias != canonical_name:
-			filtered_aliases.append(alias)
-	updated_data["aliases"] = filtered_aliases
-
-	# Add/update appearances - this chapter is always added
-	var existing_appearances: Array = existing_data.get("appearances", [])
-	if not existing_appearances.has(chapter_id):
-		existing_appearances.append(chapter_id)
-	updated_data["appearances"] = existing_appearances
-
-	# Add/update notes - chapter-specific notes
-	var existing_notes: Dictionary = existing_data.get("notes", {})
-	var new_notes = new_obj_data.get("notes", "")
-	# Handle both String and Dictionary notes from LLM
-	if new_notes is Dictionary:
-		# If LLM returned a dict, merge it
-		for key in new_notes:
-			existing_notes[key] = new_notes[key]
-	elif new_notes is String and new_notes != "":
-		# If LLM returned a string, use it for this chapter
-		existing_notes[chapter_id] = new_notes
-	updated_data["notes"] = existing_notes
-
-	# Merge symbolic_meaning
-	updated_data["symbolic_meaning"] = _merge_arrays(existing_data.get("symbolic_meaning", []), new_obj_data.get("symbolic_meaning", []))
-
-	return updated_data
-
+## ============================================================================
+## LLM Extraction
+## ============================================================================
 
 # Extract objects from text using LLM
 func _extract_objects_from_text(text: String, chapter_id: String, existing_objects_json: String) -> Dictionary:
@@ -442,7 +410,7 @@ func _get_llm_options() -> Dictionary:
 
 ## Call LLM with retry logic
 func _call_llm_with_retry(prompt: String, options: Dictionary, max_retries: int) -> Dictionary:
-	var llm_response : Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response: Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
 
@@ -457,133 +425,64 @@ func _call_llm_with_retry(prompt: String, options: Dictionary, max_retries: int)
 	return {"objects": []}
 
 
-# Find matching object file using fuzzy matching
-func _find_matching_object_file(obj_name: String, cache_path: String) -> String:
-	var dir: DirAccess = DirAccess.open(cache_path)
-	if not dir:
-		return ""
+## ============================================================================
+## Fuzzy Matching
+## ============================================================================
 
-	var best_match: String = ""
+# Find matching object in memory cache using fuzzy matching
+# Returns the object hash key if found, empty string otherwise
+func _find_matching_object_key(obj_name: String) -> String:
+	var best_match_key: String = ""
 	var best_score: int = 0
 
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".json"):
-			var file_path: String = cache_path.path_join(file_name)
-			var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
-			if file:
-				var content: String = file.get_as_text()
-				file.close()
-				var json: JSON = JSON.new()
-				if json.parse(content) == OK:
-					var data: Dictionary = json.get_data()
-					var existing_name: String = data.get("name", "")
+	for key in memory_cache:
+		var data: Dictionary = memory_cache[key]
+		var existing_name: String = data.get("name", "")
 
-					# Compare against the actual object name
-					var score: int = _calculate_similarity(obj_name, existing_name)
-					if score > best_score:
-						best_score = score
-						best_match = file_path
+		# Compare against the actual object name
+		var score: int = HashingUtils.calculate_similarity(obj_name, existing_name)
+		if score > best_score:
+			best_score = score
+			best_match_key = key
 
-					# Also check aliases
-					var aliases: Array = data.get("aliases", [])
-					for alias in aliases:
-						var alias_score: int = _calculate_similarity(obj_name, alias)
-						if alias_score > best_score:
-							best_score = alias_score
-							best_match = file_path
-						if alias_score > 80:
-							break
-					if best_score > 80:
-						break
-		file_name = dir.get_next()
-	dir.list_dir_end()
+		# Also check aliases
+		if data.has("aliases") and data["aliases"] is Array:
+			for alias in data["aliases"]:
+				var alias_score: int = HashingUtils.calculate_similarity(obj_name, alias)
+				if alias_score > best_score:
+					best_score = alias_score
+					best_match_key = key
+				if alias_score >= 80:
+					break
+			if best_score >= 80:
+				break
+		if best_score >= 80:
+			break
 
 	# Return match if score is above threshold
-	if best_score > 80:
-		return best_match
+	if best_score >= 80:
+		return best_match_key
 	return ""
 
 
-# Calculate similarity between two strings (same as CharacterService)
-func _calculate_similarity(str1: String, str2: String) -> int:
-	# Similarity percentage constants
-	const PERFECT_MATCH: int = 100
-	const PARTIAL_MATCH: int = 90
-	const BASE_MULTIPLIER: int = 100
-
-	var s1: String = str1.to_lower()
-	var s2: String = str2.to_lower()
-
-	if s1 == s2:
-		return PERFECT_MATCH
-
-	if s1.find(s2) != -1 or s2.find(s1) != -1:
-		return PARTIAL_MATCH
-
-	var words1: Array = s1.split(" ", false)
-	var words2: Array = s2.split(" ", false)
-	var common_count: int = 0
-
-	for word1 in words1:
-		for word2 in words2:
-			if word1 == word2 and word1.length() > 2:
-				common_count += 1
-				break
-
-	var total_words: int = words1.size() + words2.size()
-	if total_words == 0:
-		return 0
-
-	return int((common_count * 2.0 / total_words) * BASE_MULTIPLIER)
-
-
-# Creates an MD5 hash from an object name string
-func _hash_object(object_name: String) -> String:
-	var hash_ctx := HashingContext.new()
-	hash_ctx.start(HashingContext.HASH_MD5)
-	hash_ctx.update(object_name.to_utf8_buffer())
-	var hash_bytes := hash_ctx.finish()
-	return hash_bytes.hex_encode()
-
-
-# Check if file exists
-func _file_exists(path: String) -> bool:
-	return FileUtils.file_exists(path)
-
+## ============================================================================
+## Public Getters
+## ============================================================================
 
 # Get the object cache path for the current project
 func get_cache_path() -> String:
 	var project_path: String = BookService.loaded_project_path
 	if project_path == "":
 		project_path = "res://"
-	var cache_path: String = project_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
-	return cache_path
+	return project_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
 
 
 # Get all object files in the cache directory
 func get_all_objects(cache_path: String) -> Array:
 	var objects: Array = []
-	var dir: DirAccess = DirAccess.open(cache_path)
-	if not dir:
-		return objects
-
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".json"):
-			var file_path: String = cache_path.path_join(file_name)
-			var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
-			if file:
-				var content: String = file.get_as_text()
-				file.close()
-				var json: JSON = JSON.new()
-				if json.parse(content) == OK:
-					objects.append(json.get_data())
-		file_name = dir.get_next()
-	dir.list_dir_end()
-
+	_ensure_cache_loaded(cache_path)
+	for key in memory_cache:
+		objects.append(memory_cache[key])
 	return objects
 
 
@@ -595,81 +494,55 @@ func get_all_project_objects() -> Array:
 
 # Get a specific object by name
 func get_object(obj_name: String, cache_path: String) -> Dictionary:
-	# Use MD5 hash of object name for filename
+	# Use MD5 hash of object name for key
 	var obj_hash: String = _hash_object(obj_name)
-	var obj_file_path: String = cache_path.path_join("%s.json" % obj_hash)
+	_ensure_cache_loaded(cache_path)
 
 	# First try exact hash match
-	if _file_exists(obj_file_path):
-		var file: FileAccess = FileAccess.open(obj_file_path, FileAccess.READ)
-		if file:
-			var content: String = file.get_as_text()
-			file.close()
-			var json: JSON = JSON.new()
-			if json.parse(content) == OK:
-				return json.get_data()
+	if memory_cache.has(obj_hash):
+		return memory_cache[obj_hash]
 
 	# Try fuzzy match
-	var matched_path: String = _find_matching_object_file(obj_name, cache_path)
-	if matched_path != "":
-		var file: FileAccess = FileAccess.open(matched_path, FileAccess.READ)
-		if file:
-			var content: String = file.get_as_text()
-			file.close()
-			var json: JSON = JSON.new()
-			if json.parse(content) == OK:
-				return json.get_data()
+	var matched_key: String = _find_matching_object_key(obj_name)
+	if matched_key != "":
+		return memory_cache[matched_key]
 
 	return {}
 
 
-# Clean up object cache files that don't have corresponding source files in the project
-func cleanup_unused_object_files(cache_path: String, project_path: String) -> int:
-	var dir: DirAccess = DirAccess.open(cache_path)
-	if not dir:
-		return 0
+## ============================================================================
+## Cleanup
+## ============================================================================
 
+# Clean up object cache files that don't have corresponding source files in the project
+func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
 	var removed_count: int = 0
 	var project_files: Array = FileUtils.get_all_text_files(project_path)
 
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".json"):
-			var cache_file_path: String = cache_path.path_join(file_name)
-			var file: FileAccess = FileAccess.open(cache_file_path, FileAccess.READ)
-			if file:
-				var cache_content: String = file.get_as_text()
-				file.close()
-				var json: JSON = JSON.new()
-				if json.parse(cache_content) == OK:
-					var data: Dictionary = json.get_data()
-					var appearances: Array = data.get("appearances", [])
-					var all_missing: bool = true
+	var keys_to_remove: Array = []
+	for key in memory_cache:
+		var data: Dictionary = memory_cache[key]
+		var appearances: Array = data.get("appearances", [])
+		var all_missing: bool = true
 
-					# Check if any appearance references a file that still exists
-					for appearance in appearances:
-						for project_file in project_files:
-							if project_file.get_file().get_basename() == appearance:
-								all_missing = false
-								break
-						if not all_missing:
-							break
+		# Check if any appearance references a file that still exists
+		for appearance in appearances:
+			for project_file in project_files:
+				if project_file.get_file().get_basename() == appearance:
+					all_missing = false
+					break
+			if not all_missing:
+				break
 
-					if all_missing:
-						if DirAccess.remove_absolute(cache_file_path) == OK:
-							removed_count += 1
-						else:
-							push_error("Failed to delete object cache file: %s" % cache_file_path)
-				else:
-					push_warning("Failed to parse object cache file: %s - removing" % file_name)
-					if DirAccess.remove_absolute(cache_file_path) == OK:
-						removed_count += 1
-					else:
-						push_error("Failed to delete corrupt object cache file: %s" % cache_file_path)
-			else:
-				push_error("Failed to open object cache file: %s" % file_name)
-		file_name = dir.get_next()
-	dir.list_dir_end()
+		if all_missing:
+			keys_to_remove.append(key)
+			removed_count += 1
+
+	# Remove from memory cache
+	for key in keys_to_remove:
+		memory_cache.erase(key)
+
+	# Rewrite the JSONL file
+	_rewrite_jsonl_file(cache_path)
 
 	return removed_count

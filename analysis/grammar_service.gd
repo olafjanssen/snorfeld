@@ -1,5 +1,4 @@
-
-extends GenericCacheService
+extends AnalysisService
 ## GrammarService - Handles caching and analysis of paragraph grammar corrections
 
 # gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line,high-complexity
@@ -8,26 +7,25 @@ extends GenericCacheService
 const CONTEXT_WORDS: int = 100
 const CONTEXT_CHARACTERS: int = 1000
 
-# Override: Get service name for signals
-func _get_service_name() -> String:
-	return "grammar"
-
-# Override: Get cache subdirectory name
-func _get_cache_subdir() -> String:
-	return "paragraph"
-
-# Override: Get JSONL filename
-func _get_cache_filename() -> String:
-	return "grammar.jsonl"
-
 func _ready() -> void:
-	CommandBus.priority_analysis.connect(_on_priority_analysis_requested)
-	EventBus.folder_opened.connect(_on_folder_opened)
-	CommandBus.start_analysis.connect(_on_start_analysis)
-	EventBus.file_selected.connect(_on_file_selected)
-	EventBus.project_loaded.connect(_on_project_loaded)
-	EventBus.project_unloaded.connect(_on_project_unloaded)
+	# Configure service properties
+	service_name = "grammar"
+	cache_subdir = "paragraph"
+	cache_filename = "grammar.jsonl"
 
+	# Connect signals
+	super()
+
+
+# Override: Get cache key from data (uses paragraph_hash)
+func _get_cache_key_from_data(data: Dictionary) -> String:
+	if data.has("paragraph_hash"):
+		return data["paragraph_hash"]
+	return ""
+
+## ============================================================================
+## Analysis
+## ============================================================================
 
 # Analyzes text for grammar/spelling corrections
 func analyze_grammar(
@@ -112,11 +110,6 @@ func _analyze(payload: Dictionary) -> Dictionary:
 		"cached_at": Time.get_unix_time_from_system()
 	}
 
-# Override: Get cache key from data (uses paragraph_hash)
-func _get_cache_key_from_data(data: Dictionary) -> String:
-	if data.has("paragraph_hash"):
-		return data["paragraph_hash"]
-	return ""
 
 ## ============================================================================
 ## Queue Management
@@ -162,6 +155,7 @@ func queue_file_paragraphs(file_path: String) -> void:
 		if not is_cached(para_hash) and not is_queued(para_hash):
 			queue_paragraph(para_hash, para_text, content, file_path)
 
+
 ## ============================================================================
 ## Getters
 ## ============================================================================
@@ -169,6 +163,7 @@ func queue_file_paragraphs(file_path: String) -> void:
 # Get cached grammar analysis for a paragraph by its hash
 func get_grammar_cache(paragraph_hash: String) -> Dictionary:
 	return get_cached(paragraph_hash)
+
 
 ## ============================================================================
 ## Signal Handlers
@@ -205,22 +200,6 @@ func _on_priority_analysis_requested(service_type: String, file_path: String, pa
 
 	queue_paragraph(paragraph_hash, paragraph, file_content, file_path, true)
 
-func _on_folder_opened(path: String) -> void:
-	var cache_dir: String = path.path_join(".snorfeld").path_join(_get_cache_subdir())
-	if FileUtils.dir_exists(cache_dir):
-		# Ensure cache is loaded before cleanup
-		_ensure_cache_loaded(cache_dir)
-		EventBus.analysis_cleanup_started.emit(_get_service_name())
-		var removed_count: int = _cleanup_unused_cache_files(cache_dir, path)
-		EventBus.analysis_cleanup_completed.emit(_get_service_name(), removed_count)
-
-func _on_project_loaded(path: String) -> void:
-	# Load cache for this project
-	var cache_dir: String = path.path_join(".snorfeld").path_join(_get_cache_subdir())
-	_ensure_cache_loaded(cache_dir)
-
-func _on_project_unloaded() -> void:
-	clear_all_caches()
 
 func _on_start_analysis(service_type: String, scope: String) -> void:
 	if service_type != "GRAMMAR":
@@ -231,9 +210,6 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 		if current_file_path != "":
 			queue_file_paragraphs(current_file_path)
 
-func _on_file_selected(path: String) -> void:
-	current_file_path = path
-	current_file_content = FileUtils.read_file(path)
 
 ## ========================================================================================================================================================
 ## Cleanup
