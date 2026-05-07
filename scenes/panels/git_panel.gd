@@ -167,11 +167,13 @@ func _on_file_activated():
 
 func _show_git_diff(file_path: String):
 	_current_diff_file = file_path
-	# Get absolute path
-	var absolute_path: String = $GitService.get_absolute_path(file_path)
 
-	# Get current file content
-	var current_content: String = FileUtils.read_file(absolute_path)
+	# file_path from git status is relative to git root, convert to absolute
+	var absolute_path: String = $GitService.git_root.path_join(file_path)
+
+	# Get current file content from BookService (already cached by absolute path)
+	var file_data: Dictionary = BookService.get_file(absolute_path)
+	var current_content: String = file_data.get("content", "")
 
 	# Get git version of the file
 	var git_content: String = $GitService.get_file_content_from_git(file_path)
