@@ -275,7 +275,7 @@ func _apply_font_sizes(theme: Theme, control_type: String, font_sizes: Dictionar
 func _apply_fonts(theme: Theme, control_type: String, fonts: Dictionary, created_fonts: Dictionary, ext_resources: Array) -> void:
 	for font_name in fonts:
 		var font_ref: Variant = fonts[font_name]
-		var font = _resolve_font_reference(font_ref, created_fonts, ext_resources, control_type, font_name)
+		var font : Font = _resolve_font_reference(font_ref, created_fonts, ext_resources, control_type, font_name)
 		if font != null:
 			theme.set_font(font_name, control_type, font)
 

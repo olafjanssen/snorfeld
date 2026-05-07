@@ -332,7 +332,7 @@ func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary,
 
 	# Add/update notes - chapter-specific notes
 	var existing_notes: Dictionary = existing_data.get("notes", {})
-	var new_notes = new_char_data.get("notes", "")
+	var new_notes : Variant = new_char_data.get("notes", "")
 	# Handle both String and Dictionary notes from LLM
 	if new_notes is Dictionary:
 		# If LLM returned a dict, merge it
@@ -413,7 +413,7 @@ Respond with a JSON object:
 
 ## Call LLM with retry logic for characters
 func _call_llm_with_retry_characters(prompt: String, options: Dictionary, max_retries: int) -> Dictionary:
-	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response : Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
 

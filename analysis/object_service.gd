@@ -443,7 +443,7 @@ func _get_llm_options() -> Dictionary:
 
 ## Call LLM with retry logic
 func _call_llm_with_retry(prompt: String, options: Dictionary, max_retries: int) -> Dictionary:
-	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var llm_response : Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
 
