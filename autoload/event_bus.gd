@@ -23,6 +23,11 @@ signal theme_changed
 signal file_saved(path: String)
 signal file_changed(path: String, content: String)
 
+# Project lifecycle
+signal project_loaded(path: String)
+signal project_unloaded
+signal content_changed
+
 # Cache service type enum
 enum CacheServiceType {
 	GRAMMAR,

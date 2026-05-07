@@ -10,10 +10,9 @@ var rebuild_scheduled: bool = false
 func _ready():
 	outline_tree.item_selected.connect(_on_item_selected)
 	EventBus.folder_opened.connect(_on_folder_opened)
-	if BookService != null:
-		BookService.project_loaded.connect(_on_project_loaded)
-		BookService.project_unloaded.connect(_on_project_unloaded)
-		BookService.content_changed.connect(_rebuild_outline_tree)
+	EventBus.project_loaded.connect(_on_project_loaded)
+	EventBus.project_unloaded.connect(_on_project_unloaded)
+	EventBus.content_changed.connect(_rebuild_outline_tree)
 
 
 func _on_folder_opened(path: String):

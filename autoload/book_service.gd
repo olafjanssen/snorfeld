@@ -20,11 +20,6 @@ var paragraphs: Dictionary = {}
 # Track loaded state
 var loaded_project_path: String = ""
 
-# Signals
-signal project_loaded(path: String)
-signal project_unloaded
-signal content_changed
-
 func _ready() -> void:
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.file_changed.connect(_on_file_changed)
@@ -44,7 +39,7 @@ func load_project(path: String) -> void:
 
 	loaded_project_path = path
 	_build_content_model(path)
-	project_loaded.emit(path)
+	EventBus.project_loaded.emit(path)
 
 
 # Unload current project
@@ -53,7 +48,7 @@ func unload_project() -> void:
 	chapters.clear()
 	paragraphs.clear()
 	loaded_project_path = ""
-	project_unloaded.emit()
+	EventBus.project_unloaded.emit()
 
 
 # Rebuild content model from scratch
@@ -445,7 +440,7 @@ func cleanup() -> void:
 				chapters.erase(chapter_id)
 		files.erase(file_path)
 
-	content_changed.emit()
+	EventBus.content_changed.emit()
 
 
 # Force reload of current project
@@ -463,14 +458,14 @@ func _on_folder_opened(path: String) -> void:
 func _on_file_changed(file_path: String, _content: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path)
-		content_changed.emit()
+		EventBus.content_changed.emit()
 
 
 # Handle file saved event
 func _on_file_saved(file_path: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path)
-		content_changed.emit()
+		EventBus.content_changed.emit()
 
 
 # Determine the heading level to use as chapter level

@@ -20,8 +20,7 @@ func _ready():
 	CommandBus.save_all_files.connect(_on_save_all_files)
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 	CommandBus.navigate_to_line.connect(_on_navigate_to_line_command)
-	if BookService != null:
-		BookService.content_changed.connect(_on_book_content_changed)
+	EventBus.content_changed.connect(_on_book_content_changed)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
