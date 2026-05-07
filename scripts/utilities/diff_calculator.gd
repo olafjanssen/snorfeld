@@ -270,7 +270,7 @@ func _find_best_match_ahead(old_words: Array, new_words: Array, i: int, j: int, 
 	return -1
 
 
-func _get_old_index_for_match(old_words: Array, new_words: Array, i: int, j: int, best_match_idx: int, max_look_ahead: int) -> int:
+func _get_old_index_for_match(old_words: Array, new_words: Array, i: int, j: int, _best_match_idx: int, max_look_ahead: int) -> int:
 	# Find the corresponding old index for the match
 	for look_ahead: int in range(1, max_look_ahead + 1):
 		if i + look_ahead - 1 < old_words.size() and old_words[i + look_ahead - 1] == new_words[j]:

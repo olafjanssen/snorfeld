@@ -111,7 +111,7 @@ func _execute_git_command_simple(args: Array, cwd: String = "") -> bool:
 ### Helper Functions
 
 ## Determine git change type from status characters
-func _determine_change_type(staged_char: String, unstaged_char: String, file_path: String) -> String:
+func _determine_change_type(staged_char: String, unstaged_char: String, _file_path: String) -> String:
 	# Renamed files have format: "X Y -> new_path" - path already cleaned by caller
 	# Check untracked first (?? means new untracked file)
 	if staged_char == "?" and unstaged_char == "?":
