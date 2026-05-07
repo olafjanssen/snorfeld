@@ -1,5 +1,5 @@
 extends Node
-## AppConfig - Unified application configuration management
+## AppConfig - Application configuration management
 ## Merges AppConfig (config storage) + SettingsHandler (UI management)
 
 const CONFIG_FILE := "user://settings.cfg"

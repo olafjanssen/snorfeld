@@ -24,9 +24,9 @@ func _get_cache_subdir() -> String:
 func _on_folder_opened(path: String) -> void:
 	var cache_path := path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
 	if DirAccess.dir_exists_absolute(cache_path):
-		EventBus.unified_cache_cleanup_started.emit("object")
+		EventBus.analysis_cleanup_started.emit("object")
 		var removed_count := cleanup_unused_object_files(cache_path, path)
-		EventBus.unified_cache_cleanup_completed.emit("object", removed_count)
+		EventBus.analysis_cleanup_completed.emit("object", removed_count)
 
 
 func _on_project_loaded(_path: String) -> void:
@@ -51,17 +51,17 @@ func _process_task(task: Dictionary):
 
 # Override: Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.cache_queue_updated.emit("object", task_queue.size(), processing)
+	EventBus.analysis_queue_updated.emit("object", task_queue.size(), processing)
 
 
 # Override: Emit task started signal
 func _emit_task_started(remaining: int) -> void:
-	EventBus.cache_task_started.emit("object", remaining)
+	EventBus.analysis_task_started.emit("object", remaining)
 
 
 # Override: Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.cache_task_completed.emit("object", remaining, {})
+	EventBus.analysis_task_completed.emit("object", remaining, {})
 
 
 # Handle file scanned event - queue objects for caching
@@ -80,7 +80,7 @@ func queue_objects_for_cache(file_path: String, file_content: String = "") -> vo
 
 	# Start processing if not already running
 	if not processing:
-		_processing_start()
+		await _processing_start()
 
 
 # Queue a task for object extraction and cache creation
@@ -99,7 +99,7 @@ func _queue_task(cache_path: String, file_path: String, file_content: String, pr
 		return
 
 	# Otherwise start processing
-	_processing_start()
+	await _processing_start()
 
 
 func _on_priority_object_cache_requested(file_path: String, file_content: String) -> void:

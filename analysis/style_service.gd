@@ -191,9 +191,9 @@ func _on_folder_opened(path: String) -> void:
 	if FileUtils.dir_exists(cache_dir):
 		# Ensure cache is loaded before cleanup
 		_ensure_cache_loaded(cache_dir)
-		EventBus.unified_cache_cleanup_started.emit(_get_service_name())
+		EventBus.analysis_cleanup_started.emit(_get_service_name())
 		var removed_count := _cleanup_unused_cache_files(cache_dir, path)
-		EventBus.unified_cache_cleanup_completed.emit(_get_service_name(), removed_count)
+		EventBus.analysis_cleanup_completed.emit(_get_service_name(), removed_count)
 
 func _on_project_loaded(path: String) -> void:
 	# Load cache for this project

@@ -95,11 +95,10 @@ func _processing_start() -> void:
 	if processing:
 		return
 	processing = true
-	var task_count := task_queue.size()
-	_emit_task_started(task_count)
 
 	while task_queue.size() > 0:
 		queue_mutex.lock()
+		_emit_task_started(task_queue.size())
 		var task = task_queue.pop_front()
 		queue_mutex.unlock()
 

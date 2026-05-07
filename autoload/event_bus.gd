@@ -36,12 +36,12 @@ enum CacheServiceType {
 # Analysis type enum (backward compatibility)
 enum AnalysisType { GRAMMAR, STYLE, STRUCTURE }
 
-# Unified cache signals - carry service_type for filtering
-signal cache_queue_updated(service_type: String, queued: int, processing: bool)
-signal cache_task_started(service_type: String, remaining: int)
-signal cache_task_completed(service_type: String, remaining: int, result: Dictionary)
-signal unified_cache_cleanup_started(service_type: String)
-signal unified_cache_cleanup_completed(service_type: String, removed_count: int)
+# Analysis signals - carry service_type for filtering
+signal analysis_queue_updated(service_type: String, queued: int, processing: bool)
+signal analysis_task_started(service_type: String, remaining: int)
+signal analysis_task_completed(service_type: String, remaining: int, result: Dictionary)
+signal analysis_cleanup_started(service_type: String)
+signal analysis_cleanup_completed(service_type: String, removed_count: int)
 
 # Git integration signals
 signal show_git_diff(file_path: String, diff: String)

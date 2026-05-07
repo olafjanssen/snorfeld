@@ -1,6 +1,6 @@
 extends Node
 ## BookService - Central content model for the project
-## Maintains a unified view of all files, chapters, and paragraphs
+## Maintains a view of all files, chapters, and paragraphs
 
 # Project content structure:
 # - files: Dictionary of file_path -> FileData

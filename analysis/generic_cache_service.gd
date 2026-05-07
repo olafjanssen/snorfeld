@@ -1,7 +1,7 @@
 class_name GenericCacheService
 extends ContentCache
 ## GenericCacheService - Base class for all caching services
-## Provides unified task queue management, JSONL persistence, and caching infrastructure
+## Provides task queue management, JSONL persistence, and caching infrastructure
 
 ## In-memory cache and queue tracking
 var memory_cache: Dictionary = {}
@@ -54,15 +54,15 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 
 ## Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.cache_queue_updated.emit(_get_service_name(), task_queue.size(), processing)
+	EventBus.analysis_queue_updated.emit(_get_service_name(), task_queue.size(), processing)
 
 ## Emit task started signal
 func _emit_task_started(remaining: int) -> void:
-	EventBus.cache_task_started.emit(_get_service_name(), remaining)
+	EventBus.analysis_task_started.emit(_get_service_name(), remaining)
 
 ## Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.cache_task_completed.emit(_get_service_name(), remaining, {})
+	EventBus.analysis_task_completed.emit(_get_service_name(), remaining, {})
 
 ## ============================================================================
 ## Task Queue Management
@@ -91,7 +91,7 @@ func queue_task(payload: Dictionary, priority: bool = false) -> void:
 
 	# Start processing if not already running
 	if not processing:
-		_processing_start()
+		await _processing_start()
 
 ## Remove a task from the queue by its key
 func remove_task_from_queue(key: String) -> void:

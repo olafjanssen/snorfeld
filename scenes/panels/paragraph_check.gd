@@ -30,7 +30,7 @@ func _ready():
 	EventBus.paragraph_selected.connect(_on_paragraph_selected)
 	EventBus.diff_span_clicked.connect(_on_diff_span_clicked)
 	EventBus.theme_changed.connect(_on_theme_changed)
-	EventBus.cache_task_completed.connect(_on_cache_task_completed)
+	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
 	# Connect to tab changed signal
 	$TabContainer.tab_changed.connect(_on_tab_changed)
 
@@ -69,7 +69,7 @@ func _update_diff_displays() -> void:
 func _on_theme_changed() -> void:
 	_update_diff_displays()
 
-func _on_cache_task_completed(service_type: String, _remaining: int, _result: Dictionary) -> void:
+func _on_analysis_task_completed(service_type: String, _remaining: int, _result: Dictionary) -> void:
 	if service_type not in ['grammar','style','structure']:
 		return
 

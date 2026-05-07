@@ -26,12 +26,12 @@ func _connect_global_signals():
 	# File saving
 	EventBus.file_saved.connect(_on_file_saved)
 
-	# Unified cache progress signals (all services use this now)
-	EventBus.cache_queue_updated.connect(_on_unified_cache_queue_updated)
-	EventBus.cache_task_started.connect(_on_unified_cache_task_started)
-	EventBus.cache_task_completed.connect(_on_unified_cache_task_completed)
-	EventBus.unified_cache_cleanup_started.connect(_on_unified_cache_cleanup_started)
-	EventBus.unified_cache_cleanup_completed.connect(_on_unified_cache_cleanup_completed)
+	# Analysis progress signals (all services use this now)
+	EventBus.analysis_queue_updated.connect(_on_analysis_queue_updated)
+	EventBus.analysis_task_started.connect(_on_analysis_task_started)
+	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
+	EventBus.analysis_cleanup_started.connect(_on_analysis_cleanup_started)
+	EventBus.analysis_cleanup_completed.connect(_on_analysis_cleanup_completed)
 
 	# Git integration
 	EventBus.git_operation_started.connect(_on_git_operation_started)
@@ -44,28 +44,28 @@ func _on_folder_opened(path: String):
 func _on_file_saved(path: String):
 	_set_status(icon_text + "Saved: %s" % path)
 
-# Unified cache progress handlers (all services use this now)
-func _on_unified_cache_queue_updated(service_type: String, queued: int, _processing: bool):
+# Analysis progress handlers (all services use this now)
+func _on_analysis_queue_updated(service_type: String, queued: int, _processing: bool):
 	if queued > 0:
-		_set_status(icon_text + "[%s] %d queued" % [service_type, queued], false)
+		_set_status(icon_text + "%d %s tasks queued" % [queued, service_type], false)
 
-func _on_unified_cache_task_started(service_type: String, remaining: int):
-	_set_status(icon_text + "[%s] Processing: %d remaining" % [service_type, remaining], true)
+func _on_analysis_task_started(service_type: String, remaining: int):
+	_set_status(icon_text + "Processing %s: %d remaining" % [service_type, remaining], true)
 
-func _on_unified_cache_task_completed(service_type: String, remaining: int, _result: Dictionary):
+func _on_analysis_task_completed(service_type: String, remaining: int, _result: Dictionary):
 	if remaining > 0:
-		_set_status(icon_text + "[%s] Processed: %d remaining" % [service_type, remaining], true)
+		_set_status(icon_text + "Processed %s: %d remaining" % [service_type, remaining], false)
 	else:
-		_set_status(icon_text + "[%s] Complete" % [service_type], true)
+		_set_status(icon_text + "Completed %s" % [service_type], false)
 
-func _on_unified_cache_cleanup_started(service_type: String):
-	_set_status(icon_text + "[%s] Cleaning up old cache files..." % [service_type], true)
+func _on_analysis_cleanup_started(service_type: String):
+	_set_status(icon_text + "Cleaning up old %s files..." % [service_type], true)
 
-func _on_unified_cache_cleanup_completed(service_type: String, removed_count: int):
+func _on_analysis_cleanup_completed(service_type: String, removed_count: int):
 	if removed_count > 0:
-		_set_status(icon_text + "[%s] Cache cleanup: removed %d orphaned files" % [service_type, removed_count])
+		_set_status(icon_text + "%s cleanup: removed %d orphaned files" % [service_type, removed_count])
 	else:
-		_set_status(icon_text + "[%s] Cache cleanup: nothing to remove" % [service_type])
+		_set_status(icon_text + "%s cleanup: nothing to remove" % [service_type])
 
 func _set_status(message: String, persistent: bool = false):
 	text = message

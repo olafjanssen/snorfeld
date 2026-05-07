@@ -103,17 +103,17 @@ func _process_task(task: Dictionary):
 
 # Override: Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.cache_queue_updated.emit("embedding", task_queue.size(), processing)
+	EventBus.analysis_queue_updated.emit("embedding", task_queue.size(), processing)
 
 
 # Override: Emit task started signal
 func _emit_task_started(remaining: int) -> void:
-	EventBus.cache_task_started.emit("embedding", remaining)
+	EventBus.analysis_task_started.emit("embedding", remaining)
 
 
 # Override: Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.cache_task_completed.emit("embedding", remaining, {})
+	EventBus.analysis_task_completed.emit("embedding", remaining, {})
 
 
 # Ensure a cache directory's JSONL files are loaded into memory
@@ -211,7 +211,7 @@ func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Arra
 
 	# Start processing if not already running
 	if not processing:
-		_processing_start()
+		await _processing_start()
 
 
 # Queue chapter for embedding cache
@@ -243,7 +243,7 @@ func queue_chapter_for_embedding(file_path: String) -> void:
 
 	# Start processing if not already running
 	if not processing:
-		_processing_start()
+		await _processing_start()
 
 
 # Remove a task from the queue by cache_dir, text_hash, and is_chapter
@@ -277,7 +277,7 @@ func _queue_task(cache_dir: String, text_hash: String, text: String, file_conten
 		return
 
 	# Otherwise start processing
-	_processing_start()
+	await _processing_start()
 
 
 func _on_priority_embedding_cache_requested(text_hash: String, file_path: String, text: String, is_chapter: bool) -> void:
@@ -305,9 +305,9 @@ func _on_folder_opened(path: String) -> void:
 	if FileUtils.dir_exists(cache_dir):
 		# Ensure cache is loaded before cleanup
 		_ensure_cache_loaded(cache_dir)
-		EventBus.unified_cache_cleanup_started.emit("embedding")
+		EventBus.analysis_cleanup_started.emit("embedding")
 		var removed_count := _cleanup_unused_cache_files(cache_dir, path)
-		EventBus.unified_cache_cleanup_completed.emit("embedding", removed_count)
+		EventBus.analysis_cleanup_completed.emit("embedding", removed_count)
 
 
 func _on_start_analysis(service_type: String, scope: String) -> void:
