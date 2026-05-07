@@ -210,7 +210,7 @@ func _rebuild_bbcode_from_spans(bbcode: String, merged_spans: Array[Dictionary])
 	return "".join(final_result)
 
 # Word-level diff for grammar corrections
-func calculate_diff(old_text: String, new_text: String, show_deletions: bool = true, show_insertions: bool = true) -> String:
+func calculate_diff(old_text: String, new_text: String, include_url_meta: bool = true) -> String:
 	var old_words: PackedStringArray = old_text.split(" ")
 	var new_words: PackedStringArray = new_text.split(" ")
 
@@ -218,14 +218,17 @@ func calculate_diff(old_text: String, new_text: String, show_deletions: bool = t
 	var pos: Dictionary = {"i": 0, "j": 0}
 
 	while pos["i"] < old_words.size() or pos["j"] < new_words.size():
-		_process_diff_step(result, old_words, new_words, pos, show_deletions, show_insertions)
+		_process_diff_step(result, old_words, new_words, pos, include_url_meta)
 
 	var bbcode_result: String = " ".join(result)
-	return _merge_adjacent_spans(bbcode_result)
+	if include_url_meta:
+		return _merge_adjacent_spans(bbcode_result)
+	else:
+		return bbcode_result
 
 
 ## Process one step of the diff algorithm
-func _process_diff_step(result: Array[String], old_words: Array[String], new_words: Array[String], pos: Dictionary, show_deletions: bool, show_insertions: bool) -> void:
+func _process_diff_step(result: Array[String], old_words: Array[String], new_words: Array[String], pos: Dictionary, include_url_meta: bool) -> void:
 	var i: int = pos.get("i", 0)
 	var j: int = pos.get("j", 0)
 
@@ -245,13 +248,13 @@ func _process_diff_step(result: Array[String], old_words: Array[String], new_wor
 
 	if best_match_idx != -1:
 		var best_match_old_idx: int = _get_old_index_for_match(old_words, new_words, i, j, max_look_ahead)
-		_process_changes_with_match(result, old_words, new_words, i, j, best_match_old_idx, best_match_idx, show_deletions, show_insertions)
+		_process_changes_with_match(result, old_words, new_words, i, j, best_match_old_idx, best_match_idx, include_url_meta)
 		pos["i"] = best_match_old_idx
 		pos["j"] = best_match_idx
 		return
 
 	# No match found ahead, just mark current word as changed
-	_process_single_word_change(result, old_words, new_words, i, j, show_deletions, show_insertions)
+	_process_single_word_change(result, old_words, new_words, i, j, include_url_meta)
 	_result_advance_positions(old_words, new_words, i, j, pos)
 
 
@@ -301,7 +304,7 @@ func _get_old_index_for_match(old_words: Array[String], new_words: Array[String]
 	return i
 
 
-func _process_changes_with_match(result: Array[String], old_words: Array[String], new_words: Array[String], start_i: int, start_j: int, best_match_old_idx: int, best_match_idx: int, show_deletions: bool, show_insertions: bool) -> void:
+func _process_changes_with_match(result: Array[String], old_words: Array[String], new_words: Array[String], start_i: int, start_j: int, best_match_old_idx: int, best_match_idx: int, include_url_meta: bool) -> void:
 	# Collect unmatched old and new words
 	var old_changes: Array[String] = []
 	var i: int = start_i
@@ -317,60 +320,62 @@ func _process_changes_with_match(result: Array[String], old_words: Array[String]
 
 	# If we have equal number of deletions and insertions, show as orange changes
 	if old_changes.size() == new_changes.size() and old_changes.size() > 0:
-		_process_change_block(result, new_changes, start_i, "change", show_insertions)
+		_process_change_block(result, new_changes, start_i, "change", include_url_meta)
 	else:
 		# Different counts - show deletions and insertions separately
-		_process_deletions(result, old_changes, start_i, show_deletions)
-		_process_insertions(result, new_changes, start_j, show_insertions)
+		_process_deletions(result, old_changes, start_i, include_url_meta)
+		_process_insertions(result, new_changes, start_j, include_url_meta)
 
 
-func _process_single_word_change(result: Array[String], old_words: Array[String], new_words: Array[String], i: int, j: int, show_deletions: bool, show_insertions: bool) -> void:
+func _process_single_word_change(result: Array[String], old_words: Array[String], new_words: Array[String], i: int, j: int, include_url_meta: bool) -> void:
 	if i < old_words.size() and j < new_words.size():
 		# This is a deletion+insertion pair at same position - show as orange
-		if show_insertions:
-			var bgcolor: String = _get_bgcolor("change")
-			result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=" + bgcolor + "]" + new_words[j] + "[/bgcolor][/url]")
+		var bgcolor: String = _get_bgcolor("change")
+		var word: String = new_words[j]
+		if include_url_meta:
+			result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
 		else:
-			result.append(new_words[j])
+			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
 	elif j < new_words.size():
-		if show_insertions:
-			var bgcolor: String = _get_bgcolor("insert")
-			result.append("[url=insert" + DELIMITER + str(j) + DELIMITER + _encode_text(new_words[j]) + "][bgcolor=" + bgcolor + "]" + new_words[j] + "[/bgcolor][/url]")
+		var bgcolor: String = _get_bgcolor("insert")
+		var word: String = new_words[j]
+		if include_url_meta:
+			result.append("[url=insert" + DELIMITER + str(j) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
 		else:
-			result.append(new_words[j])
+			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
 	elif i < old_words.size():
-		if show_deletions:
-			var bgcolor: String = _get_bgcolor("delete")
-			result.append("[url=delete" + DELIMITER + str(i) + DELIMITER + _encode_text(old_words[i]) + "][bgcolor=" + bgcolor + "]" + old_words[i] + "[/bgcolor][/url]")
+		var bgcolor: String = _get_bgcolor("delete")
+		var word: String = old_words[i]
+		if include_url_meta:
+			result.append("[url=delete" + DELIMITER + str(i) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
 		else:
-			result.append(old_words[i])
+			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
 
 
-func _process_change_block(result: Array[String], changes: Array[String], word_idx: int, operation: String, show: bool) -> void:
-	if show:
-		var merged_text: String = " ".join(changes)
-		var bgcolor: String = _get_bgcolor(operation)
+func _process_change_block(result: Array[String], changes: Array[String], word_idx: int, operation: String, include_url_meta: bool) -> void:
+	var merged_text: String = " ".join(changes)
+	var bgcolor: String = _get_bgcolor(operation)
+	if include_url_meta:
 		result.append("[url=" + operation + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_text) + "][bgcolor=" + bgcolor + "]" + merged_text + "[/bgcolor][/url]")
 	else:
-		for word in changes:
-			result.append(word)
+		result.append("[bgcolor=" + bgcolor + "]" + merged_text + "[/bgcolor]")
 
 
-func _process_deletions(result: Array[String], deletions: Array[String], word_idx: int, show: bool) -> void:
-	if show and deletions.size() > 0:
+func _process_deletions(result: Array[String], deletions: Array[String], word_idx: int, include_url_meta: bool) -> void:
+	if deletions.size() > 0:
 		var merged_deletions: String = " ".join(deletions)
 		var bgcolor: String = _get_bgcolor("delete")
-		result.append("[url=delete" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_deletions) + "][bgcolor=" + bgcolor + "]" + merged_deletions + "[/bgcolor][/url]")
-	else:
-		for word in deletions:
-			result.append(word)
+		if include_url_meta:
+			result.append("[url=delete" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_deletions) + "][bgcolor=" + bgcolor + "]" + merged_deletions + "[/bgcolor][/url]")
+		else:
+			result.append("[bgcolor=" + bgcolor + "]" + merged_deletions + "[/bgcolor]")
 
 
-func _process_insertions(result: Array[String], insertions: Array[String], word_idx: int, show: bool) -> void:
-	if show and insertions.size() > 0:
+func _process_insertions(result: Array[String], insertions: Array[String], word_idx: int, include_url_meta: bool) -> void:
+	if insertions.size() > 0:
 		var merged_insertions: String = " ".join(insertions)
 		var bgcolor: String = _get_bgcolor("insert")
-		result.append("[url=insert" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_insertions) + "][bgcolor=" + bgcolor + "]" + merged_insertions + "[/bgcolor][/url]")
-	else:
-		for word in insertions:
-			result.append(word)
+		if include_url_meta:
+			result.append("[url=insert" + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_insertions) + "][bgcolor=" + bgcolor + "]" + merged_insertions + "[/bgcolor][/url]")
+		else:
+			result.append("[bgcolor=" + bgcolor + "]" + merged_insertions + "[/bgcolor]")

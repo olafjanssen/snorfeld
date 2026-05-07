@@ -179,10 +179,10 @@ func _show_git_diff(file_path: String):
 	var git_content: String = $GitService.get_file_content_from_git(file_path)
 
 	if git_content != "" and current_content != "":
-		# Use DiffUtility to create a human-readable diff
+		# Use DiffUtility to create a human-readable diff (no URL meta since diff_editor doesn't need it)
 		var diff_utility: RefCounted = DiffUtility.new()
 		diff_utility.set_control(self)
-		var diff_bbcode: String = diff_utility.calculate_diff(git_content, current_content)
+		var diff_bbcode: String = diff_utility.calculate_diff(git_content, current_content, false)
 		EventBus.show_git_diff.emit(file_path, diff_bbcode)
 
 func _regenerate_diff():
