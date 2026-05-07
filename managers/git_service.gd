@@ -26,12 +26,12 @@ func _ready():
 ### Configuration
 
 func _load_git_config() -> void:
-	var config = ConfigFile.new()
+	var config: ConfigFile = ConfigFile.new()
 	if config.load(CONFIG_FILE) == OK:
 		git_executable = config.get_value("git", "executable", "")
 
 func _save_git_config() -> void:
-	var config = ConfigFile.new()
+	var config: ConfigFile = ConfigFile.new()
 	config.set_value("git", "executable", git_executable)
 	config.save(CONFIG_FILE)
 
@@ -46,12 +46,12 @@ func set_git_executable(path: String) -> void:
 ### Git Executable Detection
 
 func _verify_git_executable(path: String) -> bool:
-	var output = []
-	var result = OS.execute(path, ['--version'], output)
+	var output: Array = []
+	var result: int = OS.execute(path, ['--version'], output)
 	return result == 0
 
 func _detect_git_executable() -> bool:
-	var output = []
+	var output: Array = []
 	var result: int
 	if OS.get_name() == "Windows":
 		result = OS.execute('where', ['git'], output)
@@ -71,7 +71,7 @@ func is_git_repo(path: String) -> bool:
 	return find_git_root(path) != ""
 
 func find_git_root(path: String) -> String:
-	var current = path.get_base_dir()
+	var current: String = path.get_base_dir()
 	while current != "":
 		if FileUtils.dir_exists(current.path_join(".git")):
 			return current
@@ -90,13 +90,13 @@ func _execute_git_command(args: Array, cwd: String = "") -> Array:
 		push_error("[GitService] Git executable not configured")
 		return ["", "Git executable not configured"]
 
-	var full_args = args.duplicate()
+	var full_args: Array = args.duplicate()
 	if cwd != "":
 		full_args.insert(0, cwd)
 		full_args.insert(0, '-C')
 
-	var output = []
-	var exit_code = OS.execute(git_executable, full_args, output)
+	var output: Array = []
+	var exit_code: int = OS.execute(git_executable, full_args, output)
 
 	if exit_code != 0 and output.size() == 0:
 		return ["", "Command failed with exit code: %d" % exit_code]
@@ -140,17 +140,17 @@ func get_status(base_path: String = "") -> Dictionary:
 		push_error("[GitService] Git not found")
 		return {"error": "Git not found"}
 
-	var repo_path = base_path if base_path else git_root
+	var repo_path: String = base_path if base_path else git_root
 	if not repo_path:
 		push_error("[GitService] No git repository path")
 		return {"error": "No git repository"}
 
-	var output = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
+	var output: Array = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
 	if output[0] == "":
 		push_error("[GitService] %s" % output[1])
 		return {"error": output[1]}
 
-	var status = {
+	var status: Dictionary = {
 		"files": [],  # Array of {path, change_type, staged}
 		"counts": {"modified": 0, "staged": 0, "untracked": 0, "deleted": 0}
 	}
@@ -158,9 +158,9 @@ func get_status(base_path: String = "") -> Dictionary:
 	for line in output[0].split("\n"):
 		if line.length() < 3:
 			continue
-		var staged_char = line[0]
-		var unstaged_char = line[1]
-		var file_path = line.substr(3)
+		var staged_char: String = line[0]
+		var unstaged_char: String = line[1]
+		var file_path: String = line.substr(3)
 
 		var change_type: String
 		# Untracked files (?? ) are never staged
@@ -187,7 +187,7 @@ func get_status(base_path: String = "") -> Dictionary:
 		if is_staged:
 			status["counts"]["staged"] += 1
 
-	var branch_output = _execute_git_command(["branch", "--show-current"], repo_path)
+	var branch_output: Array = _execute_git_command(["branch", "--show-current"], repo_path)
 	status["branch"] = branch_output[0].strip_edges() if branch_output[0] else "unknown"
 	status["is_clean"] = status["files"].size() == 0
 	return status
@@ -199,7 +199,7 @@ func get_file_status(file_path: String) -> String:
 	if not git_root:
 		return "not_git"
 
-	var status = get_status()
+	var status: Dictionary = get_status()
 	if status.has("error"):
 		return "error"
 
@@ -212,11 +212,11 @@ func get_file_status(file_path: String) -> String:
 	return "clean"
 
 func refresh_status(base_path: String = "") -> void:
-	var repo_path = base_path if base_path else git_root
+	var repo_path: String = base_path if base_path else git_root
 	if not repo_path:
 		return
 
-	var status = get_status(repo_path)
+	var status: Dictionary = get_status(repo_path)
 	if not status.has("error"):
 		EventBus.git_status_updated.emit(status)
 		file_status_cache.clear()
@@ -229,7 +229,7 @@ func refresh_status(base_path: String = "") -> void:
 func get_diff(file_path: String, staged: bool = false) -> String:
 	if not git_executable or not git_root:
 		return ""
-	var args = ["diff"]
+	var args: Array = ["diff"]
 	if staged:
 		args.append("--cached")
 	args += ["--", file_path]
@@ -243,8 +243,8 @@ func get_diff_head(file_path: String) -> String:
 func get_file_content_from_git(file_path: String) -> String:
 	if not git_executable or not git_root:
 		return ""
-	var relative_path = _make_path_relative(file_path)
-	var result = _execute_git_command(["show", "HEAD:" + relative_path], git_root)
+	var relative_path: String = _make_path_relative(file_path)
+	var result: Array = _execute_git_command(["show", "HEAD:" + relative_path], git_root)
 	if result[1] == "":
 		return result[0]
 	return ""
@@ -257,7 +257,7 @@ func stage_file(file_path: String) -> bool:
 		return false
 
 	EventBus.git_operation_started.emit("stage")
-	var relative_path = _make_path_relative(file_path)
+	var relative_path: String = _make_path_relative(file_path)
 	if not _execute_git_command_simple(["add", relative_path], git_root):
 		EventBus.git_operation_completed.emit("stage", false, "Failed to stage file")
 		return false
@@ -288,8 +288,8 @@ func unstage_file(file_path: String) -> bool:
 		return false
 
 	EventBus.git_operation_started.emit("unstage")
-	var relative_path = _make_path_relative(file_path)
-	var success = (_execute_git_command_simple(["reset", "HEAD", "--", relative_path], git_root) or
+	var relative_path: String = _make_path_relative(file_path)
+	var success: bool = (_execute_git_command_simple(["reset", "HEAD", "--", relative_path], git_root) or
 		_execute_git_command_simple(["restore", "--staged", "--", relative_path], git_root))
 
 	if not success:
@@ -329,7 +329,7 @@ func push(remote: String = "origin", branch: String = "") -> bool:
 		return false
 
 	EventBus.git_operation_started.emit("push")
-	var args = ["push", remote]
+	var args: Array = ["push", remote]
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
@@ -345,7 +345,7 @@ func pull(remote: String = "origin", branch: String = "") -> bool:
 		return false
 
 	EventBus.git_operation_started.emit("pull")
-	var args = ["pull", remote]
+	var args: Array = ["pull", remote]
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
@@ -376,8 +376,8 @@ func add_to_gitignore(pattern: String) -> bool:
 	if not git_root:
 		return false
 
-	var gitignore_path = git_root.path_join(".gitignore")
-	var content := FileUtils.read_file(gitignore_path)
+	var gitignore_path: String = git_root.path_join(".gitignore")
+	var content: String = FileUtils.read_file(gitignore_path)
 
 	if pattern in content:
 		return true
@@ -396,11 +396,11 @@ func _make_path_relative(file_path: String) -> String:
 	if not git_root:
 		return file_path
 
-	var normalized_root = git_root.replace("\\", "/").replace("//", "/")
-	var normalized_path = file_path.replace("\\", "/").replace("//", "/")
+	var normalized_root: String = git_root.replace("\\", "/").replace("//", "/")
+	var normalized_path: String = file_path.replace("\\", "/").replace("//", "/")
 
 	if normalized_path.begins_with(normalized_root):
-		var relative = normalized_path.substr(normalized_root.length())
+		var relative: String = normalized_path.substr(normalized_root.length())
 		return relative.trim_prefix("/")
 
 	return file_path
@@ -408,8 +408,8 @@ func _make_path_relative(file_path: String) -> String:
 func get_absolute_path(relative_path: String) -> String:
 	if not git_root:
 		return relative_path
-	var normalized_root = git_root.replace("\\", "/").replace("//", "/")
-	var normalized_relative = relative_path.replace("\\", "/").replace("//", "/")
+	var normalized_root: String = git_root.replace("\\", "/").replace("//", "/")
+	var normalized_relative: String = relative_path.replace("\\", "/").replace("//", "/")
 	return normalized_root.path_join(normalized_relative)
 
 ### Event Handlers

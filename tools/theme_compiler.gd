@@ -35,23 +35,23 @@ func _run():
 
 ## Compile all ThemeDefinition resources found in DEFINITIONS_PATH
 func _compile_all_themes() -> bool:
-	var success := true
-	var dir = DirAccess.open(DEFINITIONS_PATH)
+	var success: bool = true
+	var dir: DirAccess = DirAccess.open(DEFINITIONS_PATH)
 
 	if dir == null:
 		push_error("Could not open themes directory: %s" % DEFINITIONS_PATH)
 		return false
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 
 	while file_name != "":
 		if file_name.ends_with(DEFINITION_EXT):
-			var def_path = DEFINITIONS_PATH + file_name
-			var output_name = file_name.replace(DEFINITION_EXT, THEME_EXT)
-			var output_path = OUTPUT_PATH + output_name
+			var def_path: String = DEFINITIONS_PATH + file_name
+			var output_name: String = file_name.replace(DEFINITION_EXT, THEME_EXT)
+			var output_path: String = OUTPUT_PATH + output_name
 
-			var def = load(def_path)
+			var def: ThemeDefinition = load(def_path)
 			if def == null:
 				push_error("Could not load ThemeDefinition: %s" % def_path)
 				success = false
@@ -59,10 +59,10 @@ func _compile_all_themes() -> bool:
 				if def.control_overrides.size() == 0:
 					push_warning("control_overrides is EMPTY for %s" % file_name)
 
-				var theme = _compile_theme(def)
+				var theme: Theme = _compile_theme(def)
 				if theme != null:
 					DirAccess.remove_absolute(output_path)
-					var err = ResourceSaver.save(theme, output_path, ResourceSaver.FLAG_BUNDLE_RESOURCES)
+					var err: int = ResourceSaver.save(theme, output_path, ResourceSaver.FLAG_BUNDLE_RESOURCES)
 					if err != OK:
 						push_error("Failed to save compiled theme: %s" % output_path)
 						success = false
@@ -78,18 +78,18 @@ func _compile_all_themes() -> bool:
 
 ## Compile a single ThemeDefinition into a Theme resource
 func _compile_theme(def: ThemeDefinition) -> Theme:
-	var theme = Theme.new()
+	var theme: Theme = Theme.new()
 
 	# First, create all defined styles
 	var created_styles: Dictionary = {}
 
 	for style_name in def.styles:
-		var style_config = def.styles[style_name]
-		var style_type = style_config.get("type", "")
+		var style_config: Dictionary = def.styles[style_name]
+		var style_type: String = style_config.get("type", "")
 
 		match style_type:
 			"StyleBoxFlat":
-				var style = _create_stylebox_flat(def, style_config)
+				var style: StyleBoxFlat = _create_stylebox_flat(def, style_config)
 				if style:
 					style.resource_name = style_name
 					created_styles[style_name] = style
@@ -97,7 +97,7 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 					push_error("Failed to create StyleBoxFlat for: %s" % style_name)
 
 			"StyleBoxEmpty":
-				var style = _create_stylebox_empty(def, style_config)
+				var style: StyleBoxEmpty = _create_stylebox_empty(def, style_config)
 				if style:
 					style.resource_name = style_name
 					created_styles[style_name] = style
@@ -110,7 +110,7 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 	# Load external resources (fonts)
 	var ext_resources: Array = []
 	for ext_res in def.external_resources:
-		var res = load(ext_res["path"])
+		var res: Resource = load(ext_res["path"])
 		if res:
 			ext_resources.append(res)
 		else:
@@ -119,13 +119,13 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 	# Create font resources from definitions
 	var created_fonts: Dictionary = {}
 	for font_name in def.fonts:
-		var font_def = def.fonts[font_name]
-		var font_type = font_def.get("type", "")
+		var font_def: Dictionary = def.fonts[font_name]
+		var font_type: String = font_def.get("type", "")
 
 		if font_type == "FontFile":
-			var font_idx = font_def.get("index", 0)
+			var font_idx: int = font_def.get("index", 0)
 			if font_idx >= 0 and font_idx < ext_resources.size():
-				var font_file = ext_resources[font_idx]
+				var font_file: FontFile = ext_resources[font_idx]
 				if font_file is FontFile:
 					# Create a Font resource from the FontFile
 					created_fonts[font_name] = font_file
@@ -135,16 +135,16 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 				push_error("Invalid font index for %s: %d" % [font_name, font_idx])
 
 		elif font_type == "FontVariation":
-			var base_font_idx = font_def.get("base_font", 0)
-			var variation = font_def.get("variation_opentype", {})
+			var base_font_idx: int = font_def.get("base_font", 0)
+			var variation: Dictionary = font_def.get("variation_opentype", {})
 			if base_font_idx >= 0 and base_font_idx < ext_resources.size():
-				var base_font_file = ext_resources[base_font_idx]
+				var base_font_file: FontFile = ext_resources[base_font_idx]
 				if base_font_file is FontFile:
 					# Use DynamicFont for variable font support
-					var font_path = def.external_resources[base_font_idx]["path"]
+					var font_path: String = def.external_resources[base_font_idx]["path"]
 					var base_font: FontFile = load(font_path)
 					if base_font:
-						var font = FontFile.new()
+						var font: FontFile = FontFile.new()
 						font.set_opentype_feature_overrides(variation)
 						created_fonts[font_name] = font
 				else:
@@ -156,7 +156,7 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 
 	# Apply control-specific theme overrides
 	for control_type in def.control_overrides:
-		var overrides = def.control_overrides[control_type]
+		var overrides: Dictionary = def.control_overrides[control_type]
 		_apply_control_overrides(theme, control_type, overrides, def, ext_resources, created_styles, created_fonts)
 
 	return theme
@@ -166,14 +166,14 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary, created_fonts: Dictionary) -> void:
 	# Apply base type for custom control types
 	if overrides.has("base_type"):
-		var base_type = overrides["base_type"]
+		var base_type: Variant = overrides["base_type"]
 		if base_type is String:
 			theme.set_type_variation(control_type, base_type)
 
 	# Apply colors
 	if overrides.has("colors"):
 		for color_name in overrides["colors"]:
-			var color_value = overrides["colors"][color_name]
+			var color_value: Variant = overrides["colors"][color_name]
 			# Resolve color reference if it's a string
 			if color_value is String:
 				color_value = _resolve_color(def, color_value)
@@ -187,25 +187,25 @@ func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dic
 	# Apply font sizes
 	if overrides.has("font_sizes"):
 		for size_name in overrides["font_sizes"]:
-			var size_value = overrides["font_sizes"][size_name]
+			var size_value: Variant = overrides["font_sizes"][size_name]
 			theme.set_font_size(size_name, control_type, size_value)
 
 	# Apply fonts
 	if overrides.has("fonts"):
 		for font_name in overrides["fonts"]:
-			var font_ref = overrides["fonts"][font_name]
+			var font_ref: Variant = overrides["fonts"][font_name]
 
 			# Can be an integer index into created_fonts or external_resources
 			if font_ref is int:
 				# Try created_fonts first
 				if created_fonts.size() > font_ref and created_fonts.has(str(font_ref)):
-					var font = created_fonts[str(font_ref)]
+					var font: Font = created_fonts[str(font_ref)]
 					if font is Font:
 						theme.set_font(font_name, control_type, font)
 					else:
 						push_error("Font reference %d is not a Font" % font_ref)
 				elif font_ref >= 0 and font_ref < ext_resources.size():
-					var font_resource = ext_resources[font_ref]
+					var font_resource: Resource = ext_resources[font_ref]
 					if font_resource is FontFile or font_resource is Font:
 						theme.set_font(font_name, control_type, font_resource)
 					else:
@@ -214,7 +214,7 @@ func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dic
 					push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_ref])
 			# Can be a string name referencing created_fonts
 			elif font_ref is String and created_fonts.has(font_ref):
-				var font = created_fonts[font_ref]
+				var font: Font = created_fonts[font_ref]
 				if font is Font:
 					theme.set_font(font_name, control_type, font)
 				else:
@@ -225,16 +225,16 @@ func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dic
 	# Apply constants
 	if overrides.has("constants"):
 		for const_name in overrides["constants"]:
-			var const_value = overrides["constants"][const_name]
+			var const_value: Variant = overrides["constants"][const_name]
 			theme.set_constant(const_name, control_type, const_value)
 
 	# Apply styles (StyleBox references)
 	if overrides.has("styles"):
 		for style_name in overrides["styles"]:
-			var style_ref = overrides["styles"][style_name]
+			var style_ref: String = overrides["styles"][style_name]
 			# Look up the style from our created_styles dictionary
 			if created_styles.has(style_ref):
-				var style = created_styles[style_ref]
+				var style: StyleBox = created_styles[style_ref]
 				theme.set_stylebox(style_name, control_type, style)
 			else:
 				push_error("Style reference not found: %s for %s/%s" % [style_ref, control_type, style_name])
@@ -253,7 +253,7 @@ func _resolve_color(def: ThemeDefinition, ref: Variant) -> Color:
 
 ## Create a StyleBoxFlat from a style configuration
 func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
 
 	# Background color
 	if config.has("bg_color"):
@@ -261,12 +261,12 @@ func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBox
 
 	# Border colors
 	if config.has("border_color"):
-		var border_color = _resolve_color(def, config["border_color"])
+		var border_color: Color = _resolve_color(def, config["border_color"])
 		style.border_color = border_color
 
 	# Border widths - can be individual or "all"
 	if config.has("border_width_all"):
-		var width = config["border_width_all"]
+		var width: int = config["border_width_all"]
 		style.border_width_left = width
 		style.border_width_top = width
 		style.border_width_right = width
@@ -283,7 +283,7 @@ func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBox
 
 	# Corner radii - can be individual or "all"
 	if config.has("corner_radius_all"):
-		var radius = config["corner_radius_all"]
+		var radius: int = config["corner_radius_all"]
 		style.corner_radius_top_left = radius
 		style.corner_radius_top_right = radius
 		style.corner_radius_bottom_right = radius
@@ -313,7 +313,7 @@ func _create_stylebox_flat(def: ThemeDefinition, config: Dictionary) -> StyleBox
 
 ## Create a StyleBoxEmpty from a style configuration
 func _create_stylebox_empty(def: ThemeDefinition, config: Dictionary) -> StyleBoxEmpty:
-	var style = StyleBoxEmpty.new()
+	var style: StyleBoxEmpty = StyleBoxEmpty.new()
 
 	# StyleBoxEmpty has fewer properties
 	if config.has("bg_color"):

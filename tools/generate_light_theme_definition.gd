@@ -3,7 +3,7 @@ class_name LightThemeDefinitionGenerator
 extends EditorScript
 
 func _run():
-	var def = ThemeDefinition.new()
+	var def: ThemeDefinition = ThemeDefinition.new()
 
 	# Set semantic colors using hex codes
 	def.colors = {
@@ -498,6 +498,6 @@ func _run():
 	}
 
 	DirAccess.remove_absolute("res://themes/light.theme_definition.tres")
-	var err = ResourceSaver.save(def, "res://themes/light.theme_definition.tres")
+	var err: int = ResourceSaver.save(def, "res://themes/light.theme_definition.tres")
 	if err != OK:
 		push_error("Failed to save theme definition: light.theme_definition.tres")

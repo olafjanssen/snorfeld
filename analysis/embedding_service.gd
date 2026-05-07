@@ -41,9 +41,9 @@ func _process_task(task: Dictionary):
 		return
 
 	# Compute embedding for the text
-	var embedding_model = AppConfig.get_embedding_model()
+	var embedding_model: String = AppConfig.get_embedding_model()
 
-	var embed_result = await LLMClient.embed(embedding_model, text)
+	var embed_result: Dictionary = await LLMClient.embed(embedding_model, text)
 
 	if embed_result.get("error", null) != null:
 		push_error("[EmbeddingService] Failed to compute embedding: %s" % embed_result.get("error", "Unknown error"))
@@ -67,7 +67,7 @@ func _process_task(task: Dictionary):
 		return
 
 	# Build cache data
-	var data := {
+	var data: Dictionary = {
 		"text_hash": text_hash,
 		"text": text,
 		"embedding": embedding_vector,
@@ -86,10 +86,10 @@ func _process_task(task: Dictionary):
 	if not FileUtils.dir_exists(cache_dir):
 		_create_cache_directory(cache_dir)
 
-	var save_data = data.duplicate()
+	var save_data: Dictionary = data.duplicate()
 	save_data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
 
-	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
+	var file: FileAccess = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
 		file.store_string(JsonUtils.stringify_json(save_data) + "\n")
@@ -132,19 +132,19 @@ func _load_paragraph_jsonl_cache(cache_dir: String) -> void:
 	if not FileUtils.file_exists(jsonl_path):
 		return
 
-	var content := FileUtils.read_file(jsonl_path)
-	var lines := content.split("\n")
+	var content: String = FileUtils.read_file(jsonl_path)
+	var lines: Array = content.split("\n")
 	for line in lines:
 		line = line.strip_edges()
 		if line == "":
 			continue
-		var data := JsonUtils.parse_json(line)
+		var data: Dictionary = JsonUtils.parse_json(line)
 		if data == null or data.is_empty():
 			continue
-		var text_hash = data.get("text_hash", "")
+		var text_hash: String = data.get("text_hash", "")
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, false)
-			var cache_data = data.duplicate()
+			var cache_data: Dictionary = data.duplicate()
 			cache_data["embedding"] = Marshalls.base64_to_variant(data["embedding"])
 			memory_cache[key] = cache_data
 
@@ -155,19 +155,19 @@ func _load_chapter_jsonl_cache(cache_dir: String) -> void:
 	if not FileUtils.file_exists(jsonl_path):
 		return
 
-	var content := FileUtils.read_file(jsonl_path)
-	var lines := content.split("\n")
+	var content: String = FileUtils.read_file(jsonl_path)
+	var lines: Array = content.split("\n")
 	for line in lines:
 		line = line.strip_edges()
 		if line == "":
 			continue
-		var data := JsonUtils.parse_json(line)
+		var data: Dictionary = JsonUtils.parse_json(line)
 		if data == null or data.is_empty():
 			continue
-		var text_hash = data.get("text_hash", "")
+		var text_hash: String = data.get("text_hash", "")
 		if text_hash != "":
 			var key := _make_cache_key(cache_dir, text_hash, true)
-			var cache_data = data.duplicate()
+			var cache_data: Dictionary = data.duplicate()
 			cache_data["embedding"] = Marshalls.base64_to_variant(data["embedding"])
 			memory_cache[key] = cache_data
 
@@ -185,7 +185,6 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 
 
 
-
 # Queue paragraphs for embedding cache
 func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Array, file_content: String = "") -> void:
 	var cache_dir := _get_cache_dir_for_file(file_path)
@@ -199,8 +198,8 @@ func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Arra
 
 	# Queue tasks for each paragraph
 	for para_data in paragraph_data_list:
-		var paragraph_hash = para_data.get("hash", "")
-		var paragraph_text = para_data.get("text", "")
+		var paragraph_hash: String = para_data.get("hash", "")
+		var paragraph_text: String = para_data.get("text", "")
 		var key := _make_cache_key(cache_dir, paragraph_hash, false)
 
 		# Only queue if not already in memory cache or queued
@@ -230,8 +229,8 @@ func queue_chapter_for_embedding(file_path: String) -> void:
 	if file_data.is_empty():
 		return
 
-	var chapter_hash = file_data.get("hash", "")
-	var file_content = file_data.get("content", "")
+	var chapter_hash: String = file_data.get("hash", "")
+	var file_content: String = file_data.get("content", "")
 
 	var key := _make_cache_key(cache_dir, chapter_hash, true)
 
@@ -264,7 +263,7 @@ func _remove_task_from_queue(cache_dir: String, text_hash: String, is_chapter: b
 # Queue a task for embedding cache creation
 func _queue_task(cache_dir: String, text_hash: String, text: String, file_content: String, is_chapter: bool, priority: bool = false) -> void:
 	queue_mutex.lock()
-	var task = {"cache_dir": cache_dir, "hash": text_hash, "text": text, "file_content": file_content, "is_chapter": is_chapter}
+	var task: Dictionary = {"cache_dir": cache_dir, "hash": text_hash, "text": text, "file_content": file_content, "is_chapter": is_chapter}
 	if priority:
 		task_queue.insert(0, task)
 	else:
@@ -326,13 +325,13 @@ func _index_project_embeddings() -> void:
 		var file_data := BookService.get_file(file_path)
 		if file_data.is_empty():
 			continue
-		var content = file_data.get("content", "")
+		var content: String = file_data.get("content", "")
 		if content != "":
 			# Get paragraph data from BookService (includes hash)
 			var para_ids := BookService.get_paragraphs_for_file(file_path)
 			var paragraphs := []
 			for para_id in para_ids:
-				var para_data = BookService.get_paragraph(para_id)
+				var para_data: Dictionary = BookService.get_paragraph(para_id)
 				paragraphs.append(para_data)
 			queue_paragraphs_for_embedding(file_path, paragraphs, content)
 			# Also queue chapter-level embedding
@@ -349,7 +348,7 @@ func _index_chapter_embeddings() -> void:
 		return
 	# Get content and paragraphs from BookService if available
 	var file_data := BookService.get_file(current_file_path)
-	var content := current_file_content
+	var content: String = current_file_content
 	if file_data.is_empty():
 		if current_file_content == "":
 			return
@@ -361,7 +360,7 @@ func _index_chapter_embeddings() -> void:
 	var para_ids := BookService.get_paragraphs_for_file(current_file_path)
 	var paragraphs := []
 	for para_id in para_ids:
-		var para_data = BookService.get_paragraph(para_id)
+		var para_data: Dictionary = BookService.get_paragraph(para_id)
 		paragraphs.append(para_data)
 
 	queue_paragraphs_for_embedding(current_file_path, paragraphs, content)
@@ -383,7 +382,7 @@ func get_chapter_embedding(file_path: String) -> Dictionary:
 	var file_data := BookService.get_file(file_path)
 	if file_data.is_empty():
 		return {}
-	var chapter_hash = file_data.get("hash", "")
+	var chapter_hash: String = file_data.get("hash", "")
 	var key := _make_cache_key(cache_dir, chapter_hash, true)
 	return memory_cache.get(key, {})
 
@@ -402,7 +401,7 @@ func get_all_paragraph_embeddings(file_path: String) -> Array:
 # Clean up cache entries that don't have corresponding source files in the project
 func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> int:
 	# Already ensured cache is loaded by caller
-	var removed_count := 0
+	var removed_count: int = 0
 
 	# Get valid hashes from BookService
 	var valid_paragraph_hashes := BookService.get_all_paragraph_hashes()
@@ -420,10 +419,10 @@ func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> 
 	var keys_to_remove := []
 	for key in memory_cache:
 		# Parse key format: cache_dir:paragraph:text_hash or cache_dir:chapter:text_hash
-		var parts = key.split(":")
+		var parts: Array = key.split(":")
 		if parts.size() >= 3:
-			var is_chapter = parts[1] == "chapter"
-			var text_hash = parts[2]
+			var is_chapter: bool = parts[1] == "chapter"
+			var text_hash: String = parts[2]
 
 			if is_chapter:
 				if not valid_chapter_set.has(text_hash):
@@ -446,19 +445,19 @@ func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> 
 # Rewrite the JSONL files for a cache directory from current memory state
 func _rewrite_jsonl_files(cache_dir: String) -> void:
 	# Rewrite paragraph embeddings file
-	var paragraph_content := ""
+	var paragraph_content: String = ""
 	for key in memory_cache:
 		if key.begins_with(cache_dir + ":paragraph:"):
-			var data = memory_cache[key].duplicate()
+			var data: Dictionary = memory_cache[key].duplicate()
 			data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
 			paragraph_content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(cache_dir.path_join(PARAGRAPH_JSONL_FILENAME), paragraph_content)
 
 	# Rewrite chapter embeddings file
-	var chapter_content := ""
+	var chapter_content: String = ""
 	for key in memory_cache:
 		if key.begins_with(cache_dir + ":chapter:"):
-			var data = memory_cache[key].duplicate()
+			var data: Dictionary = memory_cache[key].duplicate()
 			data["embedding"] = Marshalls.variant_to_base64(data["embedding"])
 			chapter_content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(cache_dir.path_join(CHAPTER_JSONL_FILENAME), chapter_content)
@@ -466,5 +465,5 @@ func _rewrite_jsonl_files(cache_dir: String) -> void:
 
 # Compute embedding for a single text (convenience method)
 func compute_embedding(text: String) -> Dictionary:
-	var embedding_model = AppConfig.get_embedding_model()
+	var embedding_model: String = AppConfig.get_embedding_model()
 	return await LLMClient.embed(embedding_model, text)

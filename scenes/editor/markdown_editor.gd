@@ -6,7 +6,7 @@ extends Control
 var text: String = ""
 
 # Public methods for external access
-func set_text(p_text: String):
+func set_text(p_text: String) -> void:
 	text = p_text
 	markdown_label.markdown_text = text
 

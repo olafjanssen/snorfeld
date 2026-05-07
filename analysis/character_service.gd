@@ -21,10 +21,10 @@ func _get_cache_subdir() -> String:
 	return CHARACTER_DIR_NAME
 
 func _on_folder_opened(path: String) -> void:
-	var cache_path := path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	var cache_path: String = path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 	if DirAccess.dir_exists_absolute(cache_path):
 		EventBus.analysis_cleanup_started.emit("character")
-		var removed_count := cleanup_unused_character_files(cache_path, path)
+		var removed_count: int = cleanup_unused_character_files(cache_path, path)
 		EventBus.analysis_cleanup_completed.emit("character", removed_count)
 
 
@@ -64,8 +64,8 @@ func _emit_task_completed(remaining: int) -> void:
 # Handle file scanned event - queue characters for caching
 func queue_characters_for_cache(file_path: String, file_content: String = "") -> void:
 	# Get the base directory from the file path
-	var dir_path := file_path.get_base_dir()
-	var cache_path := dir_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	var dir_path: String = file_path.get_base_dir()
+	var cache_path: String = dir_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 
 	# Ensure cache exists for this directory
 	if not DirAccess.dir_exists_absolute(cache_path):
@@ -100,8 +100,8 @@ func _queue_task(cache_path: String, file_path: String, file_content: String, pr
 
 
 func _on_priority_character_cache_requested(file_path: String, file_content: String) -> void:
-	var dir_path := file_path.get_base_dir()
-	var cache_path := dir_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	var dir_path: String = file_path.get_base_dir()
+	var cache_path: String = dir_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 	if not DirAccess.dir_exists_absolute(cache_path):
 		_create_cache_directory(cache_path)
 	_queue_task(cache_path, file_path, file_content, true)
@@ -117,13 +117,13 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 
 func _on_run_all_character_analyses() -> void:
 	# Queue all text files from BookService for character analysis
-	var all_files := BookService.get_all_files()
+	var all_files: Array = BookService.get_all_files()
 	all_files.sort()
 	for file_path in all_files:
-		var file_data := BookService.get_file(file_path)
+		var file_data: Dictionary = BookService.get_file(file_path)
 		if file_data.is_empty():
 			continue
-		var content = file_data.get("content", "")
+		var content: String = file_data.get("content", "")
 		if content != "":
 			queue_characters_for_cache(file_path, content)
 
@@ -131,7 +131,7 @@ func _on_run_all_character_analyses() -> void:
 func _on_file_selected(path: String) -> void:
 	current_character_file_path = path
 	if FileAccess.file_exists(path):
-		var file := FileAccess.open(path, FileAccess.READ)
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 		if file:
 			current_character_file_content = file.get_as_text()
 			file.close()
@@ -141,7 +141,7 @@ func _on_run_chapter_character_analyses() -> void:
 	if current_character_file_path == "":
 		return
 	# Get content from BookService if available
-	var file_data := BookService.get_file(current_character_file_path)
+	var file_data: Dictionary = BookService.get_file(current_character_file_path)
 	if file_data.is_empty():
 		if current_character_file_content != "":
 			queue_characters_for_cache(current_character_file_path, current_character_file_content)
@@ -158,14 +158,14 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 	var existing_characters_json: String = _load_existing_characters_json(cache_path)
 
 	# Use LLM to extract/update characters from the chapter text with existing context
-	var extraction_result = await _extract_characters_from_text(file_content, chapter_id, existing_characters_json)
+	var extraction_result: Dictionary = await _extract_characters_from_text(file_content, chapter_id, existing_characters_json)
 
 	if extraction_result == null or not extraction_result.has("characters"):
 		push_error("[CharacterService] Failed to extract characters from file: %s" % file_path)
 		return false
 
 	var characters: Array = extraction_result["characters"]
-	var success := true
+	var success: bool = true
 
 	# Process each character
 	for char_data in characters:
@@ -180,11 +180,11 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 
 		if existing_file_path != "":
 			# Use the existing file's canonical name for hashing
-			var read_file := FileAccess.open(existing_file_path, FileAccess.READ)
+			var read_file: FileAccess = FileAccess.open(existing_file_path, FileAccess.READ)
 			if read_file:
-				var content := read_file.get_as_text()
+				var content: String = read_file.get_as_text()
 				read_file.close()
-				var json := JSON.new()
+				var json: JSON = JSON.new()
 				if json.parse(content) == OK:
 					var character_data: Dictionary = json.get_data()
 					canonical_name = character_data.get("name", char_name)
@@ -202,11 +202,11 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 		# Load existing data if file exists
 		var existing_data: Dictionary = {}
 		if _file_exists(char_file_path):
-			var read_file := FileAccess.open(char_file_path, FileAccess.READ)
+			var read_file: FileAccess = FileAccess.open(char_file_path, FileAccess.READ)
 			if read_file:
-				var content := read_file.get_as_text()
+				var content: String = read_file.get_as_text()
 				read_file.close()
-				var json := JSON.new()
+				var json: JSON = JSON.new()
 				if json.parse(content) == OK:
 					existing_data = json.get_data()
 
@@ -214,9 +214,9 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 		var updated_data: Dictionary = _merge_character_data(existing_data, char_data, chapter_id)
 
 		# Save updated character data
-		var file := FileAccess.open(char_file_path, FileAccess.WRITE)
+		var file: FileAccess = FileAccess.open(char_file_path, FileAccess.WRITE)
 		if file:
-			var json_str := JSON.stringify(updated_data)
+			var json_str: String = JSON.stringify(updated_data)
 			file.store_string(json_str)
 			file.close()
 		else:
@@ -229,18 +229,18 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 # Load all existing characters as JSON string for LLM context
 func _load_existing_characters_json(cache_path: String) -> String:
 	var existing_chars: Array = []
-	var dir := DirAccess.open(cache_path)
+	var dir: DirAccess = DirAccess.open(cache_path)
 	if dir:
 		dir.list_dir_begin()
-		var file_name = dir.get_next()
+		var file_name: String = dir.get_next()
 		while file_name != "":
 			if file_name.ends_with(".json"):
-				var char_file_path := cache_path.path_join(file_name)
-				var file := FileAccess.open(char_file_path, FileAccess.READ)
+				var char_file_path: String = cache_path.path_join(file_name)
+				var file: FileAccess = FileAccess.open(char_file_path, FileAccess.READ)
 				if file:
-					var content := file.get_as_text()
+					var content: String = file.get_as_text()
 					file.close()
-					var json := JSON.new()
+					var json: JSON = JSON.new()
 					if json.parse(content) == OK:
 						var char_data: Dictionary = json.get_data()
 						# Create a clean version without bookkeeping fields
@@ -258,7 +258,7 @@ func _load_existing_characters_json(cache_path: String) -> String:
 							clean_char["aliases"] = char_data["aliases"]
 						existing_chars.append(clean_char)
 			file_name = dir.get_next()
-			dir.list_dir_end()
+		dir.list_dir_end()
 
 	if existing_chars.size() > 0:
 		return JSON.stringify(existing_chars)
@@ -314,9 +314,9 @@ func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary,
 	updated_data["relationships"] = _merge_relationships(existing_data.get("relationships", {}), new_char_data.get("relationships", {}))
 
 	# Merge aliases - filter out any that match the canonical name
-	var merged_aliases = _merge_arrays(existing_data.get("aliases", []), new_char_data.get("aliases", []))
-	var canonical_name = updated_data.get("name", "")
-	var filtered_aliases = []
+	var merged_aliases: Array = _merge_arrays(existing_data.get("aliases", []), new_char_data.get("aliases", []))
+	var canonical_name: String = updated_data.get("name", "")
+	var filtered_aliases: Array = []
 	for alias in merged_aliases:
 		if alias != canonical_name:
 			filtered_aliases.append(alias)
@@ -403,7 +403,7 @@ Respond with a JSON object:
 		return llm_response["parsed_json"]
 	else:
 		# Retry up to 3 times on failure
-		var max_retries := 3
+		var max_retries: int = 3
 		for _i in range(max_retries):
 			# Check if we hit token limit - increase tokens for retry
 			if llm_response.get("done", false) == false:
@@ -418,29 +418,29 @@ Respond with a JSON object:
 
 # Find matching character file using fuzzy matching
 func _find_matching_character_file(char_name: String, cache_path: String) -> String:
-	var dir := DirAccess.open(cache_path)
+	var dir: DirAccess = DirAccess.open(cache_path)
 	if not dir:
 		return ""
 
 	var best_match: String = ""
-	var best_score := 0
+	var best_score: int = 0
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".json"):
-			var file_path := cache_path.path_join(file_name)
-			var file := FileAccess.open(file_path, FileAccess.READ)
+			var file_path: String = cache_path.path_join(file_name)
+			var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
 			if file:
-				var content := file.get_as_text()
+				var content: String = file.get_as_text()
 				file.close()
-				var json := JSON.new()
+				var json: JSON = JSON.new()
 				if json.parse(content) == OK:
 					var data: Dictionary = json.get_data()
 					var existing_name: String = data.get("name", "")
 
 					# Compare against the actual character name
-					var score := _calculate_similarity(char_name, existing_name)
+					var score: int = _calculate_similarity(char_name, existing_name)
 					if score > best_score:
 						best_score = score
 						best_match = file_path
@@ -448,7 +448,7 @@ func _find_matching_character_file(char_name: String, cache_path: String) -> Str
 					# Also check aliases
 					var aliases: Array = data.get("aliases", [])
 					for alias in aliases:
-						var alias_score := _calculate_similarity(char_name, alias)
+						var alias_score: int = _calculate_similarity(char_name, alias)
 						if alias_score > best_score:
 							best_score = alias_score
 							best_match = file_path
@@ -456,8 +456,8 @@ func _find_matching_character_file(char_name: String, cache_path: String) -> Str
 							break
 					if best_score > 80:
 						break
-				if best_score > 80:
-					break
+			if best_score > 80:
+				break
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
@@ -469,8 +469,8 @@ func _find_matching_character_file(char_name: String, cache_path: String) -> Str
 
 # Calculate similarity between two strings
 func _calculate_similarity(str1: String, str2: String) -> int:
-	var s1 := str1.to_lower()
-	var s2 := str2.to_lower()
+	var s1: String = str1.to_lower()
+	var s2: String = str2.to_lower()
 
 	if s1 == s2:
 		return 100
@@ -478,9 +478,9 @@ func _calculate_similarity(str1: String, str2: String) -> int:
 	if s1.find(s2) != -1 or s2.find(s1) != -1:
 		return 90
 
-	var words1 := s1.split(" ", false)
-	var words2 := s2.split(" ", false)
-	var common_count := 0
+	var words1: Array = s1.split(" ", false)
+	var words2: Array = s2.split(" ", false)
+	var common_count: int = 0
 
 	for word1 in words1:
 		for word2 in words2:
@@ -488,7 +488,7 @@ func _calculate_similarity(str1: String, str2: String) -> int:
 				common_count += 1
 				break
 
-	var total_words := words1.size() + words2.size()
+	var total_words: int = words1.size() + words2.size()
 	if total_words == 0:
 		return 0
 
@@ -511,30 +511,30 @@ func _file_exists(path: String) -> bool:
 
 # Get the character cache path for the current project
 func get_cache_path() -> String:
-	var project_path := BookService.loaded_project_path
+	var project_path: String = BookService.loaded_project_path
 	if project_path == "":
 		project_path = "res://"
-	var cache_path := project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
+	var cache_path: String = project_path.path_join(".snorfeld").path_join(CHARACTER_DIR_NAME)
 	return cache_path
 
 
 # Get all character files in the cache directory
 func get_all_characters(cache_path: String) -> Array:
 	var characters: Array = []
-	var dir := DirAccess.open(cache_path)
+	var dir: DirAccess = DirAccess.open(cache_path)
 	if not dir:
 		return characters
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".json"):
-			var file_path := cache_path.path_join(file_name)
-			var file := FileAccess.open(file_path, FileAccess.READ)
+			var file_path: String = cache_path.path_join(file_name)
+			var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
 			if file:
-				var content := file.get_as_text()
+				var content: String = file.get_as_text()
 				file.close()
-				var json := JSON.new()
+				var json: JSON = JSON.new()
 				if json.parse(content) == OK:
 					characters.append(json.get_data())
 		file_name = dir.get_next()
@@ -545,7 +545,7 @@ func get_all_characters(cache_path: String) -> Array:
 
 # Get all characters for the current project
 func get_all_project_characters() -> Array:
-	var cache_path := get_cache_path()
+	var cache_path: String = get_cache_path()
 	return get_all_characters(cache_path)
 
 
@@ -557,22 +557,22 @@ func get_character(char_name: String, cache_path: String) -> Dictionary:
 
 	# First try exact hash match
 	if _file_exists(char_file_path):
-		var file := FileAccess.open(char_file_path, FileAccess.READ)
+		var file: FileAccess = FileAccess.open(char_file_path, FileAccess.READ)
 		if file:
-			var content := file.get_as_text()
+			var content: String = file.get_as_text()
 			file.close()
-			var json := JSON.new()
+			var json: JSON = JSON.new()
 			if json.parse(content) == OK:
 				return json.get_data()
 
 	# Try fuzzy match
 	var matched_path: String = _find_matching_character_file(char_name, cache_path)
 	if matched_path != "":
-		var file := FileAccess.open(matched_path, FileAccess.READ)
+		var file: FileAccess = FileAccess.open(matched_path, FileAccess.READ)
 		if file:
-			var content := file.get_as_text()
+			var content: String = file.get_as_text()
 			file.close()
-			var json := JSON.new()
+			var json: JSON = JSON.new()
 			if json.parse(content) == OK:
 				return json.get_data()
 
@@ -581,27 +581,27 @@ func get_character(char_name: String, cache_path: String) -> Dictionary:
 
 # Clean up character cache files that don't have corresponding source files in the project
 func cleanup_unused_character_files(cache_path: String, project_path: String) -> int:
-	var dir := DirAccess.open(cache_path)
+	var dir: DirAccess = DirAccess.open(cache_path)
 	if not dir:
 		return 0
 
-	var removed_count := 0
+	var removed_count: int = 0
 	var project_files: Array = FileUtils.get_all_text_files(project_path)
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(".json"):
-			var cache_file_path := cache_path.path_join(file_name)
-			var file := FileAccess.open(cache_file_path, FileAccess.READ)
+			var cache_file_path: String = cache_path.path_join(file_name)
+			var file: FileAccess = FileAccess.open(cache_file_path, FileAccess.READ)
 			if file:
-				var cache_content := file.get_as_text()
+				var cache_content: String = file.get_as_text()
 				file.close()
-				var json := JSON.new()
+				var json: JSON = JSON.new()
 				if json.parse(cache_content) == OK:
 					var data: Dictionary = json.get_data()
 					var appearances: Array = data.get("appearances", [])
-					var all_missing := true
+					var all_missing: bool = true
 
 					# Check if any appearance references a file that still exists
 					for appearance in appearances:

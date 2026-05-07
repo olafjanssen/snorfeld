@@ -3,7 +3,7 @@ class_name DarkThemeDefinitionGenerator
 extends EditorScript
 
 func _run():
-	var def = ThemeDefinition.new()
+	var def: ThemeDefinition = ThemeDefinition.new()
 
 	# Set semantic colors based on dark.json - using hex codes
 	def.colors = {
@@ -491,6 +491,6 @@ func _run():
 	}
 
 	DirAccess.remove_absolute("res://themes/dark.theme_definition.tres")
-	var err = ResourceSaver.save(def, "res://themes/dark.theme_definition.tres")
+	var err: int = ResourceSaver.save(def, "res://themes/dark.theme_definition.tres")
 	if err != OK:
 		push_error("Failed to save theme definition: dark.theme_definition.tres")

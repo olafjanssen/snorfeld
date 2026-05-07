@@ -25,7 +25,7 @@ func _ready():
 	CommandBus.save_all_files.connect(_on_save_all_files)
 
 	# Connect to tree signals for application close
-	var root = get_tree().root
+	var root: Node = get_tree().root
 	root.connect("tree_exiting", _on_tree_exiting)
 
 func _exit_tree():
@@ -62,7 +62,7 @@ func _on_file_changed(path: String, content: String):
 		pending_saves[path].stop()
 		pending_saves[path].start(SAVE_DEBOUNCE_SECONDS)
 	else:
-		var timer = Timer.new()
+		var timer: Timer = Timer.new()
 		timer.timeout.connect(_on_debounced_save_timeout.bind(path))
 		add_child(timer)
 		pending_saves[path] = timer
@@ -101,7 +101,7 @@ func _save_file(path: String):
 		return
 
 	# Get content from the map
-	var new_content = ""
+	var new_content: String = ""
 	if file_contents.has(path):
 		new_content = file_contents[path]
 
@@ -110,7 +110,7 @@ func _save_file(path: String):
 		return
 
 	# Compare with existing file content
-	var existing_content = FileAccess.get_file_as_string(path)
+	var existing_content: String = FileAccess.get_file_as_string(path)
 	if existing_content == new_content:
 		# Content hasn't changed, don't save
 		file_contents.erase(path)
@@ -118,7 +118,7 @@ func _save_file(path: String):
 		return
 
 	is_saving = true
-	var file = FileAccess.open(path, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		is_saving = false
 		return

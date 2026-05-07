@@ -7,7 +7,7 @@ var last_modified_time: float = 0.0
 var file_check_timer: Timer
 
 func _ready():
-	var highlighter = load("res://scripts/utilities/syntax_highlighter.gd").new()
+	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
 	EventBus.file_selected.connect(_on_file_selected)
@@ -45,12 +45,12 @@ func _on_file_check_timeout():
 		return
 
 	if FileUtils.file_exists(current_file_path):
-		var current_mod_time = FileUtils.get_modified_time(current_file_path)
+		var current_mod_time: float = FileUtils.get_modified_time(current_file_path)
 		if current_mod_time > last_modified_time:
 			# File was modified externally - save cursor position
-			var cursor_line = get_caret_line()
-			var cursor_column = get_caret_column()
-			var scroll_pos = get_v_scroll_bar().value
+			var cursor_line: int = get_caret_line()
+			var cursor_column: int = get_caret_column()
+			var scroll_pos: float = get_v_scroll_bar().value
 
 			last_modified_time = current_mod_time
 
@@ -62,7 +62,7 @@ func _on_file_check_timeout():
 			# Restore cursor position
 			if cursor_line >= 0:
 				set_caret_line(cursor_line)
-				var line_length = get_line(cursor_line).length()
+				var line_length: int = get_line(cursor_line).length()
 				set_caret_column(min(cursor_column, line_length))
 			get_v_scroll_bar().value = scroll_pos
 
@@ -71,8 +71,8 @@ func _on_show_git_diff(_path: String, _diff: String):
 
 func _on_navigate_to_line_command(file_path: String, line_number: int):
 	if current_file_path == file_path:
-		var line_count = get_line_count()
-		var target_line = clamp(line_number - 1, 0, line_count - 1)
+		var line_count: int = get_line_count()
+		var target_line: int = clamp(line_number - 1, 0, line_count - 1)
 		call_deferred("_set_caret_and_center", target_line)
 		grab_focus()
 	else:
@@ -83,8 +83,8 @@ func _on_navigate_to_line_command(file_path: String, line_number: int):
 			last_text = content
 			last_modified_time = FileUtils.get_modified_time(file_path)
 			set_text(content)
-			var line_count = get_line_count()
-			var target_line = clamp(line_number - 1, 0, line_count - 1)
+			var line_count: int = get_line_count()
+			var target_line: int = clamp(line_number - 1, 0, line_count - 1)
 			call_deferred("_set_caret_and_center", target_line)
 			grab_focus()
 		visible = true
@@ -97,7 +97,7 @@ func _set_caret_and_center(line_number: int):
 func _on_file_selected(path: String):
 	# Save current file before switching - emit file_changed with current content
 	if current_file_path != "" and current_file_path != path:
-		var current_content = get_text()
+		var current_content: String = get_text()
 		EventBus.file_changed.emit(current_file_path, current_content)
 		CommandBus.save_file.emit(current_file_path)
 
@@ -113,7 +113,7 @@ func _on_file_selected(path: String):
 	visible = true
 
 func _on_cursor_changed():
-	var cursor_line := get_caret_line()
+	var cursor_line: int = get_caret_line()
 	if cursor_line < 0:
 		return
 
@@ -143,13 +143,13 @@ func _on_apply_diff_patch_command(file_path: String, line_number: int, operation
 		return
 
 	# Store cursor column and scroll position
-	var cursor_column := get_caret_column()
-	var scroll_pos := get_v_scroll_bar().value
-	var full_text := get_text()
-	var lines := full_text.split("\n")
+	var cursor_column: int = get_caret_column()
+	var scroll_pos: float = get_v_scroll_bar().value
+	var full_text: String = get_text()
+	var lines: Array = full_text.split("\n")
 
 	# Convert to 0-based for our array
-	var cursor_line := line_number - 1
+	var cursor_line: int = line_number - 1
 	if cursor_line < 0 or cursor_line >= lines.size():
 		return
 
@@ -158,24 +158,24 @@ func _on_apply_diff_patch_command(file_path: String, line_number: int, operation
 	if para_data.is_empty():
 		return
 
-	var current_paragraph = lines[cursor_line]
-	var words := current_paragraph.split(" ")
+	var current_paragraph: String = lines[cursor_line]
+	var words: Array = current_paragraph.split(" ")
 
 	# Apply the patch
 	if operation == "delete":
 		# Remove words starting at word_index
 		# new_text contains the words to delete (from the diff)
-		var delete_words := new_text.split(" ")
+		var delete_words: Array = new_text.split(" ")
 		if word_index >= 0 and word_index + delete_words.size() <= words.size():
 			# Verify the words match what we expect to delete
-			var words_match = true
-			for k in range(delete_words.size()):
+			var words_match: bool = true
+			for k: int in range(delete_words.size()):
 				if words[word_index + k] != delete_words[k]:
 					words_match = false
 					break
 			if words_match:
 				# Remove multiple words starting at word_index
-				for _k in range(delete_words.size()):
+				for _k: int in range(delete_words.size()):
 					words.remove_at(word_index)
 				current_paragraph = " ".join(words)
 	elif operation == "insert":
@@ -186,20 +186,20 @@ func _on_apply_diff_patch_command(file_path: String, line_number: int, operation
 	elif operation == "change":
 		# Replace words starting at word_index with new_text
 		# new_text contains the replacement words
-		var new_words_list := new_text.split(" ")
+		var new_words_list: Array = new_text.split(" ")
 		# For change, we replace the same number of words as in new_text
 		if word_index >= 0 and word_index + new_words_list.size() <= words.size():
-			for k in range(new_words_list.size()):
+			for k: int in range(new_words_list.size()):
 				words[word_index + k] = new_words_list[k]
 			current_paragraph = " ".join(words)
 
 	# Update the line in the editor
 	if current_paragraph != lines[cursor_line]:
 		lines[cursor_line] = current_paragraph
-		var new_text_full = "\n".join(lines)
+		var new_text_full: String = "\n".join(lines)
 
 		# Store cursor line before set_text (which may reset cursor)
-		var target_line = cursor_line
+		var target_line: int = cursor_line
 
 		set_text(new_text_full)
 
@@ -209,7 +209,7 @@ func _on_apply_diff_patch_command(file_path: String, line_number: int, operation
 		# Restore cursor to the same line
 		set_caret_line(target_line)
 		# Try to restore column, but clamp to line length
-		var line_length = lines[target_line].length()
+		var line_length: int = lines[target_line].length()
 		set_caret_column(min(cursor_column, line_length))
 
 		# Update current hash but keep original hash (so more patches can be applied)

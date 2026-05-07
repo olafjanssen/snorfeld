@@ -4,5 +4,5 @@ extends PanelContainer
 
 @onready var TextField: ClickableRichTextLabel = $MarginContainer/ClickableRichTextLabel
 
-func set_text(full_text : String):
+func set_text(full_text: String) -> void:
 	TextField.text = full_text
