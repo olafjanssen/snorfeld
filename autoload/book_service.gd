@@ -479,7 +479,7 @@ func _determine_chapter_level(content: String) -> int:
 	# If level 1 exists and has few headings, check if level 2 is more common
 	if level_counts.has(1):
 		var level1_count: int = level_counts[1]
-		var level1_ratio: float = level1_count / total_headings
+		var level1_ratio: float = level1_count * 1.0 / total_headings
 
 		# If level 1 has less than 25% of headings and level 2 exists with more
 		if level1_ratio < 0.25 and level_counts.has(2):

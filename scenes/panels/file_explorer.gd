@@ -54,7 +54,7 @@ func _load_config():
 
 func _load_config_deferred():
 	if config.load(CONFIG_FILE) == OK:
-		var last_folder = config.get_value("general", "last_folder", "")
+		var last_folder: String = config.get_value("general", "last_folder", "")
 		if last_folder != "":
 			EventBus.folder_opened.emit(last_folder)
 
@@ -83,8 +83,8 @@ func _setup_file_tree():
 
 	clear()
 	var root_item: TreeItem = create_item()
-	var path_parts = current_path.split("/")
-	var root_name = path_parts[-2] if current_path.ends_with("/") else path_parts[-1]
+	var path_parts: Array = current_path.split("/")
+	var root_name: String = path_parts[-2] if current_path.ends_with("/") else path_parts[-1]
 
 	root_item.set_text(0, root_name)
 	root_item.set_icon(0, folder_open_icon_img)
@@ -112,9 +112,9 @@ func _refresh_files(parent_item: TreeItem, path: String):
 		var is_dir: bool = dir.current_is_dir()
 		entries.append({"name": file_name, "path": full_path, "is_dir": is_dir})
 
-	entries.sort_custom(func(a, b): return a["name"].naturalnocasecmp_to(b["name"]) < 0)
+	entries.sort_custom(func(a: Dictionary, b: Dictionary): return a["name"].naturalnocasecmp_to(b["name"]) < 0)
 
-	for entry in entries:
+	for entry: Dictionary in entries:
 		var item: TreeItem = create_item(parent_item)
 		item.set_text(0, entry["name"])
 		item.set_metadata(0, {"path": entry["path"], "is_dir": entry["is_dir"]})
@@ -126,7 +126,7 @@ func _refresh_files(parent_item: TreeItem, path: String):
 			item.set_icon(0, file_icon_img)
 
 func _is_text_file(file_path: String) -> bool:
-	for ext in text_file_whitelist:
+	for ext: String in text_file_whitelist:
 		if file_path.ends_with(".%s" % ext):
 			return true
 	return false
@@ -135,7 +135,7 @@ func _on_item_selected():
 	var item: TreeItem = get_selected()
 	if item == null:
 		return
-	var info = item.get_metadata(0)
+	var info: Dictionary = item.get_metadata(0)
 	if info == null:
 		return
 	var path: String = info["path"]
@@ -173,7 +173,7 @@ func _on_folder_opened(path: String):
 	call_deferred("_setup_file_tree_deferred")
 
 func _update_icon_colors():
-	var icon_color = get_theme_color("font_color", "Button")
+	var icon_color: Color = get_theme_color("font_color", "Button")
 	folder_icon_img = _create_modulated_texture(folder_icon, icon_color)
 	folder_open_icon_img = _create_modulated_texture(folder_open_icon, icon_color)
 	file_icon_img = _create_modulated_texture(file_icon, icon_color)
@@ -183,11 +183,11 @@ func _update_icon_colors():
 	queue_redraw()
 
 func _create_modulated_texture(base: Texture2D, color: Color) -> ImageTexture:
-	var src_img = base.get_image()
-	var img = Image.create(src_img.get_width(), src_img.get_height(), false, Image.FORMAT_RGBA8)
+	var src_img: Image = base.get_image()
+	var img: Image = Image.create(src_img.get_width(), src_img.get_height(), false, Image.FORMAT_RGBA8)
 	img.copy_from(src_img)
-	for y in range(img.get_height()):
-		for x in range(img.get_width()):
+	for y: int in range(img.get_height()):
+		for x: int in range(img.get_width()):
 			img.set_pixel(x, y, img.get_pixel(x, y) * color)
 	return ImageTexture.create_from_image(img)
 
@@ -198,17 +198,17 @@ func _on_dir_check_timeout():
 	if is_building_tree or current_path == "":
 		return
 
-	var current_state = _scan_directory_state(current_path)
-	var has_changes = false
+	var current_state: Dictionary = _scan_directory_state(current_path)
+	var has_changes: bool = false
 
 	# Check for new or modified items
-	for path in current_state:
+	for path: String in current_state:
 		if not last_dir_state.has(path) or last_dir_state[path] != current_state[path]:
 			has_changes = true
 			break
 
 	# Check for deleted items
-	for path in last_dir_state:
+	for path: String in last_dir_state:
 		if not current_state.has(path):
 			has_changes = true
 			break
@@ -220,7 +220,7 @@ func _on_dir_check_timeout():
 
 func _scan_directory_state(base_path: String) -> Dictionary:
 	var state: Dictionary = {}
-	var dir = DirAccess.open(base_path)
+	var dir: DirAccess = DirAccess.open(base_path)
 	if dir == null:
 		return state
 	_dir_scan_recursive(dir, _ensure_trailing_slash(base_path), state)
@@ -236,9 +236,9 @@ func _dir_scan_recursive(dir: DirAccess, path: String, state: Dictionary):
 		if file_name == "." or file_name == "..":
 			continue
 
-		var full_path = path + file_name
-		var is_dir = dir.current_is_dir()
-		var mod_time = FileUtils.get_modified_time(full_path)
+		var full_path: String = path + file_name
+		var is_dir: bool = dir.current_is_dir()
+		var mod_time: float = FileUtils.get_modified_time(full_path)
 
 		if is_dir:
 			state[full_path] = mod_time
@@ -257,33 +257,33 @@ func _select_first_text_file():
 		return
 
 	# Try to select the last opened file first
-	var last_file = ""
+	var last_file: String = ""
 	if config.load(CONFIG_FILE) == OK:
 		last_file = config.get_value("general", "last_file", "")
 
 	# Skip res:// paths (internal project resources, not real story files)
 	if last_file != "" and not last_file.begins_with("res://") and FileUtils.file_exists(last_file):
 		# Try to find the last opened file in the tree
-		var found = _find_tree_item_by_path(get_root(), last_file)
+		var found: TreeItem = _find_tree_item_by_path(get_root(), last_file)
 		if found != null:
 			found.select(0)
 			return
 
 	# Fall back to first text file in the entire tree
-	var root = get_root()
+	var root: TreeItem = get_root()
 	if root == null:
 		return
 
 	# Use a simple iterative approach
-	var stack = [root]
+	var stack: Array = [root]
 	while stack.size() > 0:
-		var parent = stack.pop_back()
-		for i in range(parent.get_child_count()):
-			var child = parent.get_child(i)
-			var info = child.get_metadata(0)
+		var parent: TreeItem = stack.pop_back()
+		for i: int in range(parent.get_child_count()):
+			var child: TreeItem = parent.get_child(i)
+			var info: Dictionary = child.get_metadata(0)
 			if info != null:
-				var path = info["path"]
-				var is_dir = info["is_dir"]
+				var path: String = info["path"]
+				var is_dir: bool = info["is_dir"]
 				if not is_dir and _is_text_file(path):
 					child.select(0)
 					return
@@ -294,13 +294,13 @@ func _find_tree_item_by_path(parent: TreeItem, target_path: String) -> TreeItem:
 	if parent == null:
 		return null
 
-	var info = parent.get_metadata(0)
+	var info: Dictionary = parent.get_metadata(0)
 	if info != null and info["path"] == target_path:
 		return parent
 
-	for i in range(parent.get_child_count()):
-		var child = parent.get_child(i)
-		var found = _find_tree_item_by_path(child, target_path)
+	for i: int in range(parent.get_child_count()):
+		var child: TreeItem = parent.get_child(i)
+		var found: TreeItem = _find_tree_item_by_path(child, target_path)
 		if found != null:
 			return found
 
