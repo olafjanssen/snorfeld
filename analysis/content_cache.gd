@@ -25,18 +25,6 @@ func _get_cache_subdir() -> String:
 func _process_task(_task: Dictionary):
 	pass
 
-# Get cache queue updated signal name
-func _get_queue_updated_signal() -> String:
-	return ""
-
-# Get cache task started signal name
-func _get_task_started_signal() -> String:
-	return ""
-
-# Get cache task completed signal name
-func _get_task_completed_signal() -> String:
-	return ""
-
 # Emit queue updated signal
 func _emit_queue_updated() -> void:
 	pass
@@ -61,10 +49,6 @@ func _create_cache_directory(base_path: String) -> bool:
 # Check if file exists
 func _file_exists(path: String) -> bool:
 	return FileUtils.file_exists(path)
-
-# Get all text files in a directory recursively
-func _get_all_text_files(base_path: String) -> Array:
-	return FileUtils.get_all_text_files(base_path)
 
 # Cleanup unused cache files (files whose source no longer exists)
 func _cleanup_unused_cache_files(cache_path: String, _source_dir: String) -> int:
