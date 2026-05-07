@@ -1,5 +1,12 @@
 extends Control
 
+# Constants
+const HIGH_DPI_THRESHOLD: int = 144
+const SIDE_PANEL_X_POSITION: int = 820
+const SIDEBAR_WIDTH: int = 200
+const MAIN_PANEL_WIDTH: int = 800
+const RIGHT_PANEL_WIDTH: int = 1600
+
 var story_bible: Window
 
 func _ready():
@@ -10,10 +17,10 @@ func _ready():
 	var dpi := DisplayServer.screen_get_dpi(0)
 
 	# Use 2.0 for high-DPI (Retina/4K), 1.0 for standard
-	var ui_scale := 2.0 if dpi > 144 else 1.0
+	var ui_scale := 2.0 if dpi > HIGH_DPI_THRESHOLD else 1.0
 	get_tree().root.content_scale_factor = ui_scale
 
-	$VBoxContainer/HSplitContainer.split_offsets = PackedInt32Array([200, 800, 1600])
+	$VBoxContainer/HSplitContainer.split_offsets = PackedInt32Array([SIDEBAR_WIDTH, MAIN_PANEL_WIDTH, RIGHT_PANEL_WIDTH])
 
 	$VBoxContainer/PanelContainer/HBoxContainer/SidebarButtonLeft.connect("pressed", _on_sidebar_left_button_pressed)
 	$VBoxContainer/PanelContainer/HBoxContainer/SidebarButtonRight.connect("pressed", _on_sidebar_right_button_pressed)
@@ -29,7 +36,7 @@ func _open_story_bible():
 	var StoryBibleScene = preload("res://scenes/panels/story_bible.tscn")
 	story_bible = StoryBibleScene.instantiate()
 	get_tree().root.add_child(story_bible)
-	story_bible.position = Vector2(820, 0)
+	story_bible.position = Vector2(SIDE_PANEL_X_POSITION, 0)
 
 func _on_sidebar_left_button_pressed():
 	$VBoxContainer/HSplitContainer/TabContainer.visible = !$VBoxContainer/HSplitContainer/TabContainer.visible

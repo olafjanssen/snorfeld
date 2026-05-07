@@ -2,6 +2,10 @@ extends Tree
 
 const CONFIG_FILE: String = "user://config.cfg"
 
+# Constants
+const HIGH_DPI_THRESHOLD: int = 144
+const FILE_CHECK_INTERVAL: float = 5.0
+
 var config: ConfigFile = ConfigFile.new()
 var current_path: String = ""
 var is_building_tree: bool = false
@@ -44,7 +48,7 @@ func _ready():
 	# Setup directory watch timer
 	dir_check_timer = Timer.new()
 	dir_check_timer.timeout.connect(_on_dir_check_timeout)
-	dir_check_timer.wait_time = 5.0
+	dir_check_timer.wait_time = FILE_CHECK_INTERVAL
 	add_child(dir_check_timer)
 	dir_check_timer.start()
 

@@ -1,5 +1,9 @@
 extends Window
 
+# Constants
+const HIGH_DPI_THRESHOLD: int = 144
+const SIDE_PANEL_X_POSITION: int = 820
+
 @onready var tab_container: TabContainer = $VBoxContainer/HSplitContainer/TabContainer
 @onready var character_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/CharacterTree
 @onready var object_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/ObjectTree
@@ -16,11 +20,11 @@ func _ready():
 	EventBus.folder_opened.connect(_on_folder_opened)
 
 	# Set initial position next to main editor
-	position = Vector2(820, 0)
+	position = Vector2(SIDE_PANEL_X_POSITION, 0)
 
 	# Detect screen DPI and set appropriate scale
 	var dpi: int = DisplayServer.screen_get_dpi(0)
-	var ui_scale: float = 2.0 if dpi > 144 else 1.0
+	var ui_scale: float = 2.0 if dpi > HIGH_DPI_THRESHOLD else 1.0
 	set_content_scale_factor(ui_scale)
 
 	# Load characters and objects immediately

@@ -1,5 +1,8 @@
 extends CodeEdit
 
+# Constants
+const FILE_CHECK_INTERVAL: float = 5.0
+
 var current_file_path: String = ""
 var last_text: String = ""
 
@@ -24,7 +27,7 @@ func _ready():
 	# Setup timer to check for external file changes
 	file_check_timer = Timer.new()
 	file_check_timer.timeout.connect(_on_file_check_timeout)
-	file_check_timer.wait_time = 5.0  # Check every 5 seconds
+	file_check_timer.wait_time = FILE_CHECK_INTERVAL  # Check every FILE_CHECK_INTERVAL seconds
 	add_child(file_check_timer)
 	file_check_timer.start()
 

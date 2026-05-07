@@ -1,6 +1,11 @@
 extends GenericCacheService
 ## StructureService - Handles caching and analysis of paragraph structure improvements
 
+# Constants for context limits
+const FULL_CHAPTER_WORDS: int = 500
+const CONTEXT_WORDS: int = 200
+const CONTEXT_CHARACTERS: int = 1000
+
 # Override: Get service name for signals
 func _get_service_name() -> String:
 	return "structure"
@@ -29,11 +34,11 @@ func analyze_structure(paragraph: String, context_before: String = "", context_a
 	var context: String = ""
 	if full_chapter.length() > 0:
 		# Use full chapter as context, trimmed to reasonable size
-		context = "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, 500)
+		context = "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, FULL_CHAPTER_WORDS)
 	elif context_before.length() > 0 or context_after.length() > 0:
 		# Fall back to before/after context
-		var before_words: String = PromptTemplates.get_words(context_before, 200)
-		var after_words: String = PromptTemplates.get_words(context_after, 200)
+		var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
+		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
 		context = "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
 
 	# Format prompt using template
@@ -82,10 +87,10 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	if file_content.length() > 0 and paragraph.length() > 0:
 		var paragraph_index: int = file_content.find(paragraph)
 		if paragraph_index != -1:
-			var before_start: int = max(0, paragraph_index - 1000)
+			var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
 			context_before = file_content.substr(before_start, paragraph_index - before_start)
 			var after_start: int = paragraph_index + paragraph.length()
-			var after_end: int = min(file_content.length(), after_start + 1000)
+			var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
 			context_after = file_content.substr(after_start, after_end - after_start)
 
 	# Call LLM to analyze structure (use full chapter as context if available)

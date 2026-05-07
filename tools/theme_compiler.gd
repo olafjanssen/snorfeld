@@ -166,78 +166,113 @@ func _compile_theme(def: ThemeDefinition) -> Theme:
 func _apply_control_overrides(theme: Theme, control_type: String, overrides: Dictionary, def: ThemeDefinition, ext_resources: Array, created_styles: Dictionary, created_fonts: Dictionary) -> void:
 	# Apply base type for custom control types
 	if overrides.has("base_type"):
-		var base_type: Variant = overrides["base_type"]
-		if base_type is String:
-			theme.set_type_variation(control_type, base_type)
+		_apply_base_type(theme, control_type, overrides["base_type"])
 
 	# Apply colors
 	if overrides.has("colors"):
-		for color_name in overrides["colors"]:
-			var color_value: Variant = overrides["colors"][color_name]
-			# Resolve color reference if it's a string
-			if color_value is String:
-				color_value = _resolve_color(def, color_value)
-			elif color_value is Color:
-				pass  # Already a Color
-			else:
-				push_error("Invalid color value for %s/%s" % [control_type, color_name])
-				continue
-			theme.set_color(color_name, control_type, color_value)
+		_apply_colors(theme, control_type, overrides["colors"], def)
 
 	# Apply font sizes
 	if overrides.has("font_sizes"):
-		for size_name in overrides["font_sizes"]:
-			var size_value: Variant = overrides["font_sizes"][size_name]
-			theme.set_font_size(size_name, control_type, size_value)
+		_apply_font_sizes(theme, control_type, overrides["font_sizes"])
 
 	# Apply fonts
 	if overrides.has("fonts"):
-		for font_name in overrides["fonts"]:
-			var font_ref: Variant = overrides["fonts"][font_name]
-
-			# Can be an integer index into created_fonts or external_resources
-			if font_ref is int:
-				# Try created_fonts first
-				if created_fonts.size() > font_ref and created_fonts.has(str(font_ref)):
-					var font: Font = created_fonts[str(font_ref)]
-					if font is Font:
-						theme.set_font(font_name, control_type, font)
-					else:
-						push_error("Font reference %d is not a Font" % font_ref)
-				elif font_ref >= 0 and font_ref < ext_resources.size():
-					var font_resource: Resource = ext_resources[font_ref]
-					if font_resource is FontFile or font_resource is Font:
-						theme.set_font(font_name, control_type, font_resource)
-					else:
-						push_error("Font resource %d is not a Font or FontFile" % font_ref)
-				else:
-					push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_ref])
-			# Can be a string name referencing created_fonts
-			elif font_ref is String and created_fonts.has(font_ref):
-				var font: Font = created_fonts[font_ref]
-				if font is Font:
-					theme.set_font(font_name, control_type, font)
-				else:
-					push_error("Font reference '%s' is not a Font" % font_ref)
-			else:
-				push_error("Invalid font reference for %s/%s: %s" % [control_type, font_name, font_ref])
+		_apply_fonts(theme, control_type, overrides["fonts"], created_fonts, ext_resources)
 
 	# Apply constants
 	if overrides.has("constants"):
-		for const_name in overrides["constants"]:
-			var const_value: Variant = overrides["constants"][const_name]
-			theme.set_constant(const_name, control_type, const_value)
+		_apply_constants(theme, control_type, overrides["constants"])
 
 	# Apply styles (StyleBox references)
 	if overrides.has("styles"):
-		for style_name in overrides["styles"]:
-			var style_ref: String = overrides["styles"][style_name]
-			# Look up the style from our created_styles dictionary
-			if created_styles.has(style_ref):
-				var style: StyleBox = created_styles[style_ref]
-				theme.set_stylebox(style_name, control_type, style)
+		_apply_styles(theme, control_type, overrides["styles"], created_styles)
+
+
+## Helper functions for _apply_control_overrides
+
+func _apply_base_type(theme: Theme, control_type: String, base_type: Variant) -> void:
+	if base_type is String:
+		theme.set_type_variation(control_type, base_type)
+
+
+func _apply_colors(theme: Theme, control_type: String, colors: Dictionary, def: ThemeDefinition) -> void:
+	for color_name in colors:
+		var color_value: Variant = colors[color_name]
+		# Resolve color reference if it's a string
+		if color_value is String:
+			color_value = _resolve_color(def, color_value)
+		elif color_value is Color:
+			pass  # Already a Color
+		else:
+			push_error("Invalid color value for %s/%s" % [control_type, color_name])
+			continue
+		theme.set_color(color_name, control_type, color_value)
+
+
+func _apply_font_sizes(theme: Theme, control_type: String, font_sizes: Dictionary) -> void:
+	for size_name in font_sizes:
+		var size_value: Variant = font_sizes[size_name]
+		theme.set_font_size(size_name, control_type, size_value)
+
+
+func _apply_fonts(theme: Theme, control_type: String, fonts: Dictionary, created_fonts: Dictionary, ext_resources: Array) -> void:
+	for font_name in fonts:
+		var font_ref: Variant = fonts[font_name]
+		var font = _resolve_font_reference(font_ref, created_fonts, ext_resources, control_type, font_name)
+		if font != null:
+			theme.set_font(font_name, control_type, font)
+
+
+func _resolve_font_reference(font_ref: Variant, created_fonts: Dictionary, ext_resources: Array, control_type: String, font_name: String):
+	# Can be an integer index into created_fonts or external_resources
+	if font_ref is int:
+		# Try created_fonts first
+		if created_fonts.size() > font_ref and created_fonts.has(str(font_ref)):
+			var font: Font = created_fonts[str(font_ref)]
+			if font is Font:
+				return font
 			else:
-				push_error("Style reference not found: %s for %s/%s" % [style_ref, control_type, style_name])
+				push_error("Font reference %d is not a Font" % font_ref)
+				return null
+		elif font_ref >= 0 and font_ref < ext_resources.size():
+			var font_resource: Resource = ext_resources[font_ref]
+			if font_resource is FontFile or font_resource is Font:
+				return font_resource
+			else:
+				push_error("Font resource %d is not a Font or FontFile" % font_ref)
+				return null
+		else:
+			push_error("Invalid font index for %s/%s: %s" % [control_type, font_name, font_ref])
+			return null
+	# Can be a string name referencing created_fonts
+	elif font_ref is String and created_fonts.has(font_ref):
+		var font: Font = created_fonts[font_ref]
+		if font is Font:
+			return font
+		else:
+			push_error("Font reference '%s' is not a Font" % font_ref)
+			return null
+	else:
+		push_error("Invalid font reference for %s/%s: %s" % [control_type, font_name, font_ref])
+		return null
+
+
+func _apply_constants(theme: Theme, control_type: String, constants: Dictionary) -> void:
+	for const_name in constants:
+		var const_value: Variant = constants[const_name]
+		theme.set_constant(const_name, control_type, const_value)
+
+
+func _apply_styles(theme: Theme, control_type: String, styles: Dictionary, created_styles: Dictionary) -> void:
+	for style_name in styles:
+		var style_ref: String = styles[style_name]
+		# Look up the style from our created_styles dictionary
+		if created_styles.has(style_ref):
+			var style: StyleBox = created_styles[style_ref]
+			theme.set_stylebox(style_name, control_type, style)
+		else:
+			push_error("Style reference not found: %s for %s/%s" % [style_ref, control_type, style_name])
 
 
 ## Resolve a color reference (string name or Color) to an actual Color

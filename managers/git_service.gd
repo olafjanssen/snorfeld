@@ -108,6 +108,29 @@ func _execute_git_command(args: Array, cwd: String = "") -> Array:
 func _execute_git_command_simple(args: Array, cwd: String = "") -> bool:
 	return _execute_git_command(args, cwd)[1] == ""
 
+### Helper Functions
+
+## Determine git change type from status characters
+func _determine_change_type(staged_char: String, unstaged_char: String, file_path: String) -> String:
+	# Renamed files have format: "X Y -> new_path" - path already cleaned by caller
+	# Check untracked first (?? means new untracked file)
+	if staged_char == "?" and unstaged_char == "?":
+		return "untracked"
+	# Deleted
+	if staged_char == "D" or unstaged_char == "D":
+		return "deleted"
+	# Conflicted
+	if staged_char == "U" or unstaged_char == "U":
+		return "conflicted"
+	# Modified (unstaged or staged)
+	if unstaged_char == "M" or (unstaged_char == " " and staged_char == "M"):
+		return "modified"
+	# Added/Staged (new file added to git)
+	if unstaged_char == "A" or (unstaged_char == " " and staged_char == "A"):
+		return "staged"
+	# Default fallback
+	return "modified"
+
 ### Core Git Operations
 
 func init_git_repo(path: String) -> bool:
@@ -162,25 +185,14 @@ func get_status(base_path: String = "") -> Dictionary:
 		var unstaged_char: String = line[1]
 		var file_path: String = line.substr(3)
 
-		var change_type: String
 		# Untracked files (?? ) are never staged
 		var is_staged: bool = staged_char != " " and not (staged_char == "?" and unstaged_char == "?")
 
+		# Handle renamed files (format: "X Y -> new_path")
 		if " -> " in file_path:
 			file_path = file_path.split(" -> ")[1]
-			change_type = "renamed"
-		elif staged_char == "?" and unstaged_char == "?":
-			change_type = "untracked"
-		elif staged_char == "D" or unstaged_char == "D":
-			change_type = "deleted"
-		elif staged_char == "U" or unstaged_char == "U":
-			change_type = "conflicted"
-		elif unstaged_char == "M" or (unstaged_char == " " and staged_char == "M"):
-			change_type = "modified"
-		elif unstaged_char == "A" or (unstaged_char == " " and staged_char == "A"):
-			change_type = "staged"  # New file added to git
-		else:
-			change_type = "modified"  # Default fallback
+
+		var change_type: String = _determine_change_type(staged_char, unstaged_char, file_path)
 
 		status["files"].append({"path": file_path, "change_type": change_type, "staged": is_staged})
 		status["counts"][change_type] += 1

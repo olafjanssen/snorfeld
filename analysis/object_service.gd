@@ -486,14 +486,19 @@ func _find_matching_object_file(obj_name: String, cache_path: String) -> String:
 
 # Calculate similarity between two strings (same as CharacterService)
 func _calculate_similarity(str1: String, str2: String) -> int:
+	# Similarity percentage constants
+	const PERFECT_MATCH: int = 100
+	const PARTIAL_MATCH: int = 90
+	const BASE_MULTIPLIER: int = 100
+
 	var s1: String = str1.to_lower()
 	var s2: String = str2.to_lower()
 
 	if s1 == s2:
-		return 100
+		return PERFECT_MATCH
 
 	if s1.find(s2) != -1 or s2.find(s1) != -1:
-		return 90
+		return PARTIAL_MATCH
 
 	var words1: Array = s1.split(" ", false)
 	var words2: Array = s2.split(" ", false)
@@ -509,7 +514,7 @@ func _calculate_similarity(str1: String, str2: String) -> int:
 	if total_words == 0:
 		return 0
 
-	return int((common_count * 2.0 / total_words) * 100)
+	return int((common_count * 2.0 / total_words) * BASE_MULTIPLIER)
 
 
 # Creates an MD5 hash from an object name string
