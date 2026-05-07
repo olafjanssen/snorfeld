@@ -69,7 +69,7 @@ func _on_file_check_timeout():
 				set_caret_column(min(cursor_column, line_length))
 			get_v_scroll_bar().value = scroll_pos
 
-func _on_show_git_diff(_path: String, _diff: String):
+func _on_show_git_diff(_file_path: String, _diff: String):
 	visible = false
 
 func _on_navigate_to_line_command(file_path: String, line_number: int):

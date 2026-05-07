@@ -45,14 +45,14 @@ func _on_file_saved(path: String):
 	_set_status(icon_text + "Saved: %s" % path)
 
 # Analysis progress handlers (all services use this now)
-func _on_analysis_queue_updated(service_type: String, queued: int, _processing: bool):
+func _on_analysis_queue_updated(service_type: String, queued: int):
 	if queued > 0:
 		_set_status(icon_text + "%d %s tasks queued" % [queued, service_type], false)
 
 func _on_analysis_task_started(service_type: String, remaining: int):
 	_set_status(icon_text + "Processing %s: %d remaining" % [service_type, remaining], true)
 
-func _on_analysis_task_completed(service_type: String, remaining: int, _result: Dictionary):
+func _on_analysis_task_completed(service_type: String, remaining: int):
 	if remaining > 0:
 		_set_status(icon_text + "Processed %s: %d remaining" % [service_type, remaining], false)
 	else:
@@ -83,7 +83,7 @@ func _on_timer_timeout():
 func _on_git_operation_started(operation: String):
 	_set_status(icon_text + "Git: %s..." % operation, true)
 
-func _on_git_operation_completed(_operation: String, success: bool, message: String):
+func _on_git_operation_completed(success: bool, message: String):
 	if success:
 		_set_status(icon_text + "Git: %s" % message, true)
 	else:

@@ -37,16 +37,16 @@ enum CacheServiceType {
 enum AnalysisType { GRAMMAR, STYLE, STRUCTURE }
 
 # Analysis signals - carry service_type for filtering
-signal analysis_queue_updated(service_type: String, queued: int, processing: bool)
+signal analysis_queue_updated(service_type: String, queued: int)
 signal analysis_task_started(service_type: String, remaining: int)
-signal analysis_task_completed(service_type: String, remaining: int, result: Dictionary)
+signal analysis_task_completed(service_type: String, remaining: int)
 signal analysis_cleanup_started(service_type: String)
 signal analysis_cleanup_completed(service_type: String, removed_count: int)
 
 # Git integration signals
 signal show_git_diff(file_path: String, diff: String)
-signal git_status_updated(status: Dictionary)
+signal git_status_updated()
 signal git_operation_started(operation: String)
-signal git_operation_completed(operation: String, success: bool, message: String)
+signal git_operation_completed(success: bool, message: String)
 signal git_repo_changed(is_git_repo: bool)
 signal file_status_changed(file_path: String, status: String)

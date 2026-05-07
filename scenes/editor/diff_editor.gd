@@ -4,7 +4,7 @@ func _ready():
 	EventBus.file_selected.connect(_on_file_selected)
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 
-func _on_show_git_diff(_path: String, diff: String):
+func _on_show_git_diff(_file_path: String, diff: String):
 	# Filter out [url=...] and [/url] tags to make them non-clickable in this view
 	# Keep [bgcolor] tags for coloring
 	# Format: [url=meta][bgcolor=X]text[/bgcolor][/url] -> [bgcolor=X]text[/bgcolor]

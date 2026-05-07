@@ -54,7 +54,7 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 
 ## Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.analysis_queue_updated.emit(_get_service_name(), task_queue.size(), processing)
+	EventBus.analysis_queue_updated.emit(_get_service_name(), task_queue.size())
 
 ## Emit task started signal
 func _emit_task_started(remaining: int) -> void:
@@ -62,7 +62,7 @@ func _emit_task_started(remaining: int) -> void:
 
 ## Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.analysis_task_completed.emit(_get_service_name(), remaining, {})
+	EventBus.analysis_task_completed.emit(_get_service_name(), remaining)
 
 ## ============================================================================
 ## Task Queue Management

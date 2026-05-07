@@ -135,7 +135,7 @@ func _determine_change_type(staged_char: String, unstaged_char: String, _file_pa
 
 func init_git_repo(path: String) -> bool:
 	if git_executable == "":
-		EventBus.git_operation_completed.emit("init", false, "Git executable not found")
+		EventBus.git_operation_completed.emit(false, "Git executable not found")
 		return false
 
 	EventBus.git_operation_started.emit("init")
@@ -143,18 +143,18 @@ func init_git_repo(path: String) -> bool:
 	if is_git_repo(path):
 		git_root = find_git_root(path)
 		is_git_repo_cached = true
-		EventBus.git_operation_completed.emit("init", true, "Already a git repository")
+		EventBus.git_operation_completed.emit(true, "Already a git repository")
 		EventBus.git_repo_changed.emit(true)
 		return true
 
 	if not _execute_git_command_simple(["init"], path):
-		EventBus.git_operation_completed.emit("init", false, "Failed to initialize git repo")
+		EventBus.git_operation_completed.emit(false, "Failed to initialize git repo")
 		return false
 
 	git_root = path
 	is_git_repo_cached = true
 	ensure_snorfeld_in_gitignore()
-	EventBus.git_operation_completed.emit("init", true, "Git repository initialized")
+	EventBus.git_operation_completed.emit(true, "Git repository initialized")
 	EventBus.git_repo_changed.emit(true)
 	return true
 
@@ -230,7 +230,7 @@ func refresh_status(base_path: String = "") -> void:
 
 	var status: Dictionary = get_status(repo_path)
 	if not status.has("error"):
-		EventBus.git_status_updated.emit(status)
+		EventBus.git_status_updated.emit()
 		file_status_cache.clear()
 		for file_info in status["files"]:
 			file_status_cache[file_info["path"]] = file_info["change_type"]
@@ -265,38 +265,38 @@ func get_file_content_from_git(file_path: String) -> String:
 
 func stage_file(file_path: String) -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("stage", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("stage")
 	var relative_path: String = _make_path_relative(file_path)
 	if not _execute_git_command_simple(["add", relative_path], git_root):
-		EventBus.git_operation_completed.emit("stage", false, "Failed to stage file")
+		EventBus.git_operation_completed.emit(false, "Failed to stage file")
 		return false
 
 	file_status_cache.erase(file_path)
 	refresh_status()
-	EventBus.git_operation_completed.emit("stage", true, "File staged")
+	EventBus.git_operation_completed.emit(true, "File staged")
 	return true
 
 func stage_all() -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("stage_all", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("stage_all")
 	if not _execute_git_command_simple(["add", "-A"], git_root):
-		EventBus.git_operation_completed.emit("stage_all", false, "Failed to stage all files")
+		EventBus.git_operation_completed.emit(false, "Failed to stage all files")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	EventBus.git_operation_completed.emit("stage_all", true, "All files staged")
+	EventBus.git_operation_completed.emit(true, "All files staged")
 	return true
 
 func unstage_file(file_path: String) -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("unstage", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("unstage")
@@ -305,39 +305,39 @@ func unstage_file(file_path: String) -> bool:
 		_execute_git_command_simple(["restore", "--staged", "--", relative_path], git_root))
 
 	if not success:
-		EventBus.git_operation_completed.emit("unstage", false, "Failed to unstage file")
+		EventBus.git_operation_completed.emit(false, "Failed to unstage file")
 		return false
 
 	file_status_cache.erase(file_path)
 	refresh_status()
-	EventBus.git_operation_completed.emit("unstage", true, "File unstaged")
+	EventBus.git_operation_completed.emit(true, "File unstaged")
 	return true
 
 ### Commit Operations
 
 func commit(message: String) -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("commit", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 	if message == "":
-		EventBus.git_operation_completed.emit("commit", false, "Empty commit message")
+		EventBus.git_operation_completed.emit(false, "Empty commit message")
 		return false
 
 	EventBus.git_operation_started.emit("commit")
 	if not _execute_git_command_simple(["commit", "-m", message], git_root):
-		EventBus.git_operation_completed.emit("commit", false, "Failed to commit")
+		EventBus.git_operation_completed.emit(false, "Failed to commit")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	EventBus.git_operation_completed.emit("commit", true, "Commit successful")
+	EventBus.git_operation_completed.emit(true, "Commit successful")
 	return true
 
 ### Push/Pull/Fetch Operations
 
 func push(remote: String = "origin", branch: String = "") -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("push", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("push")
@@ -345,15 +345,15 @@ func push(remote: String = "origin", branch: String = "") -> bool:
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
-		EventBus.git_operation_completed.emit("push", false, "Failed to push")
+		EventBus.git_operation_completed.emit(false, "Failed to push")
 		return false
 
-	EventBus.git_operation_completed.emit("push", true, "Push successful")
+	EventBus.git_operation_completed.emit(true, "Push successful")
 	return true
 
 func pull(remote: String = "origin", branch: String = "") -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("pull", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("pull")
@@ -361,25 +361,25 @@ func pull(remote: String = "origin", branch: String = "") -> bool:
 	if branch:
 		args.append(branch)
 	if not _execute_git_command_simple(args, git_root):
-		EventBus.git_operation_completed.emit("pull", false, "Failed to pull")
+		EventBus.git_operation_completed.emit(false, "Failed to pull")
 		return false
 
 	file_status_cache.clear()
 	refresh_status()
-	EventBus.git_operation_completed.emit("pull", true, "Pull successful")
+	EventBus.git_operation_completed.emit(true, "Pull successful")
 	return true
 
 func fetch(remote: String = "origin") -> bool:
 	if not git_executable or not git_root:
-		EventBus.git_operation_completed.emit("fetch", false, "Not a git repository")
+		EventBus.git_operation_completed.emit(false, "Not a git repository")
 		return false
 
 	EventBus.git_operation_started.emit("fetch")
 	if not _execute_git_command_simple(["fetch", remote], git_root):
-		EventBus.git_operation_completed.emit("fetch", false, "Failed to fetch")
+		EventBus.git_operation_completed.emit(false, "Failed to fetch")
 		return false
 
-	EventBus.git_operation_completed.emit("fetch", true, "Fetch successful")
+	EventBus.git_operation_completed.emit(true, "Fetch successful")
 	return true
 
 ### .gitignore Management

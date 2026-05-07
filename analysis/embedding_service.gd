@@ -103,7 +103,7 @@ func _process_task(task: Dictionary):
 
 # Override: Emit queue updated signal
 func _emit_queue_updated() -> void:
-	EventBus.analysis_queue_updated.emit("embedding", task_queue.size(), processing)
+	EventBus.analysis_queue_updated.emit("embedding", task_queue.size())
 
 
 # Override: Emit task started signal
@@ -113,7 +113,7 @@ func _emit_task_started(remaining: int) -> void:
 
 # Override: Emit task completed signal
 func _emit_task_completed(remaining: int) -> void:
-	EventBus.analysis_task_completed.emit("embedding", remaining, {})
+	EventBus.analysis_task_completed.emit("embedding", remaining)
 
 
 # Ensure a cache directory's JSONL files are loaded into memory

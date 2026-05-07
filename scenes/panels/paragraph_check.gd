@@ -69,7 +69,7 @@ func _update_diff_displays() -> void:
 func _on_theme_changed() -> void:
 	_update_diff_displays()
 
-func _on_analysis_task_completed(service_type: String, _remaining: int, _result: Dictionary) -> void:
+func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 	if service_type not in ['grammar','style','structure']:
 		return
 

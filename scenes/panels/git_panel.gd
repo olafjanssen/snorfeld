@@ -76,7 +76,7 @@ func _on_git_repo_changed(is_git_repo: bool):
 		file_list.clear()
 		_set_buttons_enabled(false)
 
-func _on_git_status_updated(_status: Dictionary):
+func _on_git_status_updated():
 	if not is_inside_tree():
 		return
 
@@ -131,7 +131,7 @@ func _on_file_selected():
 		if metadata:
 			selected_files.append(metadata["path"])
 
-func _on_stage_button_clicked(item: TreeItem, _column: int, _button_index: int, _id: int) -> void:
+func _on_stage_button_clicked(item: TreeItem) -> void:
 	var metadata: Dictionary = item.get_metadata(0)
 	if metadata:
 		var file_path: String = metadata["path"]
