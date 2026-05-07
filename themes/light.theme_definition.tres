@@ -71,6 +71,12 @@ styles = {
 "bg_color": "bg_lighter",
 "type": "StyleBoxFlat"
 },
+"StyleBoxFlat_panel_popupwindow": {
+"bg_color": "bg_lighter",
+"border_color": "border_primary",
+"border_width_all": 1,
+"type": "StyleBoxFlat"
+},
 "StyleBoxFlat_paneled_label": {
 "bg_color": "bg_lighter",
 "border_color": "border_primary",
@@ -299,6 +305,28 @@ control_overrides = {
 "base_type": "Panel",
 "styles": {
 "panel": "StyleBoxFlat_paneled_label"
+}
+},
+"PopupMenu": {
+"colors": {
+"font_accelerator_color": "text_tertiary",
+"font_color": "text_secondary",
+"font_disabled_color": "text_dimmed",
+"font_hover_color": "text_primary"
+},
+"constants": {
+"h_separation": 8,
+"item_end_padding": 12,
+"item_start_padding": 12,
+"v_separation": 4
+},
+"font_sizes": {
+"font_size": 14
+},
+"styles": {
+"hover": "StyleBoxFlat_button_hover",
+"panel": "StyleBoxFlat_panel_popupwindow",
+"separator": "StyleBoxEmpty_paragraph_separator"
 }
 },
 "RichTextLabel": {

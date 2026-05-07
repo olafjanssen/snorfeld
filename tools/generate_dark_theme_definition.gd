@@ -62,6 +62,12 @@ func _run():
 			"type": "StyleBoxFlat",
 			"bg_color": "bg_lighter"
 		},
+		"StyleBoxFlat_panel_popupwindow": {
+			"type": "StyleBoxFlat",
+			"bg_color": "bg_lighter",
+			"border_color": "border_primary",
+			"border_width_all": 1
+		},		
 		"StyleBoxFlat_tabcontainer_panel": {
 			"type": "StyleBoxFlat",
 			"bg_color": "bg_secondary",
@@ -391,7 +397,7 @@ func _run():
 			"styles": {
 				"panel": "StyleBoxFlat_windowbar"
 			}
-		},		
+		},
 		"TextEditorPanel": {
 			"base_type": "Panel",
 			"styles": {
@@ -458,6 +464,28 @@ func _run():
 				"diff_delete_bg": "diff_delete_bg",
 				"diff_insert_bg": "diff_insert_bg",
 				"diff_change_bg": "diff_change_bg"
+			}
+		},
+		"PopupMenu": {
+			"colors": {
+				"font_color": "text_secondary",
+				"font_hover_color": "text_primary",
+				"font_disabled_color": "text_dimmed",
+				"font_accelerator_color": "text_tertiary"
+			},
+			"font_sizes": {
+				"font_size": 14
+			},
+			"constants": {
+				"h_separation": 8,
+				"v_separation": 4,
+				"item_start_padding": 12,
+				"item_end_padding": 12
+			},
+			"styles": {
+				"panel": "StyleBoxFlat_panel_popupwindow",
+				"hover": "StyleBoxFlat_button_hover",
+				"separator": "StyleBoxEmpty_paragraph_separator"
 			}
 		}
 	}
