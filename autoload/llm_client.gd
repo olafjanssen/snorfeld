@@ -7,7 +7,7 @@ extends Node
 ##   var embedding = await LLMClient.embed("qwen3-embedding:0.6b", "Some text to embed")
 ##   var running = await LLMClient.is_llm_running()
 
-# gdlint:ignore-file:file-length,deep-nesting,high-complexity,long-function,long-line,missing-type-hint,todo-comment
+# gdlint:ignore-file:file-length,deep-nesting,long-function,long-line,missing-type-hint,todo-comment
 
 # HTTP status codes
 const HTTP_STATUS_OK: int = 200
@@ -34,7 +34,6 @@ var queue_mutex := Mutex.new()
 var current_completion: Dictionary
 
 ## Signal for async completion (backward compatibility)
-signal generate_complete(response: Dictionary)
 signal check_complete(running: bool)
 signal embed_complete(response: Dictionary)
 
@@ -233,86 +232,69 @@ func _on_http_request_completed(
 	if current_completion == null or current_completion.is_empty():
 		return
 
-	if current_request_type == "check":
-		var is_running: bool = (response_code == HTTP_STATUS_OK)
-		current_completion["response"] = is_running
-		current_completion["completed"] = true
-		# Emit for backward compatibility
-		check_complete.emit(is_running)
-		return
-
-	var response_body_str: String = body.get_string_from_utf8()
 	var response_dict: Dictionary
-
-	if current_request_type == "embed":
-		if result == OK and response_code == HTTP_STATUS_OK:
-			var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
-			if not json_data.is_empty():
-				# Ollama embedding API returns: {"embedding": [...], "model": "...", ...}
-				response_dict = {"json_data": json_data, "raw_response": response_body_str}
-				# Extract embedding vector if present
-				if json_data.has("embedding"):
-					response_dict["embedding"] = json_data["embedding"]
-					response_dict["model"] = json_data.get("model", "")
-					response_dict["success"] = true
-				else:
-					response_dict = {
-						"error": "Failed to parse embedding response or missing embedding",
-						"raw_response": response_body_str
-					}
-					response_dict["success"] = false
-			else:
-				response_dict = {
-					"error": "Failed to parse JSON response",
-					"raw_response": response_body_str
-				}
-				response_dict["success"] = false
-		elif response_code == 0:
-			response_dict = {
-				"error": "Connection failed - is LLM server running?",
-				"error_code": response_code
-			}
-			response_dict["success"] = false
-		else:
-			response_dict = {
-				"error": "API embedding request failed",
-				"error_code": response_code,
-				"response": response_body_str
-			}
-			response_dict["success"] = false
-
-		current_completion["response"] = response_dict
-		current_completion["completed"] = true
-		# Emit for backward compatibility
-		embed_complete.emit(response_dict)
-		return
-
-	# Otherwise it's a generate request
-	if result == OK and response_code == HTTP_STATUS_OK:
-		var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
-		if not json_data.is_empty():
-			response_dict = {"json_data": json_data, "raw_response": response_body_str}
-		else:
-			response_dict = {
-				"error": "Failed to parse JSON response",
-				"raw_response": response_body_str
-			}
-	elif response_code == 0:
-		response_dict = {
-			"error": "Connection failed - is LLM server running?",
-			"error_code": response_code
-		}
+	if current_request_type == "check":
+		response_dict = _handle_check_response(response_code)
+	elif current_request_type == "embed":
+		response_dict = _handle_embed_response(result, response_code, body)
 	else:
-		response_dict = {
-			"error": "API request failed",
-			"error_code": response_code,
-			"response": response_body_str
-		}
+		response_dict = _handle_generate_response(result, response_code, body)
 
 	current_completion["response"] = response_dict
 	current_completion["completed"] = true
-	# Emit for backward compatibility
-	generate_complete.emit(response_dict)
+
+
+func _handle_check_response(response_code: int) -> Dictionary:
+	var is_running: bool = (response_code == HTTP_STATUS_OK)
+	check_complete.emit(is_running)
+	return {"response": is_running}
+
+
+func _handle_embed_response(result: int, response_code: int, body: PackedByteArray) -> Dictionary:
+	var response_body_str: String = body.get_string_from_utf8()
+
+	if result == OK and response_code == HTTP_STATUS_OK:
+		return _parse_embed_success(response_body_str)
+	elif response_code == 0:
+		return {"error": "Connection failed - is LLM server running?", "error_code": response_code, "success": false}
+	else:
+		return {"error": "API embedding request failed", "error_code": response_code, "response": response_body_str, "success": false}
+
+
+func _parse_embed_success(response_body_str: String) -> Dictionary:
+	var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
+	if json_data.is_empty():
+		return {"error": "Failed to parse JSON response", "raw_response": response_body_str, "success": false}
+
+	var response_dict: Dictionary = {"json_data": json_data, "raw_response": response_body_str}
+	if json_data.has("embedding"):
+		response_dict["embedding"] = json_data["embedding"]
+		response_dict["model"] = json_data.get("model", "")
+		response_dict["success"] = true
+	else:
+		response_dict = {"error": "Failed to parse embedding response or missing embedding", "raw_response": response_body_str, "success": false}
+
+	embed_complete.emit(response_dict)
+	return response_dict
+
+
+func _handle_generate_response(result: int, response_code: int, body: PackedByteArray) -> Dictionary:
+	var response_body_str: String = body.get_string_from_utf8()
+
+	if result == OK and response_code == HTTP_STATUS_OK:
+		return _parse_generate_success(response_body_str)
+	elif response_code == 0:
+		return {"error": "Connection failed - is LLM server running?", "error_code": response_code}
+	else:
+		return {"error": "API request failed", "error_code": response_code, "response": response_body_str}
+
+
+func _parse_generate_success(response_body_str: String) -> Dictionary:
+	var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
+	if not json_data.is_empty():
+		return {"json_data": json_data, "raw_response": response_body_str}
+	else:
+		return {"error": "Failed to parse JSON response", "raw_response": response_body_str}
 
 ## Check if LLM server is running and accessible
 func is_llm_running() -> bool:

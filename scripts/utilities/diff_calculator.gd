@@ -210,56 +210,61 @@ func _rebuild_bbcode_from_spans(bbcode: String, merged_spans: Array[Dictionary])
 	return "".join(final_result)
 
 # Word-level diff for grammar corrections
-# gdlint:ignore-function:long-function
 func calculate_diff(old_text: String, new_text: String, show_deletions: bool = true, show_insertions: bool = true) -> String:
 	var old_words: PackedStringArray = old_text.split(" ")
 	var new_words: PackedStringArray = new_text.split(" ")
 
 	var result: Array[String] = []
-	var i: int = 0
-	var j: int = 0
+	var pos: Dictionary = {"i": 0, "j": 0}
 
-	while i < old_words.size() or j < new_words.size():
-		# Find how many consecutive words match starting from current position
-		var match_count: int = _find_match_count(old_words, new_words, i, j)
-
-		# Add matching words
-		if match_count > 0:
-			_process_matched_words(result, old_words, i, match_count)
-			i += match_count
-			j += match_count
-			continue
-
-		# Find best matching word ahead (look-ahead up to MAX_LOOK_AHEAD words)
-		var best_match_idx: int = -1
-		var best_match_old_idx: int = -1
-		var max_look_ahead: int = min(MAX_LOOK_AHEAD, old_words.size() - i, new_words.size() - j)
-
-		best_match_idx = _find_best_match_ahead(old_words, new_words, i, j, max_look_ahead)
-		if best_match_idx != -1:
-			best_match_old_idx = _get_old_index_for_match(old_words, new_words, i, j, max_look_ahead)
-
-		# If we found a match ahead, add the unmatched words as changes and skip to the match
-		if best_match_idx != -1:
-			_process_changes_with_match(result, old_words, new_words, i, j, best_match_old_idx, best_match_idx, show_deletions, show_insertions)
-			i = best_match_old_idx
-			j = best_match_idx
-		else:
-			# No match found ahead, just mark current word as changed
-			_process_single_word_change(result, old_words, new_words, i, j, show_deletions, show_insertions)
-			if i < old_words.size() and j < new_words.size():
-				i += 1
-				j += 1
-			elif j < new_words.size():
-				j += 1
-			elif i < old_words.size():
-				i += 1
+	while pos["i"] < old_words.size() or pos["j"] < new_words.size():
+		_process_diff_step(result, old_words, new_words, pos, show_deletions, show_insertions)
 
 	var bbcode_result: String = " ".join(result)
+	return _merge_adjacent_spans(bbcode_result)
 
-	# Post-process to merge adjacent spans of the same type
-	var merged: String = _merge_adjacent_spans(bbcode_result)
-	return merged
+
+## Process one step of the diff algorithm
+func _process_diff_step(result: Array[String], old_words: Array[String], new_words: Array[String], pos: Dictionary, show_deletions: bool, show_insertions: bool) -> void:
+	var i: int = pos.get("i", 0)
+	var j: int = pos.get("j", 0)
+
+	# Find how many consecutive words match starting from current position
+	var match_count: int = _find_match_count(old_words, new_words, i, j)
+
+	# Add matching words
+	if match_count > 0:
+		_process_matched_words(result, old_words, i, match_count)
+		pos["i"] = i + match_count
+		pos["j"] = j + match_count
+		return
+
+	# Find best matching word ahead
+	var max_look_ahead: int = min(MAX_LOOK_AHEAD, old_words.size() - i, new_words.size() - j)
+	var best_match_idx: int = _find_best_match_ahead(old_words, new_words, i, j, max_look_ahead)
+
+	if best_match_idx != -1:
+		var best_match_old_idx: int = _get_old_index_for_match(old_words, new_words, i, j, max_look_ahead)
+		_process_changes_with_match(result, old_words, new_words, i, j, best_match_old_idx, best_match_idx, show_deletions, show_insertions)
+		pos["i"] = best_match_old_idx
+		pos["j"] = best_match_idx
+		return
+
+	# No match found ahead, just mark current word as changed
+	_process_single_word_change(result, old_words, new_words, i, j, show_deletions, show_insertions)
+	_result_advance_positions(old_words, new_words, i, j, pos)
+
+
+func _result_advance_positions(old_words: Array, new_words: Array, i: int, j: int, pos: Dictionary) -> void:
+	if i < old_words.size() and j < new_words.size():
+		pos["i"] = i + 1
+		pos["j"] = j + 1
+	elif j < new_words.size():
+		pos["i"] = i
+		pos["j"] = j + 1
+	elif i < old_words.size():
+		pos["i"] = i + 1
+		pos["j"] = j
 
 
 ## Helper functions for calculate_diff

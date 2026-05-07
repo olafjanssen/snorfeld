@@ -44,38 +44,39 @@ func _ready():
 	id_pressed.connect(_on_item_pressed)
 
 
-# gdlint:ignore-function:long-function
 func _on_item_pressed(id: int):
-	match id:
-		OPEN_FOLDER_ID:
-			CommandBus.open_folder.emit()
-		SETTINGS_ID:
-			EventBus.open_settings.emit()
-		STORY_BIBLE_ID:
-			CommandBus.open_story_bible.emit()
-		RUN_ALL_GRAMMAR_ANALYSES_ID:
-			CommandBus.start_analysis.emit("GRAMMAR", "project")
-		RUN_CHAPTER_GRAMMAR_ANALYSES_ID:
-			CommandBus.start_analysis.emit("GRAMMAR", "chapter")
-		RUN_ALL_STYLE_ANALYSES_ID:
-			CommandBus.start_analysis.emit("STYLE", "project")
-		RUN_CHAPTER_STYLE_ANALYSES_ID:
-			CommandBus.start_analysis.emit("STYLE", "chapter")
-		RUN_ALL_STRUCTURE_ANALYSES_ID:
-			CommandBus.start_analysis.emit("STRUCTURE", "project")
-		RUN_CHAPTER_STRUCTURE_ANALYSES_ID:
-			CommandBus.start_analysis.emit("STRUCTURE", "chapter")
-		RUN_ALL_CHARACTER_ANALYSES_ID:
-			CommandBus.start_analysis.emit("CHARACTER", "project")
-		RUN_CHAPTER_CHARACTER_ANALYSES_ID:
-			CommandBus.start_analysis.emit("CHARACTER", "chapter")
-		RUN_ALL_OBJECT_ANALYSES_ID:
-			CommandBus.start_analysis.emit("OBJECT", "project")
-		RUN_CHAPTER_OBJECT_ANALYSES_ID:
-			CommandBus.start_analysis.emit("OBJECT", "chapter")
-		INDEX_PROJECT_EMBEDDINGS_ID:
-			CommandBus.start_analysis.emit("EMBEDDING", "project")
-		INDEX_CHAPTER_EMBEDDINGS_ID:
-			CommandBus.start_analysis.emit("EMBEDDING", "chapter")
-		1:
-			get_tree().quit()
+	if id == 1:
+		get_tree().quit()
+		return
+
+	# Map menu IDs to their service type and scope
+	var analysis_actions: Dictionary = {
+		RUN_ALL_GRAMMAR_ANALYSES_ID: {"type": "GRAMMAR", "scope": "project"},
+		RUN_CHAPTER_GRAMMAR_ANALYSES_ID: {"type": "GRAMMAR", "scope": "chapter"},
+		RUN_ALL_STYLE_ANALYSES_ID: {"type": "STYLE", "scope": "project"},
+		RUN_CHAPTER_STYLE_ANALYSES_ID: {"type": "STYLE", "scope": "chapter"},
+		RUN_ALL_STRUCTURE_ANALYSES_ID: {"type": "STRUCTURE", "scope": "project"},
+		RUN_CHAPTER_STRUCTURE_ANALYSES_ID: {"type": "STRUCTURE", "scope": "chapter"},
+		RUN_ALL_CHARACTER_ANALYSES_ID: {"type": "CHARACTER", "scope": "project"},
+		RUN_CHAPTER_CHARACTER_ANALYSES_ID: {"type": "CHARACTER", "scope": "chapter"},
+		RUN_ALL_OBJECT_ANALYSES_ID: {"type": "OBJECT", "scope": "project"},
+		RUN_CHAPTER_OBJECT_ANALYSES_ID: {"type": "OBJECT", "scope": "chapter"},
+		INDEX_PROJECT_EMBEDDINGS_ID: {"type": "EMBEDDING", "scope": "project"},
+		INDEX_CHAPTER_EMBEDDINGS_ID: {"type": "EMBEDDING", "scope": "chapter"}
+	}
+
+	if analysis_actions.has(id):
+		var action: Dictionary = analysis_actions[id]
+		CommandBus.start_analysis.emit(action["type"], action["scope"])
+		return
+
+	if id == OPEN_FOLDER_ID:
+		CommandBus.open_folder.emit()
+		return
+
+	if id == SETTINGS_ID:
+		EventBus.open_settings.emit()
+		return
+
+	if id == STORY_BIBLE_ID:
+		CommandBus.open_story_bible.emit()

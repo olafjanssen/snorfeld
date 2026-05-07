@@ -1,6 +1,6 @@
 extends Node
 
-# gdlint:ignore-file:file-length,god-class-functions,high-complexity,long-function
+# gdlint:ignore-file:file-length,god-class-functions,long-function
 ## GitService - Core git operations using OS.execute()
 ## Uses 'which' (Unix) or 'where' (Windows) to locate Git executable.
 
@@ -164,50 +164,76 @@ func init_git_repo(path: String) -> bool:
 	return true
 
 func get_status(base_path: String = "") -> Dictionary:
-	if git_executable == "":
-		push_error("[GitService] Git not found")
-		return {"error": "Git not found"}
-
-	var repo_path: String = base_path if base_path else git_root
-	if not repo_path:
-		push_error("[GitService] No git repository path")
+	var repo_path: String = _get_repo_path(base_path)
+	if repo_path == "":
 		return {"error": "No git repository"}
 
-	var output: Array = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
-	if output[0] == "":
-		push_error("[GitService] %s" % output[1])
+	var output: Array = _execute_git_status_command(repo_path)
+	if _is_status_error(output):
 		return {"error": output[1]}
 
-	var status: Dictionary = {
-		"files": [],  # Array of {path, change_type, staged}
+	var status: Dictionary = _init_status_dict()
+	_parse_status_output(output[0], status)
+	_add_branch_info(status, repo_path)
+	return status
+
+
+func _get_repo_path(base_path: String) -> String:
+	if git_executable == "":
+		push_error("[GitService] Git not found")
+		return ""
+	return base_path if base_path else git_root
+
+
+func _execute_git_status_command(repo_path: String) -> Array:
+	return _execute_git_command(["status", "--porcelain", "-u"], repo_path)
+
+
+func _is_status_error(output: Array) -> bool:
+	if output[0] == "":
+		push_error("[GitService] %s" % output[1])
+		return true
+	return false
+
+
+func _init_status_dict() -> Dictionary:
+	return {
+		"files": [],
 		"counts": {"modified": 0, "staged": 0, "untracked": 0, "deleted": 0}
 	}
 
-	for line in output[0].split("\n"):
+
+func _parse_status_output(output: String, status: Dictionary) -> void:
+	for line in output.split("\n"):
 		if line.length() < GIT_STATUS_PREFIX_LENGTH:
 			continue
-		var staged_char: String = line[0]
-		var unstaged_char: String = line[1]
-		var file_path: String = line.substr(GIT_STATUS_PREFIX_LENGTH)
+		var file_info: Dictionary = _parse_status_line(line)
+		if file_info:
+			status["files"].append(file_info)
+			status["counts"][file_info["change_type"]] += 1
+			if file_info["staged"]:
+				status["counts"]["staged"] += 1
 
-		# Untracked files (?? ) are never staged
-		var is_staged: bool = staged_char != " " and not (staged_char == "?" and unstaged_char == "?")
 
-		# Handle renamed files (format: "X Y -> new_path")
-		if " -> " in file_path:
-			file_path = file_path.split(" -> ")[1]
+func _parse_status_line(line: String) -> Dictionary:
+	var staged_char: String = line[0]
+	var unstaged_char: String = line[1]
+	var file_path: String = line.substr(GIT_STATUS_PREFIX_LENGTH)
 
-		var change_type: String = _determine_change_type(staged_char, unstaged_char, file_path)
+	# Handle renamed files
+	if " -> " in file_path:
+		file_path = file_path.split(" -> ")[1]
 
-		status["files"].append({"path": file_path, "change_type": change_type, "staged": is_staged})
-		status["counts"][change_type] += 1
-		if is_staged:
-			status["counts"]["staged"] += 1
+	var is_staged: bool = staged_char != " " and not (staged_char == "?" and unstaged_char == "?")
+	var change_type: String = _determine_change_type(staged_char, unstaged_char, file_path)
 
+	return {"path": file_path, "change_type": change_type, "staged": is_staged}
+
+
+func _add_branch_info(status: Dictionary, repo_path: String) -> void:
 	var branch_output: Array = _execute_git_command(["branch", "--show-current"], repo_path)
 	status["branch"] = branch_output[0].strip_edges() if branch_output[0] else "unknown"
 	status["is_clean"] = status["files"].size() == 0
-	return status
 
 func get_file_status(file_path: String) -> String:
 	if file_status_cache.has(file_path):

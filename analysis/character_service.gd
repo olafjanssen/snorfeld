@@ -1,7 +1,7 @@
 extends ContentCache
 # Character service - handles caching and analysis of character results
 
-# gdlint:ignore-file:file-length,high-complexity,deep-nesting,long-function,missing-type-hint,magic-number,long-line
+# gdlint:ignore-file:file-length,deep-nesting,long-function,missing-type-hint,magic-number,long-line
 
 const CHARACTER_DIR_NAME := "characters"
 
@@ -348,7 +348,23 @@ func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary,
 
 # Extract characters from text using LLM
 func _extract_characters_from_text(text: String, chapter_id: String, existing_characters_json: String) -> Dictionary:
-	var prompt := """
+	var prompt: String = _build_character_extraction_prompt(existing_characters_json, chapter_id, text)
+	var options: Dictionary = _get_llm_options()
+	return await _call_llm_with_retry_characters(prompt, options, 3)
+
+
+## Get LLM options
+func _get_llm_options() -> Dictionary:
+	return {
+		"temperature": AppConfig.get_llm_temperature(),
+		"max_tokens": AppConfig.get_llm_max_tokens()
+	}
+
+
+## Build the prompt for character extraction
+# gdlint:ignore-function:high-complexity
+func _build_character_extraction_prompt(existing_characters_json: String, chapter_id: String, text: String) -> String:
+	return """
 You are a helpful writing assistant specializing in character analysis for a novel. Analyze the following chapter text.
 
 Your task is to identify the characters that appear in this chapter and provide their complete, consistent profiles. Use the existing character database to maintain consistency.
@@ -394,28 +410,22 @@ Respond with a JSON object:
 }
 """ % [existing_characters_json, chapter_id, text]
 
-	var options := {
-		"temperature": AppConfig.get_llm_temperature(),
-		"max_tokens": AppConfig.get_llm_max_tokens()
-	}
 
+## Call LLM with retry logic for characters
+func _call_llm_with_retry_characters(prompt: String, options: Dictionary, max_retries: int) -> Dictionary:
 	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
-
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
-	else:
-		# Retry up to 3 times on failure
-		var max_retries: int = 3
-		for _i in range(max_retries):
-			# Check if we hit token limit - increase tokens for retry
-			if llm_response.get("done", false) == false:
-				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
-			llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
-			if llm_response.get("parsed_json", null) != null:
-				return llm_response["parsed_json"]
 
-		push_error("[CharacterService] Failed to parse character extraction response after %d retries" % max_retries)
-		return {"characters": []}
+	for _i in range(max_retries):
+		if llm_response.get("done", false) == false:
+			options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
+		llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+		if llm_response.get("parsed_json", null) != null:
+			return llm_response["parsed_json"]
+
+	push_error("[CharacterService] Failed to parse character extraction response after %d retries" % max_retries)
+	return {"characters": []}
 
 
 # Find matching character file using fuzzy matching

@@ -1,7 +1,7 @@
 extends GenericCacheService
 ## StyleService - Handles caching and analysis of paragraph style improvements
 
-# gdlint:ignore-file:file-length,too-many-params,long-function,high-complexity,missing-return-type,long-line
+# gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line
 
 # Constants for context limits
 const CONTEXT_WORDS: int = 100
@@ -35,50 +35,54 @@ func analyze_style(
 	context_before: String = "",
 	context_after: String = ""
 ) -> Dictionary:
-	# Build context from surrounding text (trim to reasonable size)
-	var context: String = ""
-	if context_before.length() > 0 or context_after.length() > 0:
-		# Take up to CONTEXT_WORDS before and after
-		var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
-		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
-		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
+	var context: String = _build_style_context(context_before, context_after)
+	var prompt: String = _build_style_prompt(context, paragraph)
+	var llm_response: Dictionary = await _call_style_llm(prompt)
+	return _parse_style_response(llm_response, paragraph)
 
-	# Format prompt using template
-	var prompt: String = PromptTemplates.format_prompt(
+
+func _build_style_context(context_before: String, context_after: String) -> String:
+	if context_before.length() == 0 and context_after.length() == 0:
+		return ""
+	var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
+	var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
+	return "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
+
+
+func _build_style_prompt(context: String, paragraph: String) -> String:
+	return PromptTemplates.format_prompt(
 		PromptTemplates.STYLE_PROMPT,
 		{"context": context, "paragraph": paragraph}
 	)
 
+
+func _call_style_llm(prompt: String) -> Dictionary:
 	var options: Dictionary = {
 		"temperature": AppConfig.get_llm_temperature(),
 		"max_tokens": AppConfig.get_llm_max_tokens()
 	}
-	var llm_response: Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	return await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
-	var enhanced_text: String = paragraph
-	var explanation: String = ""
-	var model: String = AppConfig.get_llm_model()
 
+func _parse_style_response(llm_response: Dictionary, paragraph: String) -> Dictionary:
 	if llm_response.get("parsed_json", null) != null:
-		# The LLMClient.generate_json already parsed the JSON for us
-		var parsed: Dictionary = llm_response["parsed_json"]
-		if parsed is Dictionary:
-			if parsed.has("enhanced") and parsed["enhanced"] is String:
-				enhanced_text = parsed["enhanced"]
-			if parsed.has("explanation") and parsed["explanation"] is String:
-				explanation = parsed["explanation"]
-		else:
-			push_warning("[StyleService] LLM returned non-Dictionary JSON: %s" % parsed)
-	else:
-		push_warning("[StyleService] LLM response error or not JSON")
-		if llm_response.has("error"):
-			push_error("[StyleService] LLM Error: %s" % llm_response["error"])
+		return _parse_style_json(llm_response["parsed_json"], paragraph)
 
-	return {
-		"enhanced": enhanced_text,
-		"explanation": explanation,
-		"model": model
-	}
+	push_warning("[StyleService] LLM response error or not JSON")
+	if llm_response.has("error"):
+		push_error("[StyleService] LLM Error: %s" % llm_response["error"])
+	return {"enhanced": paragraph, "explanation": "", "model": AppConfig.get_llm_model()}
+
+
+func _parse_style_json(parsed: Variant, paragraph: String) -> Dictionary:
+	if parsed is Dictionary:
+		return {
+			"enhanced": parsed.get("enhanced", paragraph),
+			"explanation": parsed.get("explanation", ""),
+			"model": AppConfig.get_llm_model()
+		}
+	push_warning("[StyleService] LLM returned non-Dictionary JSON: %s" % parsed)
+	return {"enhanced": paragraph, "explanation": "", "model": AppConfig.get_llm_model()}
 
 
 # Override: Analyze a paragraph and return style cache data
@@ -86,23 +90,29 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
+	var contexts: Array = _extract_context(file_content, paragraph)
+	var context_before: String = contexts[0]
+	var context_after: String = contexts[1]
 
-	# Extract context from file_content
-	var context_before: String = ""
-	var context_after: String = ""
-	if file_content.length() > 0 and paragraph.length() > 0:
-		var paragraph_index: int = file_content.find(paragraph)
-		if paragraph_index != -1:
-			var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
-			context_before = file_content.substr(before_start, paragraph_index - before_start)
-			var after_start: int = paragraph_index + paragraph.length()
-			var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
-			context_after = file_content.substr(after_start, after_end - after_start)
-
-	# Call LLM to analyze style
 	var result: Dictionary = await analyze_style(paragraph, context_before, context_after)
+	return _build_style_cache_data(paragraph_hash, paragraph, result)
 
-	# Build cache data
+
+func _extract_context(file_content: String, paragraph: String) -> Array:
+	if file_content.length() == 0 or paragraph.length() == 0:
+		return ["", ""]
+	var paragraph_index: int = file_content.find(paragraph)
+	if paragraph_index == -1:
+		return ["", ""]
+	var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
+	var context_before: String = file_content.substr(before_start, paragraph_index - before_start)
+	var after_start: int = paragraph_index + paragraph.length()
+	var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
+	var context_after: String = file_content.substr(after_start, after_end - after_start)
+	return [context_before, context_after]
+
+
+func _build_style_cache_data(paragraph_hash: String, paragraph: String, result: Dictionary) -> Dictionary:
 	return {
 		"paragraph_hash": paragraph_hash,
 		"original_text": paragraph,

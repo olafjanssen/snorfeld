@@ -1,7 +1,7 @@
 extends GenericCacheService
 ## StructureService - Handles caching and analysis of paragraph structure improvements
 
-# gdlint:ignore-file:file-length,too-many-params,long-function,high-complexity,missing-return-type,long-line
+# gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line
 
 # Constants for context limits
 const FULL_CHAPTER_WORDS: int = 500
@@ -37,56 +37,56 @@ func analyze_structure(
 	context_after: String = "",
 	full_chapter: String = ""
 ) -> Dictionary:
-	# Build context - use full chapter if available, otherwise use before/after
-	var context: String = ""
+	var context: String = _build_structure_context(full_chapter, context_before, context_after)
+	var prompt: String = _build_structure_prompt(context, paragraph)
+	var llm_response: Dictionary = await _call_structure_llm(prompt)
+	return _parse_structure_response(llm_response)
+
+
+func _build_structure_context(full_chapter: String, context_before: String, context_after: String) -> String:
 	if full_chapter.length() > 0:
-		# Use full chapter as context, trimmed to reasonable size
-		context = "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, FULL_CHAPTER_WORDS)
-	elif context_before.length() > 0 or context_after.length() > 0:
-		# Fall back to before/after context
+		return "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, FULL_CHAPTER_WORDS)
+	if context_before.length() > 0 or context_after.length() > 0:
 		var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
 		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
-		context = "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
+		return "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
+	return ""
 
-	# Format prompt using template
-	var prompt: String = PromptTemplates.format_prompt(PromptTemplates.STRUCTURE_PROMPT, {
+
+func _build_structure_prompt(context: String, paragraph: String) -> String:
+	return PromptTemplates.format_prompt(PromptTemplates.STRUCTURE_PROMPT, {
 		"context": context,
 		"paragraph": paragraph
 	})
 
+
+func _call_structure_llm(prompt: String) -> Dictionary:
 	var options: Dictionary = {
 		"temperature": AppConfig.get_llm_temperature(),
 		"max_tokens": AppConfig.get_llm_max_tokens()
 	}
-	var llm_response: Dictionary = await LLMClient.generate_json(
-		AppConfig.get_llm_model(),
-		prompt,
-		options
-	)
+	return await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
-	var suggestion: String = ""
-	var explanation: String = ""
-	var model: String = AppConfig.get_llm_model()
 
+func _parse_structure_response(llm_response: Dictionary) -> Dictionary:
 	if llm_response.get("parsed_json", null) != null:
-		var parsed: Dictionary = llm_response["parsed_json"]
-		if parsed is Dictionary:
-			if parsed.has("suggestion") and parsed["suggestion"] is String:
-				suggestion = parsed["suggestion"]
-			if parsed.has("explanation") and parsed["explanation"] is String:
-				explanation = parsed["explanation"]
-		else:
-			push_warning("[StructureService] LLM returned non-Dictionary JSON: %s" % parsed)
-	else:
-		push_warning("[StructureService] LLM response error or not JSON")
-		if llm_response.has("error"):
-			push_error("[StructureService] LLM Error: %s" % llm_response["error"])
+		return _parse_structure_json(llm_response["parsed_json"])
 
-	return {
-		"suggestion": suggestion,
-		"explanation": explanation,
-		"model": model
-	}
+	push_warning("[StructureService] LLM response error or not JSON")
+	if llm_response.has("error"):
+		push_error("[StructureService] LLM Error: %s" % llm_response["error"])
+	return {"suggestion": "", "explanation": "", "model": AppConfig.get_llm_model()}
+
+
+func _parse_structure_json(parsed: Variant) -> Dictionary:
+	if parsed is Dictionary:
+		return {
+			"suggestion": parsed.get("suggestion", ""),
+			"explanation": parsed.get("explanation", ""),
+			"model": AppConfig.get_llm_model()
+		}
+	push_warning("[StructureService] LLM returned non-Dictionary JSON: %s" % parsed)
+	return {"suggestion": "", "explanation": "", "model": AppConfig.get_llm_model()}
 
 
 # Override: Analyze a paragraph and return structure cache data
@@ -94,23 +94,27 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
+	var contexts: Array = _extract_context(file_content, paragraph)
 
-	# Extract context from file_content
-	var context_before: String = ""
-	var context_after: String = ""
-	if file_content.length() > 0 and paragraph.length() > 0:
-		var paragraph_index: int = file_content.find(paragraph)
-		if paragraph_index != -1:
-			var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
-			context_before = file_content.substr(before_start, paragraph_index - before_start)
-			var after_start: int = paragraph_index + paragraph.length()
-			var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
-			context_after = file_content.substr(after_start, after_end - after_start)
+	var result: Dictionary = await analyze_structure(paragraph, contexts[0], contexts[1], file_content)
+	return _build_structure_cache_data(paragraph_hash, paragraph, result)
 
-	# Call LLM to analyze structure (use full chapter as context if available)
-	var result: Dictionary = await analyze_structure(paragraph, context_before, context_after, file_content)
 
-	# Build cache data
+func _extract_context(file_content: String, paragraph: String) -> Array:
+	if file_content.length() == 0 or paragraph.length() == 0:
+		return ["", ""]
+	var paragraph_index: int = file_content.find(paragraph)
+	if paragraph_index == -1:
+		return ["", ""]
+	var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
+	var context_before: String = file_content.substr(before_start, paragraph_index - before_start)
+	var after_start: int = paragraph_index + paragraph.length()
+	var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
+	var context_after: String = file_content.substr(after_start, after_end - after_start)
+	return [context_before, context_after]
+
+
+func _build_structure_cache_data(paragraph_hash: String, paragraph: String, result: Dictionary) -> Dictionary:
 	return {
 		"paragraph_hash": paragraph_hash,
 		"original_text": paragraph,

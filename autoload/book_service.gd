@@ -2,7 +2,7 @@ extends Node
 ## BookService - Central content model for the project
 ## Maintains a view of all files, chapters, and paragraphs
 
-# gdlint:ignore-file:file-length,god-class-functions,high-complexity,deep-nesting,long-function,magic-number,long-line,too-many-params
+# gdlint:ignore-file:file-length,god-class-functions,deep-nesting,long-function,magic-number,long-line,too-many-params
 
 # Project content structure:
 # - files: Dictionary of file_path -> FileData
@@ -70,13 +70,9 @@ func _add_file(file_path: String) -> void:
 	if content == "":
 		return
 
-	# File hash based on content
-	var file_hash: String = hash_text(content)
-
-	# File data
 	var file_data: Dictionary = {
 		"path": file_path,
-		"hash": file_hash,
+		"hash": hash_text(content),
 		"content": content,
 		"chapters": [],
 		"paragraphs": [],
@@ -84,77 +80,96 @@ func _add_file(file_path: String) -> void:
 	}
 	files[file_path] = file_data
 
-	# Determine chapter level for this file
 	var chapter_level: int = _determine_chapter_level(content)
-
-	# Parse chapters from markdown headings
 	var chapter_id_counter: int = 0
 	var current_chapter_id: String = ""
-
 	var lines: Array = content.split("\n")
-	var line_num: int = 0
 	var paragraph_start_line: int = 0
 	var current_paragraph_text: String = ""
 
-	for line in lines:
-		line_num += 1
+	for i in range(lines.size()):
+		var line_num: int = i + 1
+		var line: String = lines[i]
 		var stripped: String = line.strip_edges()
 
-		# Check for chapter heading (dynamic level)
-		if stripped.begins_with("#") and stripped.length() > 1:
-			var level: int = 0
-			while level < stripped.length() and stripped[level] == "#":
-				level += 1
-			# Check bounds before accessing stripped[level]
-			if level < stripped.length() and level == chapter_level and (stripped[level] == " " or stripped[level] == "\t"):
-				# Save previous chapter if exists
-				if current_chapter_id != "":
-					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
-					current_paragraph_text = ""
-
-				# Create new chapter
-				chapter_id_counter += 1
-				current_chapter_id = "%s%d_%s" % [CHAPTER_ID_PREFIX, chapter_id_counter, hash_text(file_path)]
-				var chapter_title: String = stripped.substr(level).strip_edges()
-				var chapter_data: Dictionary = {
-					"id": current_chapter_id,
-					"title": chapter_title,
-					"file": file_path,
-					"level": level,
-					"line": line_num,
-					"paragraphs": []
-				}
-				chapters[current_chapter_id] = chapter_data
-				file_data["chapters"].append(current_chapter_id)
-				paragraph_start_line = line_num
+		if _is_chapter_heading(stripped, chapter_level):
+			var level: int = _count_hashes(stripped)
+			_save_previous_paragraph(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+			current_chapter_id = _create_chapter(file_path, stripped, level, line_num, chapter_id_counter, file_data)
+			chapter_id_counter += 1
+			paragraph_start_line = line_num
+			current_paragraph_text = ""
 			continue
 
 		# Line-based paragraphs: each non-empty line is a separate paragraph
 		if stripped != "":
 			# Save previous paragraph if exists
-			if current_paragraph_text != "":
-				if current_chapter_id != "":
-					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
-				else:
-					_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+			_save_previous_paragraph(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
 			# Start new paragraph
 			current_paragraph_text = stripped
 			paragraph_start_line = line_num
 		else:
 			# Empty line - save previous paragraph if exists
-			if current_paragraph_text != "":
-				if current_chapter_id != "":
-					_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
-				else:
-					_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
-				current_paragraph_text = ""
+			_save_previous_paragraph(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num - 1)
+			current_paragraph_text = ""
 
 	# Save the last paragraph if it has content
 	if current_paragraph_text != "":
-		if current_chapter_id != "":
-			_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, line_num)
-		else:
-			_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, line_num)
+		_save_paragraph_for_chapter_or_file(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, lines.size())
+
+
+## Check if line is a chapter heading at the expected level
+func _is_chapter_heading(stripped: String, chapter_level: int) -> bool:
+	if not stripped.begins_with("#") or stripped.length() <= 1:
+		return false
+	var level: int = 0
+	while level < stripped.length() and stripped[level] == "#":
+		level += 1
+	return level == chapter_level and level < stripped.length() and (stripped[level] == " " or stripped[level] == "\t")
+
+
+## Count number of # characters at start of string
+func _count_hashes(stripped: String) -> int:
+	var level: int = 0
+	while level < stripped.length() and stripped[level] == "#":
+		level += 1
+	return level
+
+
+## Create a new chapter and add to file data
+func _create_chapter(file_path: String, heading: String, level: int, line_num: int, chapter_id_counter: int, file_data: Dictionary) -> String:
+	chapter_id_counter += 1
+	var chapter_id: String = "%s%d_%s" % [CHAPTER_ID_PREFIX, chapter_id_counter, hash_text(file_path)]
+	var chapter_title: String = heading.substr(level).strip_edges()
+	var chapter_data: Dictionary = {
+		"id": chapter_id,
+		"title": chapter_title,
+		"file": file_path,
+		"level": level,
+		"line": line_num,
+		"paragraphs": []
+	}
+	chapters[chapter_id] = chapter_data
+	file_data["chapters"].append(chapter_id)
+	return chapter_id
+
+
+## Save previous paragraph if it exists
+func _save_previous_paragraph(current_chapter_id: String, file_path: String, current_paragraph_text: String, paragraph_start_line: int, end_line: int) -> void:
+	if current_paragraph_text == "":
+		return
+	if current_chapter_id != "":
+		_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, end_line)
+	else:
+		_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, end_line)
+
+
+## Save paragraph to chapter or file
+func _save_paragraph_for_chapter_or_file(current_chapter_id: String, file_path: String, current_paragraph_text: String, paragraph_start_line: int, end_line: int) -> void:
+	if current_chapter_id != "":
+		_save_paragraph_for_chapter(current_chapter_id, file_path, current_paragraph_text, paragraph_start_line, end_line)
+	else:
+		_save_paragraph_for_file(file_path, current_paragraph_text, paragraph_start_line, end_line)
 
 
 # Save a paragraph for a chapter
@@ -229,44 +244,49 @@ func get_all_paragraphs() -> Array:
 func get_chapters_for_file(file_path: String) -> Array:
 	if not files.has(file_path):
 		return []
-	return files[file_path].get("chapters", [])
+	var chapters_list: Array = files[file_path].get("chapters")
+	return chapters_list if chapters_list != null else []
 
 
 # Get paragraphs for a file
 func get_paragraphs_for_file(file_path: String) -> Array:
 	if not files.has(file_path):
 		return []
-	return files[file_path].get("paragraphs", [])
+	var paragraphs_list: Array = files[file_path].get("paragraphs")
+	return paragraphs_list if paragraphs_list != null else []
 
 
 # Get paragraphs for a chapter
 func get_paragraphs_for_chapter(chapter_id: String) -> Array:
 	if not chapters.has(chapter_id):
 		return []
-	return chapters[chapter_id].get("paragraphs", [])
+	var paragraphs_list: Array = chapters[chapter_id].get("paragraphs")
+	return paragraphs_list if paragraphs_list != null else []
 
 
 # Get paragraph by ID
 func get_paragraph(paragraph_id: String) -> Dictionary:
-	return paragraphs.get(paragraph_id, {})
+	var paragraph: Dictionary = paragraphs.get(paragraph_id)
+	return paragraph if paragraph != null else {}
 
 
 # Get paragraph by hash
 func get_paragraph_by_hash(paragraph_hash: String) -> Dictionary:
 	for para_id in paragraphs:
-		if paragraphs[para_id].get("hash", "") == paragraph_hash:
+		var para_hash: String = paragraphs[para_id].get("hash")
+		if para_hash != null and para_hash == paragraph_hash:
 			return paragraphs[para_id]
 	return {}
 
 
 # Get chapter by ID
 func get_chapter(chapter_id: String) -> Dictionary:
-	return chapters.get(chapter_id, {})
+	return chapters[chapter_id] if chapters.has(chapter_id) else {}
 
 
 # Get file by path
 func get_file(file_path: String) -> Dictionary:
-	return files.get(file_path, {})
+	return files[file_path] if files.has(file_path) else {}
 
 
 # Check if a paragraph exists in the project
@@ -278,7 +298,8 @@ func has_paragraph(paragraph_hash: String) -> bool:
 func has_paragraph_in_file(paragraph_hash: String, file_path: String) -> bool:
 	var paras: Array = get_paragraphs_for_file(file_path)
 	for para_id in paras:
-		if paragraphs[para_id].get("hash", "") == paragraph_hash:
+		var para_hash: String = paragraphs[para_id].get("hash")
+		if para_hash != null and para_hash == paragraph_hash:
 			return true
 	return false
 
@@ -287,7 +308,9 @@ func has_paragraph_in_file(paragraph_hash: String, file_path: String) -> bool:
 func get_all_paragraph_hashes() -> Array:
 	var hashes: Array = []
 	for para_id in paragraphs:
-		hashes.append(paragraphs[para_id].get("hash", ""))
+		var para_hash: String = paragraphs[para_id].get("hash")
+		if para_hash != null:
+			hashes.append(para_hash)
 	return hashes
 
 
@@ -298,8 +321,8 @@ func get_all_chapter_hashes() -> Array:
 	for file_path in files:
 		var file_data: Dictionary = files[file_path]
 		if not file_data.is_empty():
-			var file_hash: String = file_data.get("hash", "")
-			if file_hash != "":
+			var file_hash: String = file_data.get("hash")
+			if file_hash != null and file_hash != "":
 				hashes.append(file_hash)
 	return hashes
 
@@ -312,12 +335,16 @@ func get_chapter_at_line(file_path: String, line_number: int) -> Dictionary:
 	var chapter_list: Array = get_chapters_for_file(file_path)
 	for chapter_id in chapter_list:
 		var chapter: Dictionary = chapters[chapter_id]
-		if line_number >= chapter.get("line", 0):
+		var chapter_line: int = chapter.get("line")
+		if chapter_line == null:
+			continue
+		if line_number >= chapter_line:
 			# Check if there's a next chapter to compare against
 			var next_chapter_line: int = 999999
 			for other_id in chapter_list:
-				if chapters[other_id].get("line", 0) > chapter.get("line", 0) and chapters[other_id].get("line", 0) < next_chapter_line:
-					next_chapter_line = chapters[other_id].get("line", 0)
+				var other_line: int = chapters[other_id].get("line")
+				if other_line != null and other_line > chapter_line and other_line < next_chapter_line:
+					next_chapter_line = other_line
 			if line_number < next_chapter_line:
 				return chapter
 	return {}
@@ -333,9 +360,9 @@ func get_paragraph_at_line(file_path: String, line_number: int) -> Dictionary:
 	var para_ids: Array = get_paragraphs_for_file(file_path)
 	for para_id in para_ids:
 		var para: Dictionary = paragraphs[para_id]
-		var start_line: int = para.get("start_line", 0)
-		var end_line: int = para.get("end_line", 0)
-		if line_number >= start_line and line_number <= end_line:
+		var start_line: int = para.get("start_line")
+		var end_line: int = para.get("end_line")
+		if start_line != null and end_line != null and line_number >= start_line and line_number <= end_line:
 			return para
 	return {}
 
@@ -343,7 +370,8 @@ func get_paragraph_at_line(file_path: String, line_number: int) -> Dictionary:
 # Get paragraph hash at a specific line in a file (convenience method)
 func get_paragraph_hash_at_line(file_path: String, line_number: int) -> String:
 	var para: Dictionary = get_paragraph_at_line(file_path, line_number)
-	return para.get("hash", "")
+	var hash_val: String = para.get("hash")
+	return hash_val if hash_val != null else ""
 
 
 # Get all headings from a file (all levels, not just chapters)
@@ -353,8 +381,8 @@ func get_all_headings_for_file(file_path: String) -> Array:
 	if not files.has(file_path):
 		return headings
 
-	var content: String = files[file_path].get("content", "")
-	if content == "":
+	var content: String = files[file_path].get("content")
+	if content == null or content == "":
 		return headings
 
 	var lines: Array = content.split("\n")
@@ -406,13 +434,15 @@ func cleanup() -> void:
 	# Remove files and their associated chapters/paragraphs
 	for file_path in files_to_remove:
 		# Remove chapters belonging to this file
-		var chapter_ids: Array = files[file_path].get("chapters", [])
-		for chapter_id in chapter_ids:
-			# Remove paragraphs belonging to this chapter
-			var para_ids: Array = chapters[chapter_id].get("paragraphs", [])
-			for para_id in para_ids:
-				paragraphs.erase(para_id)
-			chapters.erase(chapter_id)
+		var chapter_ids: Array = files[file_path].get("chapters")
+		if chapter_ids != null:
+			for chapter_id in chapter_ids:
+				# Remove paragraphs belonging to this chapter
+				var para_ids: Array = chapters[chapter_id].get("paragraphs")
+				if para_ids != null:
+					for para_id in para_ids:
+						paragraphs.erase(para_id)
+				chapters.erase(chapter_id)
 		files.erase(file_path)
 
 	content_changed.emit()
@@ -446,31 +476,46 @@ func _on_file_saved(file_path: String) -> void:
 # Determine the heading level to use as chapter level
 # Returns the level (1-6) that should be treated as chapters
 func _determine_chapter_level(content: String) -> int:
-	var level_counts: Dictionary = {}
-	var lines: Array = content.split("\n")
+	var level_counts: Dictionary = _count_headings_by_level(content)
 
-	# Count headings by level
-	for line in lines:
-		var stripped: String = line.strip_edges()
-		if stripped.begins_with("#"):
-			var level: int = 0
-			while level < stripped.length() and stripped[level] == "#":
-				level += 1
-			# Check bounds before accessing stripped[level]
-			if level >= 1 and level <= 6 and level < stripped.length() and (stripped[level] == " " or stripped[level] == "\t"):
-				level_counts[level] = level_counts.get(level, 0) + 1
-
-	# If no headings, default to level 1
 	if level_counts.is_empty():
 		return 1
 
-	# If only one level, use that
 	if level_counts.size() == 1:
 		return level_counts.keys()[0]
 
-	# Multiple levels - determine chapter level
-	# Heuristic: if level 1 has very few headings (< 25% of total) and level 2 exists, use level 2
-	# Otherwise, use level 1
+	return _determine_chapter_level_from_counts(level_counts)
+
+
+## Count headings by level in content
+func _count_headings_by_level(content: String) -> Dictionary:
+	var level_counts: Dictionary = {}
+	var lines: Array = content.split("\n")
+
+	for line in lines:
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("#"):
+			var level: int = _get_heading_level(stripped)
+			if level >= 1 and level <= 6:
+				var current = level_counts.get(level)
+				level_counts[level] = (current as int) + 1 if current != null else 1
+
+	return level_counts
+
+
+## Get heading level from a line (returns 0 if not a valid heading)
+func _get_heading_level(stripped: String) -> int:
+	var level: int = 0
+	while level < stripped.length() and stripped[level] == "#":
+		level += 1
+	# Check bounds before accessing stripped[level]
+	if level >= 1 and level <= 6 and level < stripped.length() and (stripped[level] == " " or stripped[level] == "\t"):
+		return level
+	return 0
+
+
+## Determine chapter level from heading counts
+func _determine_chapter_level_from_counts(level_counts: Dictionary) -> int:
 	var total_headings: int = 0
 	for count in level_counts.values():
 		total_headings += count
@@ -478,17 +523,13 @@ func _determine_chapter_level(content: String) -> int:
 	if total_headings == 0:
 		return 1
 
-	# If level 1 exists and has few headings, check if level 2 is more common
 	if level_counts.has(1):
 		var level1_count: int = level_counts[1]
 		var level1_ratio: float = level1_count * 1.0 / total_headings
 
-		# If level 1 has less than 25% of headings and level 2 exists with more
-		if level1_ratio < 0.25 and level_counts.has(2):
-			if level_counts[2] > level1_count:
-				return 2
+		if level1_ratio < 0.25 and level_counts.has(2) and level_counts[2] > level1_count:
+			return 2
 
-	# Default to level 1
 	return 1
 
 

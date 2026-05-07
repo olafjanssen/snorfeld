@@ -2,7 +2,7 @@ extends ContentCache
 # Object service - handles caching and analysis of important objects (Chekhov's guns)
 # Tracks appearance, relation with characters, thematic relevance, etc.
 
-# gdlint:ignore-file:file-length,high-complexity,deep-nesting,long-function,missing-type-hint,magic-number,long-line
+# gdlint:ignore-file:file-length,deep-nesting,long-function,missing-type-hint,magic-number,long-line
 
 const OBJECT_DIR_NAME := "objects"
 
@@ -156,78 +156,89 @@ func _on_run_chapter_object_analyses() -> void:
 
 # Extracts objects from file content and creates/updates cache files
 func _extract_and_cache_objects(cache_path: String, file_path: String, file_content: String) -> bool:
-	# Extract chapter ID from file path (full filename without extension)
 	var chapter_id: String = file_path.get_file().get_basename()
-
-	# Load all existing objects from cache to provide context to LLM
 	var existing_objects_json: String = _load_existing_objects_json(cache_path)
 
-	# Use LLM to extract/update objects from the chapter text with existing context
 	var extraction_result: Dictionary = await _extract_objects_from_text(file_content, chapter_id, existing_objects_json)
-
-	if extraction_result == null or not extraction_result.has("objects"):
-		push_error("[ObjectService] Failed to extract objects from file: %s" % file_path)
+	if not _is_valid_extraction(extraction_result):
 		return false
 
-	var objects: Array = extraction_result["objects"]
 	var success: bool = true
-
-	# Process each object
-	for obj_data in objects:
+	for obj_data in extraction_result["objects"]:
 		var obj_name: String = obj_data.get("name", "")
 		if obj_name == "":
 			continue
-
-		# Check for fuzzy matches with existing object files FIRST
-		var existing_file_path: String = _find_matching_object_file(obj_name, cache_path)
-		var canonical_name: String = obj_name
-
-		if existing_file_path != "":
-			# Use the existing file's canonical name for hashing
-			var read_file: FileAccess = FileAccess.open(existing_file_path, FileAccess.READ)
-			if read_file:
-				var content: String = read_file.get_as_text()
-				read_file.close()
-				var json: JSON = JSON.new()
-				if json.parse(content) == OK:
-					var object_data: Dictionary = json.get_data()
-					canonical_name = object_data.get("name", obj_name)
-					# Also add the new alias to the existing object
-					if not object_data.get("aliases", []).has(obj_name):
-						var aliases: Array = object_data.get("aliases", [])
-						if not aliases.has(obj_name):
-							aliases.append(obj_name)
-							object_data["aliases"] = aliases
-
-		# Use MD5 hash of the CANONICAL object name for filename
-		var obj_hash: String = _hash_object(canonical_name)
-		var obj_file_path: String = cache_path.path_join("%s.json" % obj_hash)
-
-		# Load existing data if file exists
-		var existing_data: Dictionary = {}
-		if _file_exists(obj_file_path):
-			var read_file: FileAccess = FileAccess.open(obj_file_path, FileAccess.READ)
-			if read_file:
-				var content: String = read_file.get_as_text()
-				read_file.close()
-				var json: JSON = JSON.new()
-				if json.parse(content) == OK:
-					existing_data = json.get_data()
-
-		# Merge with existing data and add chapter-specific fields
+		var canonical_name: String = _get_canonical_object_name(obj_name, cache_path)
+		var obj_file_path: String = _get_object_file_path(cache_path, canonical_name)
+		var existing_data: Dictionary = _load_object_data(obj_file_path)
 		var updated_data: Dictionary = _merge_object_data(existing_data, obj_data, chapter_id)
-
-		# Save updated object data
-		var file: FileAccess = FileAccess.open(obj_file_path, FileAccess.WRITE)
-		if file:
-			var json_str: String = JSON.stringify(updated_data)
-			file.store_string(json_str)
-			file.close()
-		else:
-			push_error("[ObjectService] Failed to save object file: %s" % obj_file_path)
+		if not _save_object_data(obj_file_path, updated_data):
 			success = false
-
 	return success
+
+
+func _is_valid_extraction(extraction_result: Dictionary) -> bool:
+	if extraction_result == null or not extraction_result.has("objects"):
+		push_error("[ObjectService] Failed to extract objects: invalid result")
+		return false
+	return true
+
+
+func _get_canonical_object_name(obj_name: String, cache_path: String) -> String:
+	var existing_file_path: String = _find_matching_object_file(obj_name, cache_path)
+	if existing_file_path == "":
+		return obj_name
+
+	var read_file: FileAccess = FileAccess.open(existing_file_path, FileAccess.READ)
+	if not read_file:
+		return obj_name
+
+	var content: String = read_file.get_as_text()
+	read_file.close()
+	var json: JSON = JSON.new()
+	if json.parse(content) != OK:
+		return obj_name
+
+	var object_data: Dictionary = json.get_data()
+	var canonical_name: String = object_data.get("name", obj_name)
+	# Add new alias
+	if not object_data.get("aliases", []).has(obj_name):
+		var aliases: Array = object_data.get("aliases", [])
+		if not aliases.has(obj_name):
+			aliases.append(obj_name)
+			object_data["aliases"] = aliases
+		_save_object_data(existing_file_path, object_data)
+	return canonical_name
+
+
+func _get_object_file_path(cache_path: String, canonical_name: String) -> String:
+	var obj_hash: String = _hash_object(canonical_name)
+	return cache_path.path_join("%s.json" % obj_hash)
+
+
+func _load_object_data(obj_file_path: String) -> Dictionary:
+	if not _file_exists(obj_file_path):
+		return {}
+	var read_file: FileAccess = FileAccess.open(obj_file_path, FileAccess.READ)
+	if not read_file:
+		return {}
+	var content: String = read_file.get_as_text()
+	read_file.close()
+	var json: JSON = JSON.new()
+	if json.parse(content) == OK:
+		return json.get_data()
+	return {}
+
+
+func _save_object_data(obj_file_path: String, data: Dictionary) -> bool:
+	var file: FileAccess = FileAccess.open(obj_file_path, FileAccess.WRITE)
+	if not file:
+		push_error("[ObjectService] Failed to save object file: %s" % obj_file_path)
+		return false
+	var json_str: String = JSON.stringify(data)
+	file.store_string(json_str)
+	file.close()
+	return true
 
 
 # Load all existing objects as JSON string for LLM context
@@ -358,7 +369,15 @@ func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, cha
 
 # Extract objects from text using LLM
 func _extract_objects_from_text(text: String, chapter_id: String, existing_objects_json: String) -> Dictionary:
-	var prompt := """
+	var prompt: String = _build_object_extraction_prompt(existing_objects_json, chapter_id, text)
+	var options: Dictionary = _get_llm_options()
+	return await _call_llm_with_retry(prompt, options, 3)
+
+
+## Build the prompt for object extraction
+# gdlint:ignore-function:high-complexity
+func _build_object_extraction_prompt(existing_objects_json: String, chapter_id: String, text: String) -> String:
+	return """
 You are a helpful writing assistant specializing in object analysis for a novel. Analyze the following chapter text.
 
 Your task is to identify ONLY tangible objects and abstract concepts (Chekhov's guns) that appear in this chapter. DO NOT include characters, people, locations, or places.
@@ -413,28 +432,30 @@ Respond with a JSON object:
 }
 """ % [existing_objects_json, chapter_id, text]
 
-	var options := {
+
+## Get LLM options
+func _get_llm_options() -> Dictionary:
+	return {
 		"temperature": AppConfig.get_llm_temperature(),
 		"max_tokens": AppConfig.get_llm_max_tokens()
 	}
 
-	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
+## Call LLM with retry logic
+func _call_llm_with_retry(prompt: String, options: Dictionary, max_retries: int) -> Dictionary:
+	var llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 	if llm_response.get("parsed_json", null) != null:
 		return llm_response["parsed_json"]
-	else:
-		# Retry up to 3 times on failure
-		var max_retries: int = 3
-		for _i in range(max_retries):
-			# Check if we hit token limit - increase tokens for retry
-			if llm_response.get("done", false) == false:
-				options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
-			llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
-			if llm_response.get("parsed_json", null) != null:
-				return llm_response["parsed_json"]
 
-		push_error("[ObjectService] Failed to parse object extraction response after %d retries" % max_retries)
-		return {"objects": []}
+	for _i in range(max_retries):
+		if llm_response.get("done", false) == false:
+			options["max_tokens"] = options.get("max_tokens", AppConfig.get_llm_max_tokens()) * 2
+		llm_response = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+		if llm_response.get("parsed_json", null) != null:
+			return llm_response["parsed_json"]
+
+	push_error("[ObjectService] Failed to parse object extraction response after %d retries" % max_retries)
+	return {"objects": []}
 
 
 # Find matching object file using fuzzy matching
