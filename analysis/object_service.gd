@@ -45,9 +45,9 @@ func _ready() -> void:
 # Override: Get cache key from payload
 # For objects, the key is the MD5 hash of the canonical object name
 func _get_cache_key(payload: Dictionary) -> String:
-	var name: String = payload.get("name", "")
-	if name != "":
-		return _hash_object(name)
+	var obj_name: String = payload.get("name", "")
+	if obj_name != "":
+		return _hash_object(obj_name)
 	return payload.get("hash", "")
 
 
@@ -187,29 +187,25 @@ func _on_run_all_object_analyses() -> void:
 			queue_objects_for_cache(file_path, content)
 
 
-# Track the current file for object analysis
-var current_object_file_path: String = ""
-var current_object_file_content: String = ""
-
 func _on_file_selected(path: String) -> void:
-	current_object_file_path = path
+	current_file_path = path
 	if FileAccess.file_exists(path):
 		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 		if file:
-			current_object_file_content = file.get_as_text()
+			current_file_content = file.get_as_text()
 			file.close()
 
 
 func _on_run_chapter_object_analyses() -> void:
-	if current_object_file_path == "":
+	if current_file_path == "":
 		return
 	# Get content from BookService if available
-	var file_data: Dictionary = BookService.get_file(current_object_file_path)
+	var file_data: Dictionary = BookService.get_file(current_file_path)
 	if file_data.is_empty():
-		if current_object_file_content != "":
-			queue_objects_for_cache(current_object_file_path, current_object_file_content)
+		if current_file_content != "":
+			queue_objects_for_cache(current_file_path, current_file_content)
 	else:
-		queue_objects_for_cache(current_object_file_path, file_data.get("content", current_object_file_content))
+		queue_objects_for_cache(current_file_path, file_data.get("content", current_file_content))
 
 
 ## ============================================================================
@@ -226,7 +222,6 @@ func _extract_and_cache_objects(cache_path: String, file_path: String, file_cont
 	if not _is_valid_extraction(extraction_result):
 		return {}
 
-	var success: bool = true
 	for obj_data in extraction_result["objects"]:
 		var obj_name: String = obj_data.get("name", "")
 		if obj_name == "":
@@ -256,7 +251,7 @@ func _is_valid_extraction(extraction_result: Dictionary) -> bool:
 	return true
 
 
-func _get_canonical_object_name(obj_name: String, cache_path: String) -> String:
+func _get_canonical_object_name(obj_name: String, _cache_path: String) -> String:
 	# Check for fuzzy matches with existing objects in memory cache
 	var best_match_key: String = _find_matching_object_key(obj_name)
 	if best_match_key != "":
@@ -314,7 +309,7 @@ func _merge_character_relations(existing: Dictionary, new: Dictionary) -> Dictio
 
 
 # Merge object data from LLM with existing data, adding chapter-specific fields
-func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, chapter_id: String) -> Dictionary:
+func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, _chapter_id: String) -> Dictionary:
 	# Use the merge strategies configured in the service
 	var merged = MergeUtils.merge_data_with_strategies(existing_data, new_obj_data, merge_strategies)
 

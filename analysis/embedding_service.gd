@@ -142,7 +142,7 @@ func _save_to_jsonl(cache_dir: String, data: Dictionary) -> void:
 	var jsonl_filename := PARAGRAPH_JSONL_FILENAME if not is_chapter else CHAPTER_JSONL_FILENAME
 	var jsonl_path := cache_dir.path_join(jsonl_filename)
 
-	var encoded_data = _encode_data(data)
+	var encoded_data: Dictionary = _encode_data(data)
 
 	var file: FileAccess = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
@@ -234,7 +234,6 @@ func _analyze(payload: Dictionary) -> Dictionary:
 func _process_task(task: Dictionary) -> void:
 	var cache_dir: String = task.get("cache_dir", "")
 	var text_hash: String = task.get("hash", "")
-	var text: String = task.get("text", "")
 	var is_chapter: bool = task.get("is_chapter", false)
 
 	# Ensure cache is loaded
@@ -284,7 +283,7 @@ func _emit_task_completed(remaining: int) -> void:
 
 
 # Override: Clean up cache entries that don't have corresponding source files
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+func _cleanup_unused_cache_files(cache_path: String, _project_path: String) -> int:
 	# Get valid hashes from BookService
 	var valid_paragraph_hashes := BookService.get_all_paragraph_hashes()
 	var valid_chapter_hashes := BookService.get_all_chapter_hashes()
@@ -401,7 +400,7 @@ func _index_chapter_embeddings() -> void:
 ## ============================================================================
 
 # Queue paragraphs for embedding cache
-func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Array, file_content: String = "") -> void:
+func queue_paragraphs_for_embedding(file_path: String, paragraph_data_list: Array, _file_content: String = "") -> void:
 	var cache_dir := _get_cache_dir_for_file(file_path)
 
 	# Ensure cache directory exists

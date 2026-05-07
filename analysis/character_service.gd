@@ -48,9 +48,9 @@ func _ready() -> void:
 # Override: Get cache key from payload
 # For characters, the key is the MD5 hash of the canonical character name
 func _get_cache_key(payload: Dictionary) -> String:
-	var name: String = payload.get("name", "")
-	if name != "":
-		return _hash_character(name)
+	var char_name: String = payload.get("name", "")
+	if char_name != "":
+		return _hash_character(char_name)
 	return payload.get("hash", "")
 
 
@@ -191,29 +191,25 @@ func _on_run_all_character_analyses() -> void:
 			queue_characters_for_cache(file_path, content)
 
 
-# Track the current file for character analysis
-var current_character_file_path: String = ""
-var current_character_file_content: String = ""
-
 func _on_file_selected(path: String) -> void:
-	current_character_file_path = path
+	current_file_path = path
 	if FileAccess.file_exists(path):
 		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 		if file:
-			current_character_file_content = file.get_as_text()
+			current_file_content = file.get_as_text()
 			file.close()
 
 
 func _on_run_chapter_character_analyses() -> void:
-	if current_character_file_path == "":
+	if current_file_path == "":
 		return
 	# Get content from BookService if available
-	var file_data: Dictionary = BookService.get_file(current_character_file_path)
+	var file_data: Dictionary = BookService.get_file(current_file_path)
 	if file_data.is_empty():
-		if current_character_file_content != "":
-			queue_characters_for_cache(current_character_file_path, current_character_file_content)
+		if current_file_content != "":
+			queue_characters_for_cache(current_file_path, current_file_content)
 	else:
-		queue_characters_for_cache(current_character_file_path, file_data.get("content", current_character_file_content))
+		queue_characters_for_cache(current_file_path, file_data.get("content", current_file_content))
 
 
 ## ============================================================================
@@ -250,12 +246,12 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 
 		# Check if we already have this character in memory
 		if memory_cache.has(char_hash):
-			var existing_data: Dictionary = memory_cache[char_hash]
-			canonical_name = existing_data.get("name", char_name)
+			var existing_char_data: Dictionary = memory_cache[char_hash]
+			canonical_name = existing_char_data.get("name", char_name)
 			char_hash = _hash_character(canonical_name)
 			# Add alias if not present
-			if not existing_data.get("aliases", []).has(char_name):
-				var aliases: Array = existing_data.get("aliases", []).duplicate()
+			if not existing_char_data.get("aliases", []).has(char_name):
+				var aliases: Array = existing_char_data.get("aliases", []).duplicate()
 				if not aliases.has(char_name):
 					aliases.append(char_name)
 					char_data["aliases"] = aliases
@@ -276,7 +272,7 @@ func _extract_and_cache_characters(cache_path: String, file_path: String, file_c
 
 
 # Load all existing characters as JSON string for LLM context
-func _load_existing_characters_json(cache_path: String) -> String:
+func _load_existing_characters_json(_cache_path: String) -> String:
 	var existing_chars: Array = []
 	for key in memory_cache:
 		var char_data: Dictionary = memory_cache[key]
@@ -317,7 +313,7 @@ func _merge_relationships(existing: Dictionary, new: Dictionary) -> Dictionary:
 # Merge character data from LLM with existing data, adding chapter-specific fields
 func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary, chapter_id: String) -> Dictionary:
 	# Use the merge strategies configured in the service
-	var merged = MergeUtils.merge_data_with_strategies(existing_data, new_char_data, merge_strategies)
+	var merged: Dictionary = MergeUtils.merge_data_with_strategies(existing_data, new_char_data, merge_strategies)
 
 	# Special handling for appearances - always add this chapter
 	var existing_appearances: Array = merged.get("appearances", [])

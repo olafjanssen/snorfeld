@@ -347,9 +347,10 @@ func _process_task(task: Dictionary) -> void:
 	if memory_cache.has(task_key):
 		if _should_merge_on_duplicate():
 			# Merge existing with new analysis
-			var result := await _analyze(task)
-			if result != null and not result.is_empty():
-				var merged: Dictionary = _merge_data(memory_cache[task_key], result)
+			@warning_ignore("redundant_await")
+			var analysis_result := await _analyze(task)
+			if analysis_result != null and not analysis_result.is_empty():
+				var merged: Dictionary = _merge_data(memory_cache[task_key], analysis_result)
 				memory_cache[task_key] = merged
 				_save_to_jsonl(cache_dir, merged)
 			queued_keys.erase(task_key)
@@ -417,7 +418,7 @@ func _ready() -> void:
 	EventBus.project_loaded.connect(_on_project_loaded)
 	EventBus.project_unloaded.connect(_on_project_unloaded)
 
-func _on_priority_analysis_requested(service_type: String, file_path: String, payload: Dictionary) -> void:
+func _on_priority_analysis_requested(service_type: String, _file_path: String, payload: Dictionary) -> void:
 	if service_type != _get_service_name():
 		return
 	# Default: queue with priority
