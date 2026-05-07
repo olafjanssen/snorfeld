@@ -1,6 +1,8 @@
 class_name ThemeColors
 extends RefCounted
 ## ThemeColors - Semantic color constants for the application
+
+# gdlint:ignore-file:magic-number
 ##
 ## This utility class defines semantic color names that are used throughout the UI.
 ## Each color has a descriptive name and a default value for the light theme.

@@ -33,7 +33,7 @@ func _ready():
 func _open_story_bible():
 	if story_bible != null:
 		story_bible.queue_free()
-	var StoryBibleScene = preload("res://scenes/panels/story_bible.tscn")
+	var StoryBibleScene: PackedScene = preload("res://scenes/panels/story_bible.tscn")
 	story_bible = StoryBibleScene.instantiate()
 	get_tree().root.add_child(story_bible)
 	story_bible.position = Vector2(SIDE_PANEL_X_POSITION, 0)
@@ -47,12 +47,17 @@ func _on_sidebar_right_button_pressed():
 func _on_folder_open_button_pressed():
 	CommandBus.open_folder.emit()
 
+const WINDOW_BAR_HEIGHT: int = 44
+
 func _on_menu_open_button_pressed():
 	$PopupMenu.popup()
-	$PopupMenu.position = Vector2i(get_window().position.x + get_window().size.x - $PopupMenu.size.x,get_window().position.y + 44)
+	$PopupMenu.position = Vector2i(
+		get_window().position.x + get_window().size.x - $PopupMenu.size.x,
+		get_window().position.y + WINDOW_BAR_HEIGHT
+	)
 
 func _update_icon_colors():
-	var icon_color = get_theme_color("font_color", "Button")
+	var icon_color: Color = get_theme_color("font_color", "Button")
 	$VBoxContainer/WindowBar/HBoxContainer/OpenFolderButton.modulate = icon_color
 	$VBoxContainer/WindowBar/HBoxContainer/MenuButton.modulate = icon_color
 	$VBoxContainer/PanelContainer/HBoxContainer/SidebarButtonLeft.modulate = icon_color

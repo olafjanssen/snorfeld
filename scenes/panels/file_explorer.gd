@@ -1,16 +1,23 @@
 extends Tree
 
+# gdlint:ignore-file:file-length
+
 const CONFIG_FILE: String = "user://config.cfg"
 
 # Constants
 const HIGH_DPI_THRESHOLD: int = 144
 const FILE_CHECK_INTERVAL: float = 5.0
+const SECOND_TO_LAST_INDEX: int = -2
 
 var config: ConfigFile = ConfigFile.new()
 var current_path: String = ""
 var is_building_tree: bool = false
 
-var text_file_whitelist: Array = ['txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml', 'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst']
+var text_file_whitelist: Array = [
+	'txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml',
+	'js', 'ts', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp',
+	'sh', 'sql', 'log', 'cfg', 'ini', 'toml', 'tex', 'rst'
+]
 
 # Icon textures for theming
 var folder_icon: Texture2D
@@ -88,7 +95,7 @@ func _setup_file_tree():
 	clear()
 	var root_item: TreeItem = create_item()
 	var path_parts: Array = current_path.split("/")
-	var root_name: String = path_parts[-2] if current_path.ends_with("/") else path_parts[-1]
+	var root_name: String = path_parts[SECOND_TO_LAST_INDEX] if current_path.ends_with("/") else path_parts[-1]
 
 	root_item.set_text(0, root_name)
 	root_item.set_icon(0, folder_open_icon_img)
@@ -256,43 +263,56 @@ func _setup_file_tree_deferred():
 	_setup_file_tree()
 
 func _select_first_text_file():
-	# Don't auto-select if no folder is opened
 	if current_path == "":
 		return
 
-	# Try to select the last opened file first
-	var last_file: String = ""
-	if config.load(CONFIG_FILE) == OK:
-		last_file = config.get_value("general", "last_file", "")
+	if _try_select_last_opened_file():
+		return
 
-	# Skip res:// paths (internal project resources, not real story files)
-	if last_file != "" and not last_file.begins_with("res://") and FileUtils.file_exists(last_file):
-		# Try to find the last opened file in the tree
-		var found: TreeItem = _find_tree_item_by_path(get_root(), last_file)
-		if found != null:
-			found.select(0)
-			return
+	_select_first_text_file_from_tree()
 
-	# Fall back to first text file in the entire tree
+## Try to select the last opened file if it exists
+func _try_select_last_opened_file() -> bool:
+	var last_file: String = _get_last_opened_file_path()
+	if last_file == "":
+		return false
+
+	var found: TreeItem = _find_tree_item_by_path(get_root(), last_file)
+	if found != null:
+		found.select(0)
+		return true
+	return false
+
+## Get the last opened file path from config
+func _get_last_opened_file_path() -> String:
+	if config.load(CONFIG_FILE) != OK:
+		return ""
+	var last_file: String = config.get_value("general", "last_file", "")
+	if last_file == "" or last_file.begins_with("res://") or not FileUtils.file_exists(last_file):
+		return ""
+	return last_file
+
+## Select the first text file found in the tree using BFS
+func _select_first_text_file_from_tree():
 	var root: TreeItem = get_root()
 	if root == null:
 		return
 
-	# Use a simple iterative approach
 	var stack: Array = [root]
 	while stack.size() > 0:
 		var parent: TreeItem = stack.pop_back()
 		for i: int in range(parent.get_child_count()):
 			var child: TreeItem = parent.get_child(i)
 			var info: Dictionary = child.get_metadata(0)
-			if info != null:
-				var path: String = info["path"]
-				var is_dir: bool = info["is_dir"]
-				if not is_dir and _is_text_file(path):
-					child.select(0)
-					return
-				if is_dir:
-					stack.append(child)
+			if info == null:
+				continue
+			var path: String = info["path"]
+			var is_dir: bool = info["is_dir"]
+			if not is_dir and _is_text_file(path):
+				child.select(0)
+				return
+			if is_dir:
+				stack.append(child)
 
 func _find_tree_item_by_path(parent: TreeItem, target_path: String) -> TreeItem:
 	if parent == null:

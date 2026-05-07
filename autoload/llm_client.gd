@@ -7,6 +7,15 @@ extends Node
 ##   var embedding = await LLMClient.embed("qwen3-embedding:0.6b", "Some text to embed")
 ##   var running = await LLMClient.is_llm_running()
 
+# HTTP status codes
+const HTTP_STATUS_OK: int = 200
+
+# Default LLM generation parameters
+const DEFAULT_TEMPERATURE: float = 0.8
+const DEFAULT_TOP_P: float = 0.9
+const DEFAULT_TOP_K: int = 40
+const DEFAULT_MAX_TOKENS: int = 128
+
 ## HTTP request node
 var http_request: HTTPRequest
 
@@ -105,10 +114,10 @@ func _build_request_body(model: String, prompt: String, options: Dictionary) -> 
 		"model": model,
 		"prompt": prompt,
 		"stream": options.get("stream", false),
-		"temperature": options.get("temperature", 0.8),
-		"top_p": options.get("top_p", 0.9),
-		"top_k": options.get("top_k", 40),
-		"max_tokens": options.get("max_tokens", 128)
+		"temperature": options.get("temperature", DEFAULT_TEMPERATURE),
+		"top_p": options.get("top_p", DEFAULT_TOP_P),
+		"top_k": options.get("top_k", DEFAULT_TOP_K),
+		"max_tokens": options.get("max_tokens", DEFAULT_MAX_TOKENS)
 	}
 
 	if options.has("stop"):
@@ -123,7 +132,7 @@ func _build_request_body(model: String, prompt: String, options: Dictionary) -> 
 ## Make an HTTP request, queuing if another is in progress
 func _make_api_request(endpoint: String, request_body: Dictionary, request_type: String) -> Dictionary:
 	# Create completion object for this request
-	var completion = {"response": null, "completed": false}
+	var completion: Dictionary = {"response": null, "completed": false}
 
 	queue_mutex.lock()
 	request_queue.append({
@@ -149,35 +158,36 @@ func _process_next_queued_request() -> void:
 	if processing_request:
 		return
 
+	var request: Dictionary = _dequeue_next_request()
+	if request.is_empty():
+		return
+
+	_process_request(request)
+
+## Dequeue the next request from the queue
+func _dequeue_next_request() -> Dictionary:
 	queue_mutex.lock()
 	if request_queue.is_empty():
 		queue_mutex.unlock()
 		processing_request = false
-		return
+		return {}
 
-	var request = request_queue.pop_front()
+	var request: Dictionary = request_queue.pop_front()
 	queue_mutex.unlock()
+	return request
 
+## Process a single request
+func _process_request(request: Dictionary) -> void:
 	processing_request = true
 	current_request_type = request["request_type"]
 	current_completion = request["completion"]
 
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var body_string: String = JsonUtils.stringify_json(request["request_body"])
-	var request_err: int
-
-	# For GET requests (check endpoint), use GET method
-	if request["request_type"] == "check":
-		request_err = http_request.request(request["endpoint"], headers, HTTPClient.METHOD_GET, "")
-	else:
-		request_err = http_request.request(request["endpoint"], headers, HTTPClient.METHOD_POST, body_string)
+	var request_err: int = _send_http_request(request, headers, body_string)
 
 	if request_err != OK:
-		current_completion["response"] = {"error": "Failed to send request", "error_code": request_err}
-		current_completion["completed"] = true
-		current_completion = {}
-		processing_request = false
-		_process_next_queued_request()
+		_current_completion_set_error(request_err)
 		return
 
 	# Wait for the HTTP callback to set the response
@@ -186,6 +196,25 @@ func _process_next_queued_request() -> void:
 	while not current_completion["completed"]:
 		await get_tree().process_frame
 
+	_current_completion_cleanup()
+
+## Send HTTP request based on request type
+func _send_http_request(request: Dictionary, headers: PackedStringArray, body_string: String) -> int:
+	if request["request_type"] == "check":
+		return http_request.request(request["endpoint"], headers, HTTPClient.METHOD_GET, "")
+	else:
+		return http_request.request(request["endpoint"], headers, HTTPClient.METHOD_POST, body_string)
+
+## Set error on current completion and clean up
+func _current_completion_set_error(error_code: int) -> void:
+	current_completion["response"] = {"error": "Failed to send request", "error_code": error_code}
+	current_completion["completed"] = true
+	current_completion = {}
+	processing_request = false
+	_process_next_queued_request()
+
+## Clean up current completion and process next request
+func _current_completion_cleanup() -> void:
 	current_completion = {}
 	processing_request = false
 	_process_next_queued_request()
@@ -193,23 +222,28 @@ func _process_next_queued_request() -> void:
 
 ## HTTP request completion callback
 ## Sets the response on the current completion object and emits signals for backward compatibility
-func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+func _on_http_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray
+) -> void:
 	if current_completion == null or current_completion.is_empty():
 		return
 
 	if current_request_type == "check":
-		var is_running = (response_code == 200)
+		var is_running: bool = (response_code == HTTP_STATUS_OK)
 		current_completion["response"] = is_running
 		current_completion["completed"] = true
 		# Emit for backward compatibility
 		check_complete.emit(is_running)
 		return
-	
+
 	var response_body_str: String = body.get_string_from_utf8()
 	var response_dict: Dictionary
 
-	if current_request_type == "embed":	
-		if result == OK and response_code == 200:
+	if current_request_type == "embed":
+		if result == OK and response_code == HTTP_STATUS_OK:
 			var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
 			if not json_data.is_empty():
 				# Ollama embedding API returns: {"embedding": [...], "model": "...", ...}
@@ -220,16 +254,29 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 					response_dict["model"] = json_data.get("model", "")
 					response_dict["success"] = true
 				else:
-					response_dict = {"error": "Failed to parse embedding response or missing embedding", "raw_response": response_body_str}
+					response_dict = {
+						"error": "Failed to parse embedding response or missing embedding",
+						"raw_response": response_body_str
+					}
 					response_dict["success"] = false
 			else:
-				response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
+				response_dict = {
+					"error": "Failed to parse JSON response",
+					"raw_response": response_body_str
+				}
 				response_dict["success"] = false
 		elif response_code == 0:
-			response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}
+			response_dict = {
+				"error": "Connection failed - is LLM server running?",
+				"error_code": response_code
+			}
 			response_dict["success"] = false
 		else:
-			response_dict = {"error": "API embedding request failed", "error_code": response_code, "response": response_body_str}
+			response_dict = {
+				"error": "API embedding request failed",
+				"error_code": response_code,
+				"response": response_body_str
+			}
 			response_dict["success"] = false
 
 		current_completion["response"] = response_dict
@@ -239,16 +286,26 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 		return
 
 	# Otherwise it's a generate request
-	if result == OK and response_code == 200:
+	if result == OK and response_code == HTTP_STATUS_OK:
 		var json_data: Dictionary = JsonUtils.parse_json(response_body_str)
 		if not json_data.is_empty():
 			response_dict = {"json_data": json_data, "raw_response": response_body_str}
 		else:
-			response_dict = {"error": "Failed to parse JSON response", "raw_response": response_body_str}
+			response_dict = {
+				"error": "Failed to parse JSON response",
+				"raw_response": response_body_str
+			}
 	elif response_code == 0:
-		response_dict = {"error": "Connection failed - is LLM server running?", "error_code": response_code}
+		response_dict = {
+			"error": "Connection failed - is LLM server running?",
+			"error_code": response_code
+		}
 	else:
-		response_dict = {"error": "API request failed", "error_code": response_code, "response": response_body_str}
+		response_dict = {
+			"error": "API request failed",
+			"error_code": response_code,
+			"response": response_body_str
+		}
 
 	current_completion["response"] = response_dict
 	current_completion["completed"] = true
@@ -258,5 +315,13 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 ## Check if LLM server is running and accessible
 func is_llm_running() -> bool:
 	var request_body: Dictionary = {}
-	var result = await _make_api_request(AppConfig.get_llm_check_endpoint(), request_body, "check")
-	return result
+	var result: Dictionary = await _make_api_request(
+		AppConfig.get_llm_check_endpoint(),
+		request_body,
+		"check"
+	)
+	return result["response"] != null
+
+# Ignore file-length warning - this is a central utility class with many related functions
+# that work together (request queuing, HTTP handling, response processing)
+# gdlint:ignore-file:file-length

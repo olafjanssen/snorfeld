@@ -37,40 +37,34 @@ func _rebuild_outline_tree() -> void:
 		call_deferred("_do_rebuild_outline_tree")
 
 
+const MAX_INDENT_LEVEL: int = 3
+
 func _do_rebuild_outline_tree() -> void:
 	rebuild_scheduled = false
 	outline_tree.clear()
 
-	var root = outline_tree.create_item()
+	var root: TreeItem = outline_tree.create_item()
 	root.set_text(0, "Project Outline")
 	root.set_metadata(0, {"type": "root"})
 
 	# Get all files from BookService
-	var all_files := BookService.get_all_files()
+	var all_files: Array = BookService.get_all_files()
 	all_files.sort()
 
 	# Build flat list of all headings from all files (all levels, not just chapters)
-	var all_headings := BookService.get_all_project_headings()
+	var all_headings: Array = BookService.get_all_project_headings()
 
-	for heading in all_headings:
-		var level = heading.get("level", 1)
-		var heading_item = outline_tree.create_item(root)
+	for heading: Dictionary in all_headings:
+		var level: int = heading.get("level", 1)
+		var heading_item: TreeItem = outline_tree.create_item(root)
 
 		# Add indentation based on heading level
-		var indent_text = ""
-		for _i in range(max(level - 1, 0)):
-			indent_text += "  "
+		var indent_text: String = _get_indent_for_level(level)
 
 		# Add symbol prefix based on level for better visual hierarchy
-		var prefix = ""
-		if level == 1:
-			prefix = "● "
-		elif level == 2:
-			prefix = "○ "
-		elif level == 3:
-			prefix = "▪ "
+		var prefix: String = _get_prefix_for_level(level)
 
-		var display_text = indent_text + prefix + heading.get("text", "Untitled")
+		var display_text: String = indent_text + prefix + heading.get("text", "Untitled")
 		heading_item.set_text(0, display_text)
 		heading_item.set_metadata(0, {
 			"type": "heading",
@@ -81,24 +75,45 @@ func _do_rebuild_outline_tree() -> void:
 		})
 
 		# Set icons based on level
-		if level == 1:
-			heading_item.set_icon(0, load("res://icons/h1.svg") if ResourceLoader.exists("res://icons/h1.svg") else null)
-		elif level == 2:
-			heading_item.set_icon(0, load("res://icons/h2.svg") if ResourceLoader.exists("res://icons/h2.svg") else null)
-		elif level == 3:
-			heading_item.set_icon(0, load("res://icons/h3.svg") if ResourceLoader.exists("res://icons/h3.svg") else null)
+		_set_icon_for_level(heading_item, level)
+
+## Get indentation string for a heading level
+func _get_indent_for_level(level: int) -> String:
+	var indent_text: String = ""
+	for _i in range(max(level - 1, 0)):
+		indent_text += "  "
+	return indent_text
+
+## Get prefix symbol for a heading level
+func _get_prefix_for_level(level: int) -> String:
+	if level == 1:
+		return "● "
+	elif level == 2:
+		return "○ "
+	elif level == 3:
+		return "▪ "
+	return ""
+
+## Set icon for a heading level
+func _set_icon_for_level(item: TreeItem, level: int):
+	if level == 1:
+		item.set_icon(0, load("res://icons/h1.svg") if ResourceLoader.exists("res://icons/h1.svg") else null)
+	elif level == 2:
+		item.set_icon(0, load("res://icons/h2.svg") if ResourceLoader.exists("res://icons/h2.svg") else null)
+	elif level <= MAX_INDENT_LEVEL:
+		item.set_icon(0, load("res://icons/h3.svg") if ResourceLoader.exists("res://icons/h3.svg") else null)
 
 
 func _on_item_selected():
-	var item = outline_tree.get_selected()
+	var item: TreeItem = outline_tree.get_selected()
 	if item == null:
 		return
-	var metadata = item.get_metadata(0)
+	var metadata: Dictionary = item.get_metadata(0)
 	if metadata == null:
 		return
 
 	if metadata.get("type", "") == "heading":
-		var file_path = metadata["file"]
-		var line_num = metadata["line"]
+		var file_path: String = metadata["file"]
+		var line_num: int = metadata["line"]
 		CommandBus.navigate_to_line.emit(file_path, line_num)
 		EventBus.file_selected.emit(file_path)

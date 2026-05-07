@@ -1,7 +1,7 @@
 extends Node
 ## EventBus - Centralized signal bus for the application
-
 @warning_ignore_start("unused_signal")
+# gdlint:ignore-file:god-class-signals
 
 # Folder and file navigation
 signal folder_opened(path: String)

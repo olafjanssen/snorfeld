@@ -1,6 +1,8 @@
 # Diff Utility for GDScript
 # Word-level diff for grammar corrections.
 
+# gdlint:ignore-file:file-length,too-many-params,long-line
+
 class_name DiffUtility
 
 enum Operation {

@@ -45,35 +45,36 @@ func _ready():
 
 
 func _on_item_pressed(id: int):
-	if id == OPEN_FOLDER_ID:
-		CommandBus.open_folder.emit()
-	elif id == SETTINGS_ID:
-		EventBus.open_settings.emit()
-	elif id == STORY_BIBLE_ID:
-		CommandBus.open_story_bible.emit()
-	elif id == RUN_ALL_GRAMMAR_ANALYSES_ID:
-		CommandBus.start_analysis.emit("GRAMMAR", "project")
-	elif id == RUN_CHAPTER_GRAMMAR_ANALYSES_ID:
-		CommandBus.start_analysis.emit("GRAMMAR", "chapter")
-	elif id == RUN_ALL_STYLE_ANALYSES_ID:
-		CommandBus.start_analysis.emit("STYLE", "project")
-	elif id == RUN_CHAPTER_STYLE_ANALYSES_ID:
-		CommandBus.start_analysis.emit("STYLE", "chapter")
-	elif id == RUN_ALL_STRUCTURE_ANALYSES_ID:
-		CommandBus.start_analysis.emit("STRUCTURE", "project")
-	elif id == RUN_CHAPTER_STRUCTURE_ANALYSES_ID:
-		CommandBus.start_analysis.emit("STRUCTURE", "chapter")
-	elif id == RUN_ALL_CHARACTER_ANALYSES_ID:
-		CommandBus.start_analysis.emit("CHARACTER", "project")
-	elif id == RUN_CHAPTER_CHARACTER_ANALYSES_ID:
-		CommandBus.start_analysis.emit("CHARACTER", "chapter")
-	elif id == RUN_ALL_OBJECT_ANALYSES_ID:
-		CommandBus.start_analysis.emit("OBJECT", "project")
-	elif id == RUN_CHAPTER_OBJECT_ANALYSES_ID:
-		CommandBus.start_analysis.emit("OBJECT", "chapter")
-	elif id == INDEX_PROJECT_EMBEDDINGS_ID:
-		CommandBus.start_analysis.emit("EMBEDDING", "project")
-	elif id == INDEX_CHAPTER_EMBEDDINGS_ID:
-		CommandBus.start_analysis.emit("EMBEDDING", "chapter")
-	elif id == 1:
-		get_tree().quit()
+	match id:
+		OPEN_FOLDER_ID:
+			CommandBus.open_folder.emit()
+		SETTINGS_ID:
+			EventBus.open_settings.emit()
+		STORY_BIBLE_ID:
+			CommandBus.open_story_bible.emit()
+		RUN_ALL_GRAMMAR_ANALYSES_ID:
+			CommandBus.start_analysis.emit("GRAMMAR", "project")
+		RUN_CHAPTER_GRAMMAR_ANALYSES_ID:
+			CommandBus.start_analysis.emit("GRAMMAR", "chapter")
+		RUN_ALL_STYLE_ANALYSES_ID:
+			CommandBus.start_analysis.emit("STYLE", "project")
+		RUN_CHAPTER_STYLE_ANALYSES_ID:
+			CommandBus.start_analysis.emit("STYLE", "chapter")
+		RUN_ALL_STRUCTURE_ANALYSES_ID:
+			CommandBus.start_analysis.emit("STRUCTURE", "project")
+		RUN_CHAPTER_STRUCTURE_ANALYSES_ID:
+			CommandBus.start_analysis.emit("STRUCTURE", "chapter")
+		RUN_ALL_CHARACTER_ANALYSES_ID:
+			CommandBus.start_analysis.emit("CHARACTER", "project")
+		RUN_CHAPTER_CHARACTER_ANALYSES_ID:
+			CommandBus.start_analysis.emit("CHARACTER", "chapter")
+		RUN_ALL_OBJECT_ANALYSES_ID:
+			CommandBus.start_analysis.emit("OBJECT", "project")
+		RUN_CHAPTER_OBJECT_ANALYSES_ID:
+			CommandBus.start_analysis.emit("OBJECT", "chapter")
+		INDEX_PROJECT_EMBEDDINGS_ID:
+			CommandBus.start_analysis.emit("EMBEDDING", "project")
+		INDEX_CHAPTER_EMBEDDINGS_ID:
+			CommandBus.start_analysis.emit("EMBEDDING", "chapter")
+		1:
+			get_tree().quit()

@@ -1,6 +1,8 @@
 class_name ThemeDefinition
 extends Resource
 ## ThemeDefinition - Custom resource for defining themes with semantic color references
+
+# gdlint:ignore-file:magic-number
 ##
 ## This resource allows defining themes using semantic color names that can be
 ## referenced by style definitions. A compiler tool converts this to a standard

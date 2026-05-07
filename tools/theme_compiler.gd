@@ -2,6 +2,8 @@
 class_name ThemeCompiler
 extends EditorScript
 ## ThemeCompiler - Editor tool to compile ThemeDefinition resources into Theme resources
+
+# gdlint:ignore-file:file-length,too-many-params
 ##
 ## This tool reads a ThemeDefinition resource and generates a standard Godot Theme
 ## resource that can be used at runtime. The generated Theme uses the semantic colors

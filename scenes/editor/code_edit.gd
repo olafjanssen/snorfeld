@@ -1,5 +1,7 @@
 extends CodeEdit
 
+# gdlint:ignore-file:file-length
+
 # Constants
 const FILE_CHECK_INTERVAL: float = 5.0
 
@@ -27,7 +29,7 @@ func _ready():
 	# Setup timer to check for external file changes
 	file_check_timer = Timer.new()
 	file_check_timer.timeout.connect(_on_file_check_timeout)
-	file_check_timer.wait_time = FILE_CHECK_INTERVAL  # Check every FILE_CHECK_INTERVAL seconds
+	file_check_timer.wait_time = FILE_CHECK_INTERVAL
 	add_child(file_check_timer)
 	file_check_timer.start()
 
@@ -141,82 +143,99 @@ func _on_text_changed():
 
 
 func _on_apply_diff_patch_command(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
-	# Only apply if this is the current file
 	if current_file_path != file_path:
 		return
 
-	# Store cursor column and scroll position
-	var cursor_column: int = get_caret_column()
-	var scroll_pos: float = get_v_scroll_bar().value
-	var full_text: String = get_text()
-	var lines: Array = full_text.split("\n")
-
-	# Convert to 0-based for our array
+	var saved_state: Dictionary = _save_editor_state()
+	var lines: Array = get_text().split("\n")
 	var cursor_line: int = line_number - 1
-	if cursor_line < 0 or cursor_line >= lines.size():
-		return
 
-	# Verify paragraph exists in BookService
-	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
-	if para_data.is_empty():
+	if not _validate_patch_context(cursor_line, lines, file_path, line_number):
 		return
 
 	var current_paragraph: String = lines[cursor_line]
+	var modified_paragraph: String = _apply_patch_operation(
+		current_paragraph,
+		operation,
+		word_index,
+		new_text
+	)
+
+	if modified_paragraph != current_paragraph:
+		_restore_editor_with_modified_line(lines, cursor_line, modified_paragraph, saved_state)
+
+## Save current editor state (cursor position and scroll)
+func _save_editor_state() -> Dictionary:
+	return {
+		"cursor_column": get_caret_column(),
+		"scroll_pos": get_v_scroll_bar().value
+	}
+
+## Validate patch context
+func _validate_patch_context(cursor_line: int, lines: Array, file_path: String, line_number: int) -> bool:
+	if cursor_line < 0 or cursor_line >= lines.size():
+		return false
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	return not para_data.is_empty()
+
+## Apply patch operation to a paragraph
+func _apply_patch_operation(current_paragraph: String, operation: String, word_index: int, new_text: String) -> String:
 	var words: Array = current_paragraph.split(" ")
 
-	# Apply the patch
 	if operation == "delete":
-		# Remove words starting at word_index
-		# new_text contains the words to delete (from the diff)
-		var delete_words: Array = new_text.split(" ")
-		if word_index >= 0 and word_index + delete_words.size() <= words.size():
-			# Verify the words match what we expect to delete
-			var words_match: bool = true
-			for k: int in range(delete_words.size()):
-				if words[word_index + k] != delete_words[k]:
-					words_match = false
-					break
-			if words_match:
-				# Remove multiple words starting at word_index
-				for _k: int in range(delete_words.size()):
-					words.remove_at(word_index)
-				current_paragraph = " ".join(words)
+		return _apply_delete_operation(words, word_index, new_text)
 	elif operation == "insert":
-		# Insert new_text at word_index
-		if word_index >= 0 and word_index <= words.size():
-			words.insert(word_index, new_text)
-			current_paragraph = " ".join(words)
+		return _apply_insert_operation(words, word_index, new_text)
 	elif operation == "change":
-		# Replace words starting at word_index with new_text
-		# new_text contains the replacement words
-		var new_words_list: Array = new_text.split(" ")
-		# For change, we replace the same number of words as in new_text
-		if word_index >= 0 and word_index + new_words_list.size() <= words.size():
-			for k: int in range(new_words_list.size()):
-				words[word_index + k] = new_words_list[k]
-			current_paragraph = " ".join(words)
+		return _apply_change_operation(words, word_index, new_text)
+	return current_paragraph
 
-	# Update the line in the editor
-	if current_paragraph != lines[cursor_line]:
-		lines[cursor_line] = current_paragraph
-		var new_text_full: String = "\n".join(lines)
+## Apply delete operation
+func _apply_delete_operation(words: Array, word_index: int, new_text: String) -> String:
+	var delete_words: Array = new_text.split(" ")
+	if word_index < 0 or word_index + delete_words.size() > words.size():
+		return " ".join(words)
 
-		# Store cursor line before set_text (which may reset cursor)
-		var target_line: int = cursor_line
+	# Verify the words match what we expect to delete
+	for k: int in range(delete_words.size()):
+		if words[word_index + k] != delete_words[k]:
+			return " ".join(words)
 
-		set_text(new_text_full)
+	# Remove multiple words starting at word_index
+	for _k: int in range(delete_words.size()):
+		words.remove_at(word_index)
+	return " ".join(words)
 
-		# Restore scroll position first
-		get_v_scroll_bar().value = scroll_pos
+## Apply insert operation
+func _apply_insert_operation(words: Array, word_index: int, new_text: String) -> String:
+	if word_index >= 0 and word_index <= words.size():
+		words.insert(word_index, new_text)
+	return " ".join(words)
 
-		# Restore cursor to the same line
-		set_caret_line(target_line)
-		# Try to restore column, but clamp to line length
-		var line_length: int = lines[target_line].length()
-		set_caret_column(min(cursor_column, line_length))
+## Apply change operation
+func _apply_change_operation(words: Array, word_index: int, new_text: String) -> String:
+	var new_words_list: Array = new_text.split(" ")
+	if word_index >= 0 and word_index + new_words_list.size() <= words.size():
+		for k: int in range(new_words_list.size()):
+			words[word_index + k] = new_words_list[k]
+	return " ".join(words)
 
-		# Update current hash but keep original hash (so more patches can be applied)
-		# Re-trigger paragraph selection to update diff display
-		EventBus.paragraph_selected.emit(current_file_path, target_line + 1)
-		# Emit file_changed signal since text was modified
-		EventBus.file_changed.emit(current_file_path, get_text())
+## Restore editor with modified line
+func _restore_editor_with_modified_line(lines: Array, cursor_line: int, modified_paragraph: String, saved_state: Dictionary):
+	lines[cursor_line] = modified_paragraph
+	var new_text_full: String = "\n".join(lines)
+
+	set_text(new_text_full)
+
+	# Restore scroll position
+	get_v_scroll_bar().value = saved_state["scroll_pos"]
+
+	# Restore cursor to the same line
+	set_caret_line(cursor_line)
+	var line_length: int = lines[cursor_line].length()
+	set_caret_column(min(saved_state["cursor_column"], line_length))
+
+	# Re-trigger paragraph selection to update diff display
+	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
+	# Emit file_changed signal since text was modified
+	EventBus.file_changed.emit(current_file_path, get_text())

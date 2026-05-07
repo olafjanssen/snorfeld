@@ -53,12 +53,12 @@ func _file_exists(path: String) -> bool:
 # Cleanup unused cache files (files whose source no longer exists)
 func _cleanup_unused_cache_files(cache_path: String, _source_dir: String) -> int:
 	var removed_count := 0
-	var dir = DirAccess.open(cache_path)
+	var dir: DirAccess = DirAccess.open(cache_path)
 	if not dir:
 		return 0
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if not dir.current_is_dir() and file_name.ends_with(".json"):
 			# Parse the hash from the filename to find source
@@ -83,7 +83,7 @@ func _processing_start() -> void:
 	while task_queue.size() > 0:
 		queue_mutex.lock()
 		_emit_task_started(task_queue.size())
-		var task = task_queue.pop_front()
+		var task: Dictionary = task_queue.pop_front()
 		queue_mutex.unlock()
 
 		if task:

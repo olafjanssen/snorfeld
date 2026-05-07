@@ -100,23 +100,32 @@ func _save_file(path: String):
 	if not FileAccess.file_exists(path):
 		return
 
-	# Get content from the map
-	var new_content: String = ""
-	if file_contents.has(path):
-		new_content = file_contents[path]
-
+	var new_content: String = _get_content_for_path(path)
 	if new_content == "":
 		is_saving = false
 		return
 
-	# Compare with existing file content
+	if _content_unchanged(path, new_content):
+		return
+
+	_write_content_to_file(path, new_content)
+
+func _get_content_for_path(path: String) -> String:
+	var new_content: String = ""
+	if file_contents.has(path):
+		new_content = file_contents[path]
+	return new_content
+
+func _content_unchanged(path: String, new_content: String) -> bool:
 	var existing_content: String = FileAccess.get_file_as_string(path)
 	if existing_content == new_content:
 		# Content hasn't changed, don't save
 		file_contents.erase(path)
 		is_saving = false
-		return
+		return true
+	return false
 
+func _write_content_to_file(path: String, new_content: String):
 	is_saving = true
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:

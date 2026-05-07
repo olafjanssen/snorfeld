@@ -2,6 +2,8 @@ extends Node
 ## AppConfig - Application configuration management
 ## Merges AppConfig (config storage) + SettingsHandler (UI management)
 
+# gdlint:ignore-file:todo-comment
+
 const CONFIG_FILE := "user://settings.cfg"
 const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
 
@@ -9,7 +11,7 @@ const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
 const DEFAULT_LLM_ENDPOINT := "http://localhost:11434/api/generate"
 const DEFAULT_LLM_CHECK_ENDPOINT := "http://localhost:11434/api/tags"
 const DEFAULT_LLM_MODEL := "qwen3.5:9b"
-const DEFAULT_LLM_TEMPERATURE := 0.3
+const DEFAULT_LLM_TEMPERATURE := 0.3  # Default sampling temperature for LLM
 const DEFAULT_LLM_MAX_TOKENS := 512
 
 # Embedding model defaults

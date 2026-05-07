@@ -9,7 +9,7 @@ func _on_show_git_diff(_file_path: String, diff: String):
 	# Keep [bgcolor] tags for coloring
 	# Format: [url=meta][bgcolor=X]text[/bgcolor][/url] -> [bgcolor=X]text[/bgcolor]
 	# First remove [url=...] by finding the first ] after [url=
-	var filtered_diff = diff
+	var filtered_diff: String = diff
 	var url_start := filtered_diff.find("[url=")
 	while url_start != -1:
 		var url_end := filtered_diff.find("]", url_start)

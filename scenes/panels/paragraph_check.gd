@@ -7,7 +7,8 @@ extends Control
 @onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
 @onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 
-var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=-4.0]✲[/pulse] "
+const PULSE_EASE: float = -4.0
+var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=%s]✲[/pulse] " % PULSE_EASE
 
 
 # Store current context for patch application
@@ -82,7 +83,7 @@ func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 		_structure_cache_data = AnalysisManager.StructureService.get_structure_cache(current_paragraph_hash)
 
 		# Update display for the current active tab
-		var active_tab = $TabContainer.get_current_tab()
+		var active_tab: int = $TabContainer.get_current_tab()
 		_update_display_for_active_tab(active_tab)
 
 func _on_diff_span_clicked(operation: String, word_index: int, text: String):
@@ -115,7 +116,7 @@ func _on_paragraph_selected(file_path: String, line_number: int):
 	_structure_cache_data = AnalysisManager.StructureService.get_structure_cache(current_paragraph_hash)
 
 	# Get the active tab
-	var active_tab = $TabContainer.get_current_tab()
+	var active_tab: int = $TabContainer.get_current_tab()
 
 	# Update display for active tab
 	_update_display_for_active_tab(active_tab)

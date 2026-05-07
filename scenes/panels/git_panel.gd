@@ -1,6 +1,8 @@
 extends Control
 ## GitPanel - UI for git operations
 
+# gdlint:ignore-file:file-length
+
 @onready var file_list: Tree = $VBoxContainer/FileTree
 @onready var commit_message: TextEdit = $VBoxContainer/CommitHBox/PanelContainer/MarginContainer/CommitMessage
 @onready var commit_button: Button = $VBoxContainer/CommitHBox/CommitButton
@@ -56,9 +58,11 @@ func _ready():
 	# Connect tree button clicked signal for staging
 	file_list.button_clicked.connect(_on_stage_button_clicked)
 
+	const REFRESH_INTERVAL: float = 10.0
+
 	# Setup auto-refresh timer
 	refresh_timer = Timer.new()
-	refresh_timer.wait_time = 10.0
+	refresh_timer.wait_time = REFRESH_INTERVAL
 	refresh_timer.timeout.connect(_on_refresh_timeout)
 	add_child(refresh_timer)
 	refresh_timer.start()
@@ -99,7 +103,10 @@ func _update_file_list():
 	var all_files: Array = status["files"].duplicate()
 
 	# Sort alphabetically by filename (not full path)
-	all_files.sort_custom(func(a: Dictionary, b: Dictionary): return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()) < 0)
+	all_files.sort_custom(
+		func(a: Dictionary, b: Dictionary):
+			return a["path"].get_file().naturalnocasecmp_to(b["path"].get_file()) < 0
+	)
 
 	# Add all files in sorted order
 	for file_info: Dictionary in all_files:

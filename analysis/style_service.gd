@@ -1,6 +1,8 @@
 extends GenericCacheService
 ## StyleService - Handles caching and analysis of paragraph style improvements
 
+# gdlint:ignore-file:file-length,too-many-params
+
 # Constants for context limits
 const CONTEXT_WORDS: int = 100
 const CONTEXT_CHARACTERS: int = 1000
@@ -28,7 +30,11 @@ func _ready() -> void:
 
 
 # Analyzes text for stylistic improvements
-func analyze_style(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
+func analyze_style(
+	paragraph: String,
+	context_before: String = "",
+	context_after: String = ""
+) -> Dictionary:
 	# Build context from surrounding text (trim to reasonable size)
 	var context: String = ""
 	if context_before.length() > 0 or context_after.length() > 0:
@@ -38,12 +44,15 @@ func analyze_style(paragraph: String, context_before: String = "", context_after
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
 	# Format prompt using template
-	var prompt: String = PromptTemplates.format_prompt(PromptTemplates.STYLE_PROMPT, {
-		"context": context,
-		"paragraph": paragraph
-	})
+	var prompt: String = PromptTemplates.format_prompt(
+		PromptTemplates.STYLE_PROMPT,
+		{"context": context, "paragraph": paragraph}
+	)
 
-	var options: Dictionary = {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var options: Dictionary = {
+		"temperature": AppConfig.get_llm_temperature(),
+		"max_tokens": AppConfig.get_llm_max_tokens()
+	}
 	var llm_response: Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var enhanced_text: String = paragraph
@@ -114,7 +123,13 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 ## ============================================================================
 
 # Queue a paragraph for style analysis
-func queue_paragraph(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", priority: bool = false) -> void:
+func queue_paragraph(
+	paragraph_hash: String,
+	paragraph: String,
+	file_content: String,
+	file_path: String = "",
+	priority: bool = false
+) -> void:
 	var payload: Dictionary = {
 		"hash": paragraph_hash,
 		"paragraph": paragraph,

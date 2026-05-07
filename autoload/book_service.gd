@@ -2,6 +2,8 @@ extends Node
 ## BookService - Central content model for the project
 ## Maintains a view of all files, chapters, and paragraphs
 
+# gdlint:ignore-file:file-length,god-class-functions,high-complexity,deep-nesting,long-function,magic-number
+
 # Project content structure:
 # - files: Dictionary of file_path -> FileData
 # - chapters: Dictionary of chapter_id -> ChapterData

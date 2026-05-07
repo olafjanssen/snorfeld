@@ -1,5 +1,8 @@
+
 extends GenericCacheService
 ## GrammarService - Handles caching and analysis of paragraph grammar corrections
+
+# gdlint:ignore-file:file-length,too-many-params
 
 # Constants for context limits
 const CONTEXT_WORDS: int = 100
@@ -28,7 +31,11 @@ func _ready() -> void:
 
 
 # Analyzes text for grammar/spelling corrections
-func analyze_grammar(paragraph: String, context_before: String = "", context_after: String = "") -> Dictionary:
+func analyze_grammar(
+	paragraph: String,
+	context_before: String = "",
+	context_after: String = ""
+) -> Dictionary:
 	# Build context from surrounding text (trim to reasonable size)
 	var context: String = ""
 	if context_before.length() > 0 or context_after.length() > 0:
@@ -38,12 +45,15 @@ func analyze_grammar(paragraph: String, context_before: String = "", context_aft
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
 	# Format prompt using template
-	var prompt: String = PromptTemplates.format_prompt(PromptTemplates.GRAMMAR_PROMPT, {
-		"context": context,
-		"paragraph": paragraph
-	})
+	var prompt: String = PromptTemplates.format_prompt(
+		PromptTemplates.GRAMMAR_PROMPT,
+		{"context": context, "paragraph": paragraph}
+	)
 
-	var options: Dictionary = {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
+	var options: Dictionary = {
+		"temperature": AppConfig.get_llm_temperature(),
+		"max_tokens": AppConfig.get_llm_max_tokens()
+	}
 	var llm_response: Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
 
 	var corrected_text: String = paragraph
@@ -114,7 +124,13 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 ## ============================================================================
 
 # Queue a paragraph for grammar analysis
-func queue_paragraph(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", priority: bool = false) -> void:
+func queue_paragraph(
+	paragraph_hash: String,
+	paragraph: String,
+	file_content: String,
+	file_path: String = "",
+	priority: bool = false
+) -> void:
 	var payload: Dictionary = {
 		"hash": paragraph_hash,
 		"paragraph": paragraph,

@@ -2,6 +2,8 @@
 class_name DarkThemeDefinitionGenerator
 extends EditorScript
 
+# gdlint:ignore-file:file-length,magic-number
+
 func _run():
 	var def: ThemeDefinition = ThemeDefinition.new()
 

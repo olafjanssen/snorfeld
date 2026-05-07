@@ -58,9 +58,16 @@ func _process_header(line: String) -> String:
 		return result
 
 	if keep_markdown_markers:
-		result = "[b][font_size=%d]%s %s[/font_size][/b]" % [_get_header_size(m.get_string(1).length()), m.get_string(1), m.get_string(2)]
+		result = "[b][font_size=%d]%s %s[/font_size][/b]" % [
+			_get_header_size(m.get_string(1).length()),
+			m.get_string(1),
+			m.get_string(2)
+		]
 	else:
-		result = "[b][font_size=%d]%s[/font_size][/b]" % [_get_header_size(m.get_string(1).length()), m.get_string(2)]
+		result = "[b][font_size=%d]%s[/font_size][/b]" % [
+			_get_header_size(m.get_string(1).length()),
+			m.get_string(2)
+		]
 
 	return result
 
@@ -101,9 +108,14 @@ func _process_paired(_text: String, pattern: String, open_tag: String, close_tag
 			result = result.substr(0, start) + open_tag + m.get_string(2) + close_tag + result.substr(end)
 	return result
 
+const MAX_HEADER_LEVEL: int = 6
+
 func _get_header_size(level: int) -> int:
-	var theme_names := ["h1_font_size", "h2_font_size", "h3_font_size", "h4_font_size", "h5_font_size", "h6_font_size"]
-	if level >= 1 and level <= 6:
+	var theme_names := [
+		"h1_font_size", "h2_font_size", "h3_font_size",
+		"h4_font_size", "h5_font_size", "h6_font_size"
+	]
+	if level >= 1 and level <= MAX_HEADER_LEVEL:
 		var theme_size := get_theme_font_size(theme_names[level - 1])
 		if theme_size != null:
 			return theme_size

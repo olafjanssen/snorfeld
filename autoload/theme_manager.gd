@@ -21,11 +21,13 @@ var _current_mode: ThemeMode = ThemeMode.AUTO
 # Timer for checking OS theme changes
 var _check_timer: Timer
 
+const OS_THEME_CHECK_INTERVAL: float = 5.0
+
 func _ready() -> void:
 	# Load saved mode from config
 	var config := ConfigFile.new()
 	if config.load(CONFIG_FILE) == OK:
-		var mode_str = config.get_value("theme", "mode", "auto")
+		var mode_str: String = config.get_value("theme", "mode", "auto")
 		match mode_str:
 			"light": _current_mode = ThemeMode.LIGHT
 			"dark": _current_mode = ThemeMode.DARK
@@ -41,10 +43,10 @@ func _ready() -> void:
 	_check_timer.timeout.connect(_on_check_timer_timeout)
 	_check_timer.timeout.connect(_check_os_theme_change)
 	add_child(_check_timer)
-	_check_timer.start(5.0)  # Check every 5 seconds
+	_check_timer.start(OS_THEME_CHECK_INTERVAL)  # Check every 5 seconds
 
 func _on_check_timer_timeout() -> void:
-	_check_timer.start(5.0)
+	_check_timer.start(OS_THEME_CHECK_INTERVAL)
 
 func _check_os_theme_change() -> void:
 	if _current_mode == ThemeMode.AUTO:

@@ -1,6 +1,8 @@
 extends ContentCache
 # Character service - handles caching and analysis of character results
 
+# gdlint:ignore-file:file-length,high-complexity,deep-nesting,long-function,missing-type-hint,magic-number
+
 const CHARACTER_DIR_NAME := "characters"
 
 # Track the current file for character analysis

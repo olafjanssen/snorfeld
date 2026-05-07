@@ -1,11 +1,14 @@
 extends SyntaxHighlighter
 
 # Token types
-const TOKEN_NORMAL = 0
-const TOKEN_HEADER = 1
-const TOKEN_BOLD = 2
-const TOKEN_ITALIC = 3
-const TOKEN_DIALOG = 4
+const TOKEN_NORMAL: int = 0
+const TOKEN_HEADER: int = 1
+const TOKEN_BOLD: int = 2
+const TOKEN_ITALIC: int = 3
+const TOKEN_DIALOG: int = 4
+
+# Maximum header level to check
+const MAX_HEADER_LEVEL: int = 6
 
 # Theme color names for syntax highlighting
 const THEME_COLORS = {
@@ -17,68 +20,87 @@ const THEME_COLORS = {
 }
 
 func _get_theme_color(color_name: String) -> Color:
-	var text_edit = get_text_edit()
+	var text_edit: TextEdit = get_text_edit()
 	return text_edit.get_theme_color(color_name, "SyntaxHighlighter")
 
 func _get_token_color(index: int) -> Color:
-	var color_name = THEME_COLORS.get(index, "")
+	var color_name: String = THEME_COLORS.get(index, "")
 	if color_name:
 		return _get_theme_color(color_name)
 	return Color(1, 1, 1)
 
 func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var text: String = get_text_edit().get_line(line)
-	var length : int = len(text)
+	var length: int = len(text)
 
-	var tokens = {}
+	var tokens: Dictionary = {}
 	var pos: int = 0
 	var in_bold: bool = false
 	var in_italic: bool = false
 	var in_dialog: bool = false
 
 	while pos < length:
-		# Check for headers at start of line
 		if pos == 0:
-			for i in range(6, 0, -1):
-				if pos + i <= length and text.substr(pos, i) == "#".repeat(i) and (pos + i < length and text[pos + i] == " "):
-					for j in range(i):
-						tokens[pos + j] = {"color": _get_token_color(TOKEN_HEADER)}
-					pos += i + 1
-					break
-			# If we reached end of line after header, continue to next iteration
+			pos = _process_header_tokens(text, length, tokens, pos)
 			if pos >= length:
 				continue
 
-		# Check for bold
-		if pos + 1 < length and text.substr(pos, 2) == "**":
+		var new_pos: int
+
+		new_pos = _process_bold(text, length, tokens, pos, in_bold)
+		if new_pos != -1:
 			in_bold = !in_bold
-			if in_bold:
-				tokens[pos] = {"color": _get_token_color(TOKEN_BOLD)}
-			else:
-				tokens[pos] = {"color": _get_token_color(TOKEN_NORMAL)}
-			pos += 2
+			pos = new_pos
 			continue
 
-		# Check for italic
-		if text[pos] == "*" or text[pos] == "_":
+		new_pos = _process_italic(text, tokens, pos, in_italic)
+		if new_pos != -1:
 			in_italic = !in_italic
-			if in_italic:
-				tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC)}
-			else:
-				tokens[pos] = {"color": _get_token_color(TOKEN_NORMAL)}
-			pos += 1
+			pos = new_pos
 			continue
 
-		# Check for dialog
-		if text[pos] == "\"":
+		new_pos = _process_dialog(text, length, tokens, pos, in_dialog)
+		if new_pos != -1:
 			in_dialog = !in_dialog
-			if in_dialog and pos + 1 < length:
-				tokens[pos+1] = {"color": _get_token_color(TOKEN_DIALOG)}
-			elif not in_dialog and pos - 1 >= 0:
-				tokens[pos-1] = {"color": _get_token_color(TOKEN_NORMAL)}
-			pos += 1
+			pos = new_pos
 			continue
 
 		pos += 1
 
 	return tokens
+
+## Process header tokens at the start of a line
+func _process_header_tokens(text: String, length: int, tokens: Dictionary, pos: int) -> int:
+	for i in range(MAX_HEADER_LEVEL, 0, -1):
+		if pos + i <= length and text.substr(pos, i) == "#".repeat(i) and (pos + i < length and text[pos + i] == " "):
+			for j in range(i):
+				tokens[pos + j] = {"color": _get_token_color(TOKEN_HEADER)}
+			return pos + i + 1
+	return pos
+
+## Process bold markdown tokens (**)
+## Returns new position or -1 if not processed
+func _process_bold(text: String, length: int, tokens: Dictionary, pos: int, in_bold: bool) -> int:
+	if pos + 1 < length and text.substr(pos, 2) == "**":
+		tokens[pos] = {"color": _get_token_color(TOKEN_BOLD if not in_bold else TOKEN_NORMAL)}
+		return pos + 2
+	return -1
+
+## Process italic markdown tokens (* or _)
+## Returns new position or -1 if not processed
+func _process_italic(text: String, tokens: Dictionary, pos: int, in_italic: bool) -> int:
+	if text[pos] == "*" or text[pos] == "_":
+		tokens[pos] = {"color": _get_token_color(TOKEN_ITALIC if not in_italic else TOKEN_NORMAL)}
+		return pos + 1
+	return -1
+
+## Process dialog quotes
+## Returns new position or -1 if not processed
+func _process_dialog(text: String, length: int, tokens: Dictionary, pos: int, in_dialog: bool) -> int:
+	if text[pos] == "\"":
+		if in_dialog and pos + 1 < length:
+			tokens[pos+1] = {"color": _get_token_color(TOKEN_DIALOG)}
+		elif not in_dialog and pos - 1 >= 0:
+			tokens[pos-1] = {"color": _get_token_color(TOKEN_NORMAL)}
+		return pos + 1
+	return -1

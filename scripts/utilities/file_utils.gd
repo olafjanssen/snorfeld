@@ -75,11 +75,11 @@ static func get_files_by_extension(base_path: String, extension: String) -> Arra
 	var files := []
 	if not dir_exists(base_path):
 		return files
-	var dir = DirAccess.open(base_path)
+	var dir: DirAccess = DirAccess.open(base_path)
 	if not dir:
 		return files
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if file_name.ends_with(extension):
 			files.append(base_path.path_join(file_name))
@@ -90,14 +90,14 @@ static func get_files_by_extension(base_path: String, extension: String) -> Arra
 ## Recursive text file scanning
 static func get_all_text_files(base_path: String) -> Array:
 	var text_files := []
-	var dir = DirAccess.open(base_path)
+	var dir: DirAccess = DirAccess.open(base_path)
 	if not dir:
 		return text_files
 
 	dir.list_dir_begin()
-	var file_name = dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
-		var full_path = base_path.path_join(file_name)
+		var full_path: String = base_path.path_join(file_name)
 		if dir.current_is_dir():
 			# Skip .snorfeld cache directory and other hidden dirs
 			if not file_name.begins_with("."):

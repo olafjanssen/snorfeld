@@ -1,6 +1,8 @@
 extends GenericCacheService
 ## StructureService - Handles caching and analysis of paragraph structure improvements
 
+# gdlint:ignore-file:file-length,too-many-params
+
 # Constants for context limits
 const FULL_CHAPTER_WORDS: int = 500
 const CONTEXT_WORDS: int = 200
@@ -29,7 +31,12 @@ func _ready() -> void:
 
 
 # Analyzes text for structural/plot/pacing enhancements
-func analyze_structure(paragraph: String, context_before: String = "", context_after: String = "", full_chapter: String = "") -> Dictionary:
+func analyze_structure(
+	paragraph: String,
+	context_before: String = "",
+	context_after: String = "",
+	full_chapter: String = ""
+) -> Dictionary:
 	# Build context - use full chapter if available, otherwise use before/after
 	var context: String = ""
 	if full_chapter.length() > 0:
@@ -47,8 +54,15 @@ func analyze_structure(paragraph: String, context_before: String = "", context_a
 		"paragraph": paragraph
 	})
 
-	var options: Dictionary = {"temperature": AppConfig.get_llm_temperature(), "max_tokens": AppConfig.get_llm_max_tokens()}
-	var llm_response: Dictionary = await LLMClient.generate_json(AppConfig.get_llm_model(), prompt, options)
+	var options: Dictionary = {
+		"temperature": AppConfig.get_llm_temperature(),
+		"max_tokens": AppConfig.get_llm_max_tokens()
+	}
+	var llm_response: Dictionary = await LLMClient.generate_json(
+		AppConfig.get_llm_model(),
+		prompt,
+		options
+	)
 
 	var suggestion: String = ""
 	var explanation: String = ""
@@ -117,7 +131,13 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 ## ============================================================================
 
 # Queue a paragraph for structure analysis
-func queue_paragraph(paragraph_hash: String, paragraph: String, file_content: String, file_path: String = "", priority: bool = false) -> void:
+func queue_paragraph(
+	paragraph_hash: String,
+	paragraph: String,
+	file_content: String,
+	file_path: String = "",
+	priority: bool = false
+) -> void:
 	var payload: Dictionary = {
 		"hash": paragraph_hash,
 		"paragraph": paragraph,

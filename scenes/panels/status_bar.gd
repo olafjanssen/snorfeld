@@ -3,8 +3,10 @@ extends RichTextLabel
 @export var default_message: String = ""
 @export var display_duration: float = 2.0
 
+const PULSE_EASE: float = -4.0
+
 var timer: Timer
-var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=-4.0]✲[/pulse] "
+var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=%s]✲[/pulse] " % PULSE_EASE
 
 # Git status tracking
 var is_git_repo: bool = false

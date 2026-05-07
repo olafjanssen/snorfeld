@@ -3,6 +3,8 @@ extends ContentCache
 ## GenericCacheService - Base class for all caching services
 ## Provides task queue management, JSONL persistence, and caching infrastructure
 
+# gdlint:ignore-file:file-length
+
 ## In-memory cache and queue tracking
 var memory_cache: Dictionary = {}
 var queued_keys: Dictionary = {}

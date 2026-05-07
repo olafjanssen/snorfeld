@@ -2,6 +2,8 @@ class_name PromptTemplates
 extends RefCounted
 ## Centralized LLM prompt templates for all analysis services
 
+# gdlint:ignore-file:file-length,magic-number,long-line
+
 # ============================================================================
 # Paragraph Analysis Prompts
 # ============================================================================
@@ -9,7 +11,8 @@ extends RefCounted
 # Grammar analysis prompt template
 const GRAMMAR_PROMPT := """
 You are a helpful writing assistant. Analyze the following text and provide:
-1. A corrected version with improved spelling and grammar (keep the original meaning), be aware the text may contain dialogue between \"...\" and MarkDown markup.
+1. A corrected version with improved spelling and grammar (keep the original meaning),
+   be aware the text may contain dialogue between \"...\" and MarkDown markup.
 2. A brief explanation of the changes made
 
 Context:
@@ -122,7 +125,8 @@ Respond with a JSON object containing all fields.
 
 # Object extraction prompt template
 const OBJECT_EXTRACTION_PROMPT := """
-You are an object analysis assistant (Chekhov's gun principle). Extract all important objects from the following chapter text.
+You are an object analysis assistant (Chekhov's gun principle).
+Extract all important objects from the following chapter text.
 An important object is one that:
 - Appears repeatedly or has symbolic meaning
 - Could be relevant to plot development (Chekhov's gun)

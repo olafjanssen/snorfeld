@@ -1,5 +1,8 @@
 extends Window
 
+const DEFAULT_WINDOW_SIZE: Vector2 = Vector2(1024, 800)
+const DPI_THRESHOLD: int = 144
+
 func _ready() -> void:
 	# Setup theme option button first (before loading settings)
 	var theme_option: OptionButton = $MarginContainer/VBoxContainer/ThemeOptionButton
@@ -10,7 +13,7 @@ func _ready() -> void:
 	$MarginContainer/VBoxContainer/CloseButton.pressed.connect(_on_close_pressed)
 	$MarginContainer/VBoxContainer/ThemeOptionButton.pressed.connect(_on_theme_selected)
 	close_requested.connect(_on_close_requested)
-	size = Vector2(1024, 800)
+	size = DEFAULT_WINDOW_SIZE
 
 	# Now load settings (after items are added)
 	load_llm_settings()
@@ -18,7 +21,7 @@ func _ready() -> void:
 
 	# Detect screen DPI and set appropriate scale
 	var dpi := DisplayServer.screen_get_dpi(0)
-	var ui_scale := 2.0 if dpi > 144 else 1.0
+	var ui_scale := 2.0 if dpi > DPI_THRESHOLD else 1.0
 	set_content_scale_factor(ui_scale)
 
 
@@ -32,8 +35,8 @@ func load_llm_settings() -> void:
 	$MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
 
 func load_theme_settings() -> void:
-	var theme_mode := ThemeManager.get_mode()
-	var index := 0
+	var theme_mode: ThemeManager.ThemeMode = ThemeManager.get_mode()
+	var index: int = 0
 	match theme_mode:
 		ThemeManager.ThemeMode.LIGHT: index = 0
 		ThemeManager.ThemeMode.DARK: index = 1

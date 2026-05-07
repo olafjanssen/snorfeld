@@ -1,8 +1,11 @@
 extends Window
 
+# gdlint:ignore-file:file-length
+
 # Constants
 const HIGH_DPI_THRESHOLD: int = 144
 const SIDE_PANEL_X_POSITION: int = 820
+const SHEET_TITLE_FONT_SIZE: int = 18
 
 @onready var tab_container: TabContainer = $VBoxContainer/HSplitContainer/TabContainer
 @onready var character_tree: Tree = $VBoxContainer/HSplitContainer/TabContainer/CharacterTree
@@ -147,113 +150,153 @@ func _on_tab_changed(tab_index: int):
 		content_sheet.text = ""
 
 func _display_character_sheet(char_data: Dictionary):
-	var full_name: String = char_data.get("name", "Unknown")
-	var output: String = ""
-
-	output += "[b][font_size=18]%s[/font_size][/b]" % [full_name]
-
-	# Aliases
-	var aliases: Array = char_data.get("aliases", [])
-	if aliases.size() > 0:
-		output += " (%s)" % [", ".join(aliases)]
-
-	output += "\n\n"
-
-	# Plot Roles
-	var plot_roles: Array = char_data.get("plot_roles", [])
-	if plot_roles.size() > 0:
-		output += "[b]Role:[/b] %s\n\n" % [", ".join(plot_roles)]
-
-	# Archetypes
-	var archetypes: Array = char_data.get("archetypes", [])
-	if archetypes.size() > 0:
-		output += "[b]Archetypes:[/b] %s\n\n" % [", ".join(archetypes)]
-
-	# Traits
-	var traits: Array = char_data.get("traits", [])
-	if traits.size() > 0:
-		output += "[b]Traits:[/b] %s\n\n" % [", ".join(traits)]
-
-	# Relationships
-	var relationships: Dictionary = char_data.get("relationships", {})
-	if relationships.size() > 0:
-		output += "[b]Relationships:[/b]\n"
-		for other_char: String in relationships:
-			output += "[ul][i]%s[/i]: %s[/ul]\n" % [other_char, relationships[other_char]]
-		output += "\n"
-
-	# Notes
-	var notes = char_data.get("notes", {})
-	if notes.size() > 0:
-		output += "[b]Chapter Notes:[/b]\n"
-		if notes is Dictionary:
-			for chapter: String in notes:
-				output += "[ul]%s [i](%s)[/i][/ul]\n" % [notes[chapter], chapter]
-		elif notes is String:
-			output += "  %s\n" % [notes]
-		output += "\n"
-
+	var output: String = _build_character_sheet_header(char_data)
+	output += _build_character_sheet_aliases(char_data)
+	output += _build_character_sheet_plot_roles(char_data)
+	output += _build_character_sheet_archetypes(char_data)
+	output += _build_character_sheet_traits(char_data)
+	output += _build_character_sheet_relationships(char_data)
+	output += _build_character_sheet_notes(char_data)
 	content_sheet.text = output
+
+## Build character sheet header with name
+func _build_character_sheet_header(char_data: Dictionary) -> String:
+	var full_name: String = char_data.get("name", "Unknown")
+	return "[b][font_size=%d]%s[/font_size][/b]\n\n" % [SHEET_TITLE_FONT_SIZE, full_name]
+
+## Build aliases section
+func _build_character_sheet_aliases(char_data: Dictionary) -> String:
+	var aliases: Array = char_data.get("aliases", [])
+	if aliases.is_empty():
+		return ""
+	return " (%s)\n\n" % [", ".join(aliases)]
+
+## Build plot roles section
+func _build_character_sheet_plot_roles(char_data: Dictionary) -> String:
+	var plot_roles: Array = char_data.get("plot_roles", [])
+	if plot_roles.is_empty():
+		return ""
+	return "[b]Role:[/b] %s\n\n" % [", ".join(plot_roles)]
+
+## Build archetypes section
+func _build_character_sheet_archetypes(char_data: Dictionary) -> String:
+	var archetypes: Array = char_data.get("archetypes", [])
+	if archetypes.is_empty():
+		return ""
+	return "[b]Archetypes:[/b] %s\n\n" % [", ".join(archetypes)]
+
+## Build traits section
+func _build_character_sheet_traits(char_data: Dictionary) -> String:
+	var traits: Array = char_data.get("traits", [])
+	if traits.is_empty():
+		return ""
+	return "[b]Traits:[/b] %s\n\n" % [", ".join(traits)]
+
+## Build relationships section
+func _build_character_sheet_relationships(char_data: Dictionary) -> String:
+	var relationships: Dictionary = char_data.get("relationships", {})
+	if relationships.is_empty():
+		return ""
+	var output: String = "[b]Relationships:[/b]\n"
+	for other_char: String in relationships:
+		output += "[ul][i]%s[/i]: %s[/ul]\n" % [other_char, relationships[other_char]]
+	return output + "\n"
+
+## Build notes section
+func _build_character_sheet_notes(char_data: Dictionary) -> String:
+	var notes: Variant = char_data.get("notes", {})
+	if notes == null or (notes is not Dictionary and notes is not String):
+		return ""
+	var output: String = "[b]Chapter Notes:[/b]\n"
+	if notes is Dictionary:
+		for chapter: String in notes:
+			output += "[ul]%s [i](%s)[/i][/ul]\n" % [notes[chapter], chapter]
+	elif notes is String:
+		output += "  %s\n" % [notes]
+	return output + "\n"
 
 
 func _display_object_sheet(obj_data: Dictionary):
-	var full_name: String = obj_data.get("name", "Unknown")
-	var output: String = ""
-
-	output += "[b][font_size=18]%s[/font_size][/b]" % [full_name]
-
-	# Aliases
-	var aliases: Array = obj_data.get("aliases", [])
-	if aliases.size() > 0:
-		output += " (%s)" % [", ".join(aliases)]
-
-	output += "\n\n"
-
-	# Object Types
-	var object_types: Array = obj_data.get("object_type", [])
-	if object_types.size() > 0:
-		output += "[b]Type:[/b] %s\n\n" % [", ".join(object_types)]
-
-	# Description
-	var description: String = obj_data.get("description", "")
-	if description != "":
-		output += "[b]Description:[/b] %s\n\n" % [description]
-
-	# Thematic Relevance
-	var thematic_relevance: Array = obj_data.get("thematic_relevance", [])
-	if thematic_relevance.size() > 0:
-		output += "[b]Themes:[/b] %s\n\n" % [", ".join(thematic_relevance)]
-
-	# Symbolic Meaning
-	var symbolic_meaning: Array = obj_data.get("symbolic_meaning", [])
-	if symbolic_meaning.size() > 0:
-		output += "[b]Symbolic Meaning:[/b] %s\n\n" % [", ".join(symbolic_meaning)]
-
-	# Character Relations
-	var character_relations: Dictionary = obj_data.get("character_relations", {})
-	if character_relations.size() > 0:
-		output += "[b]Character Relations:[/b]\n"
-		for char_name: String in character_relations:
-			output += "[ul][i]%s[/i]: %s[/ul]\n" % [char_name, character_relations[char_name]]
-		output += "\n"
-
-	# Appearances
-	var appearances: Array = obj_data.get("appearances", [])
-	if appearances.size() > 0:
-		output += "[b]Appears in:[/b] %s\n\n" % [", ".join(appearances)]
-
-	# Notes
-	var notes = obj_data.get("notes", {})
-	if notes.size() > 0:
-		output += "[b]Chapter Notes:[/b]\n"
-		if notes is Dictionary:
-			for chapter: String in notes:
-				output += "[ul]%s [i](%s)[/i][/ul]\n" % [notes[chapter], chapter]
-		elif notes is String:
-			output += "  %s\n" % [notes]
-		output += "\n"
-
+	var output: String = _build_object_sheet_header(obj_data)
+	output += _build_object_sheet_aliases(obj_data)
+	output += _build_object_sheet_types(obj_data)
+	output += _build_object_sheet_description(obj_data)
+	output += _build_object_sheet_themes(obj_data)
+	output += _build_object_sheet_symbolic(obj_data)
+	output += _build_object_sheet_character_relations(obj_data)
+	output += _build_object_sheet_appearances(obj_data)
+	output += _build_object_sheet_notes(obj_data)
 	content_sheet.text = output
+
+## Build object sheet header with name
+func _build_object_sheet_header(obj_data: Dictionary) -> String:
+	var full_name: String = obj_data.get("name", "Unknown")
+	return "[b][font_size=%d]%s[/font_size][/b]\n\n" % [SHEET_TITLE_FONT_SIZE, full_name]
+
+## Build aliases section for object
+func _build_object_sheet_aliases(obj_data: Dictionary) -> String:
+	var aliases: Array = obj_data.get("aliases", [])
+	if aliases.is_empty():
+		return ""
+	return " (%s)\n\n" % [", ".join(aliases)]
+
+## Build object types section
+func _build_object_sheet_types(obj_data: Dictionary) -> String:
+	var object_types: Array = obj_data.get("object_type", [])
+	if object_types.is_empty():
+		return ""
+	return "[b]Type:[/b] %s\n\n" % [", ".join(object_types)]
+
+## Build description section
+func _build_object_sheet_description(obj_data: Dictionary) -> String:
+	var description: String = obj_data.get("description", "")
+	if description == "":
+		return ""
+	return "[b]Description:[/b] %s\n\n" % [description]
+
+## Build themes section
+func _build_object_sheet_themes(obj_data: Dictionary) -> String:
+	var thematic_relevance: Array = obj_data.get("thematic_relevance", [])
+	if thematic_relevance.is_empty():
+		return ""
+	return "[b]Themes:[/b] %s\n\n" % [", ".join(thematic_relevance)]
+
+## Build symbolic meaning section
+func _build_object_sheet_symbolic(obj_data: Dictionary) -> String:
+	var symbolic_meaning: Array = obj_data.get("symbolic_meaning", [])
+	if symbolic_meaning.is_empty():
+		return ""
+	return "[b]Symbolic Meaning:[/b] %s\n\n" % [", ".join(symbolic_meaning)]
+
+## Build character relations section
+func _build_object_sheet_character_relations(obj_data: Dictionary) -> String:
+	var character_relations: Dictionary = obj_data.get("character_relations", {})
+	if character_relations.is_empty():
+		return ""
+	var output: String = "[b]Character Relations:[/b]\n"
+	for char_name: String in character_relations:
+		output += "[ul][i]%s[/i]: %s[/ul]\n" % [char_name, character_relations[char_name]]
+	return output + "\n"
+
+## Build appearances section
+func _build_object_sheet_appearances(obj_data: Dictionary) -> String:
+	var appearances: Array = obj_data.get("appearances", [])
+	if appearances.is_empty():
+		return ""
+	return "[b]Appears in:[/b] %s\n\n" % [", ".join(appearances)]
+
+## Build notes section for object
+func _build_object_sheet_notes(obj_data: Dictionary) -> String:
+	var notes: Variant = obj_data.get("notes", {})
+	if notes == null or (notes is not Dictionary and notes is not String):
+		return ""
+	var output: String = "[b]Chapter Notes:[/b]\n"
+	if notes is Dictionary:
+		for chapter: String in notes:
+			output += "[ul]%s [i](%s)[/i][/ul]\n" % [notes[chapter], chapter]
+	elif notes is String:
+		output += "  %s\n" % [notes]
+	return output + "\n"
 
 
 func _on_folder_opened(_path: String):
