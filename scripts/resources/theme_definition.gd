@@ -66,7 +66,15 @@ extends Resource
 @export var fonts: Dictionary = {}
 
 ## Control-specific theme overrides
-## Structure: {"ControlType": {"colors": {...}, "font_sizes": {...}, "fonts": {...}, "constants": {...}, "styles": {...}}}
+## Structure: {
+##   "ControlType": {
+##     "colors": {...},
+##     "font_sizes": {...},
+##     "fonts": {...},
+##     "constants": {...},
+##     "styles": {...}
+##   }
+## }
 @export var control_overrides: Dictionary = {}
 
 ## Resolve a color reference to an actual Color

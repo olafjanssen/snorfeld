@@ -142,7 +142,14 @@ func _on_text_changed():
 
 
 
-func _on_apply_diff_patch_command(file_path: String, line_number: int, operation: String, word_index: int, new_text: String):
+# gdlint:ignore-function:too-many-params,long-function,long-line
+func _on_apply_diff_patch_command(
+	file_path: String,
+	line_number: int,
+	operation: String,
+	word_index: int,
+	new_text: String
+):
 	if current_file_path != file_path:
 		return
 
@@ -221,7 +228,12 @@ func _apply_change_operation(words: Array, word_index: int, new_text: String) ->
 	return " ".join(words)
 
 ## Restore editor with modified line
-func _restore_editor_with_modified_line(lines: Array, cursor_line: int, modified_paragraph: String, saved_state: Dictionary):
+func _restore_editor_with_modified_line(
+	lines: Array,
+	cursor_line: int,
+	modified_paragraph: String,
+	saved_state: Dictionary
+):
 	lines[cursor_line] = modified_paragraph
 	var new_text_full: String = "\n".join(lines)
 

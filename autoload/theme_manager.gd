@@ -43,7 +43,7 @@ func _ready() -> void:
 	_check_timer.timeout.connect(_on_check_timer_timeout)
 	_check_timer.timeout.connect(_check_os_theme_change)
 	add_child(_check_timer)
-	_check_timer.start(OS_THEME_CHECK_INTERVAL)  # Check every 5 seconds
+	_check_timer.start(OS_THEME_CHECK_INTERVAL)  # Check every few seconds
 
 func _on_check_timer_timeout() -> void:
 	_check_timer.start(OS_THEME_CHECK_INTERVAL)

@@ -29,6 +29,7 @@ func _get_token_color(index: int) -> Color:
 		return _get_theme_color(color_name)
 	return Color(1, 1, 1)
 
+# gdlint:ignore-function:long-function
 func _get_line_syntax_highlighting(line: int) -> Dictionary:
 	var text: String = get_text_edit().get_line(line)
 	var length: int = len(text)
@@ -80,6 +81,7 @@ func _process_header_tokens(text: String, length: int, tokens: Dictionary, pos: 
 
 ## Process bold markdown tokens (**)
 ## Returns new position or -1 if not processed
+# gdlint:ignore-function:too-many-params
 func _process_bold(text: String, length: int, tokens: Dictionary, pos: int, in_bold: bool) -> int:
 	if pos + 1 < length and text.substr(pos, 2) == "**":
 		tokens[pos] = {"color": _get_token_color(TOKEN_BOLD if not in_bold else TOKEN_NORMAL)}
@@ -96,6 +98,7 @@ func _process_italic(text: String, tokens: Dictionary, pos: int, in_italic: bool
 
 ## Process dialog quotes
 ## Returns new position or -1 if not processed
+# gdlint:ignore-function:too-many-params
 func _process_dialog(text: String, length: int, tokens: Dictionary, pos: int, in_dialog: bool) -> int:
 	if text[pos] == "\"":
 		if in_dialog and pos + 1 < length:

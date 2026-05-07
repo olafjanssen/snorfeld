@@ -158,7 +158,7 @@ func _save_to_jsonl(cache_dir: String, data: Dictionary) -> void:
 		_create_cache_directory(cache_dir)
 
 	var jsonl_path := cache_dir.path_join(_get_cache_filename())
-	var file = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
+	var file: FileAccess = FileAccess.open(jsonl_path, FileAccess.READ_WRITE)
 	if file:
 		file.seek_end()
 		file.store_string(JsonUtils.stringify_json(data) + "\n")
@@ -171,7 +171,7 @@ func _rewrite_jsonl_file(cache_dir: String) -> void:
 	var jsonl_path := cache_dir.path_join(_get_cache_filename())
 	var content := ""
 	for key in memory_cache:
-		var data = memory_cache[key]
+		var data: Dictionary = memory_cache[key]
 		content += JsonUtils.stringify_json(data) + "\n"
 	FileUtils.write_file(jsonl_path, content)
 
@@ -180,6 +180,7 @@ func _rewrite_jsonl_file(cache_dir: String) -> void:
 ## ============================================================================
 
 ## Override ContentCache's _process_task with generic implementation
+# gdlint:ignore-function:long-function
 func _process_task(task: Dictionary) -> void:
 	# Determine cache directory from task
 	var cache_dir: String

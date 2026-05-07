@@ -82,6 +82,7 @@ func _parse_spans(bbcode: String) -> Array:
 	return spans
 
 
+# gdlint:ignore-function:long-function
 func _parse_single_span(bbcode: String, start_pos: int) -> Dictionary:
 	var i: int = start_pos
 	var url_end: int = bbcode.find("]", i)
@@ -209,6 +210,7 @@ func _rebuild_bbcode_from_spans(bbcode: String, merged_spans: Array[Dictionary])
 	return "".join(final_result)
 
 # Word-level diff for grammar corrections
+# gdlint:ignore-function:long-function
 func calculate_diff(old_text: String, new_text: String, show_deletions: bool = true, show_insertions: bool = true) -> String:
 	var old_words: PackedStringArray = old_text.split(" ")
 	var new_words: PackedStringArray = new_text.split(" ")

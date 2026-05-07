@@ -53,8 +53,8 @@ func save_llm_settings() -> void:
 	AppConfig.set_embedding_model($MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
 
 func save_theme_settings() -> void:
-	var index = $MarginContainer/VBoxContainer/ThemeOptionButton.selected
-	var theme_mode = ThemeManager.ThemeMode.LIGHT
+	var index: int = $MarginContainer/VBoxContainer/ThemeOptionButton.selected
+	var theme_mode: ThemeManager.ThemeMode = ThemeManager.ThemeMode.LIGHT
 	match index:
 		0: theme_mode = ThemeManager.ThemeMode.LIGHT
 		1: theme_mode = ThemeManager.ThemeMode.DARK

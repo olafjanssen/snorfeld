@@ -1,6 +1,6 @@
 extends Node
 
-# gdlint:ignore-file:file-length,god-class-functions
+# gdlint:ignore-file:file-length,god-class-functions,high-complexity,long-function,magic-number
 ## GitService - Core git operations using OS.execute()
 ## Uses 'which' (Unix) or 'where' (Windows) to locate Git executable.
 

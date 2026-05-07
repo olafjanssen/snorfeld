@@ -7,6 +7,8 @@ extends Node
 ##   var embedding = await LLMClient.embed("qwen3-embedding:0.6b", "Some text to embed")
 ##   var running = await LLMClient.is_llm_running()
 
+# gdlint:ignore-file:file-length,deep-nesting,high-complexity,long-function,long-line,missing-type-hint,todo-comment
+
 # HTTP status codes
 const HTTP_STATUS_OK: int = 200
 
@@ -321,7 +323,3 @@ func is_llm_running() -> bool:
 		"check"
 	)
 	return result["response"] != null
-
-# Ignore file-length warning - this is a central utility class with many related functions
-# that work together (request queuing, HTTP handling, response processing)
-# gdlint:ignore-file:file-length

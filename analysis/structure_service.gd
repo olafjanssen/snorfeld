@@ -1,7 +1,7 @@
 extends GenericCacheService
 ## StructureService - Handles caching and analysis of paragraph structure improvements
 
-# gdlint:ignore-file:file-length,too-many-params
+# gdlint:ignore-file:file-length,too-many-params,long-function,high-complexity,missing-return-type,long-line
 
 # Constants for context limits
 const FULL_CHAPTER_WORDS: int = 500

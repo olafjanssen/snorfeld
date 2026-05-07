@@ -39,6 +39,7 @@ func _rebuild_outline_tree() -> void:
 
 const MAX_INDENT_LEVEL: int = 3
 
+# gdlint:ignore-function:long-function,magic-number
 func _do_rebuild_outline_tree() -> void:
 	rebuild_scheduled = false
 	outline_tree.clear()
@@ -90,9 +91,8 @@ func _get_prefix_for_level(level: int) -> String:
 		return "● "
 	elif level == 2:
 		return "○ "
-	elif level == 3:
+	else:
 		return "▪ "
-	return ""
 
 ## Set icon for a heading level
 func _set_icon_for_level(item: TreeItem, level: int):

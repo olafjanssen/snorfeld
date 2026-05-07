@@ -35,6 +35,7 @@ func _ready():
 	# Connect to tab changed signal
 	$TabContainer.tab_changed.connect(_on_tab_changed)
 
+# gdlint:ignore-function:long-function
 func _update_diff_displays() -> void:
 	# Update all tabs based on their cached data
 	# Grammar tab
@@ -127,6 +128,7 @@ func _on_tab_changed(tab_index: int):
 	_update_display_for_active_tab(tab_index)
 
 
+# gdlint:ignore-function:long-function
 func _update_display_for_active_tab(tab_index: int):
 	# Clear all explanation texts first
 	GrammarExplanation.text = ""

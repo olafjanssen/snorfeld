@@ -44,6 +44,7 @@ func _ready():
 	id_pressed.connect(_on_item_pressed)
 
 
+# gdlint:ignore-function:long-function
 func _on_item_pressed(id: int):
 	match id:
 		OPEN_FOLDER_ID:

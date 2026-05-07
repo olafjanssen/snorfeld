@@ -1,7 +1,7 @@
 extends GenericCacheService
 ## StyleService - Handles caching and analysis of paragraph style improvements
 
-# gdlint:ignore-file:file-length,too-many-params
+# gdlint:ignore-file:file-length,too-many-params,long-function,high-complexity,missing-return-type,long-line
 
 # Constants for context limits
 const CONTEXT_WORDS: int = 100

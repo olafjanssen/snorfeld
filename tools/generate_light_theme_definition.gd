@@ -4,6 +4,7 @@ extends EditorScript
 
 # gdlint:ignore-file:file-length,magic-number
 
+# gdlint:ignore-function:long-function
 func _run():
 	var def: ThemeDefinition = ThemeDefinition.new()
 

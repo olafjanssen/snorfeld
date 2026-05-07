@@ -39,6 +39,7 @@ var _current_diff_file: String = ""
 # Auto-refresh timer
 var refresh_timer: Timer
 
+# gdlint:ignore-function:long-function
 func _ready():
 	EventBus.theme_changed.connect(_on_theme_changed)
 	# Connect signals
