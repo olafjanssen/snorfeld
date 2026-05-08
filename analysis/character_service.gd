@@ -317,6 +317,10 @@ func _merge_relationships(existing: Dictionary, new: Dictionary) -> Dictionary:
 
 # Merge character data from LLM with existing data, adding chapter-specific fields
 func _merge_character_data(existing_data: Dictionary, new_char_data: Dictionary, chapter_id: String) -> Dictionary:
+	# Turn notes field of new_char into a dictionry
+	if new_char_data.has("notes"):
+		new_char_data["notes"] = {chapter_id: new_char_data["notes"]}
+
 	# Use the merge strategies configured in the service
 	var merged: Dictionary = MergeUtils.merge_data_with_strategies(existing_data, new_char_data, merge_strategies)
 

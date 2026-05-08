@@ -162,13 +162,13 @@ func _display_character_sheet(char_data: Dictionary):
 ## Build character sheet header with name
 func _build_character_sheet_header(char_data: Dictionary) -> String:
 	var full_name: String = char_data.get("name", "Unknown")
-	return "[b][font_size=%d]%s[/font_size][/b]\n\n" % [SHEET_TITLE_FONT_SIZE, full_name]
+	return "[b][font_size=%d]%s[/font_size][/b]" % [SHEET_TITLE_FONT_SIZE, full_name]
 
 ## Build aliases section
 func _build_character_sheet_aliases(char_data: Dictionary) -> String:
 	var aliases: Array = char_data.get("aliases", [])
 	if aliases.is_empty():
-		return ""
+		return "\n\n"
 	return " (%s)\n\n" % [", ".join(aliases)]
 
 ## Build plot roles section

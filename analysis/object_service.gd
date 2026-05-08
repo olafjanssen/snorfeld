@@ -314,9 +314,17 @@ func _merge_character_relations(existing: Dictionary, new: Dictionary) -> Dictio
 
 
 # Merge object data from LLM with existing data, adding chapter-specific fields
-func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, _chapter_id: String) -> Dictionary:
+func _merge_object_data(existing_data: Dictionary, new_obj_data: Dictionary, chapter_id: String) -> Dictionary:
+	# Turn notes property into a dictionary for the dictionary merge
+	new_obj_data["notes"] = {chapter_id: new_obj_data["notes"]}
 	# Use the merge strategies configured in the service
 	var merged = MergeUtils.merge_data_with_strategies(existing_data, new_obj_data, merge_strategies)
+
+	# Special handling for appearances - always add this chapter
+	var existing_appearances: Array = merged.get("appearances", [])
+	if not existing_appearances.has(chapter_id):
+		existing_appearances.append(chapter_id)
+		merged["appearances"] = existing_appearances
 
 	# Special handling for aliases - filter out any that match the canonical name
 	if merged.has("aliases") and merged.has("name"):
