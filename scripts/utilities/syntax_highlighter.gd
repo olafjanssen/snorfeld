@@ -66,9 +66,9 @@ func _process_italic(text: String, tokens: Dictionary, pos: int, in_italic: bool
 		return pos + 1
 	return -1
 
-func _process_dialog(text: String, tokens: Dictionary, pos: int) -> int:
+func _process_dialog(text: String, tokens: Dictionary, pos: int, in_dialog: bool) -> int:
 	if text[pos] == "\"":
-		tokens[pos] = {"color": _get_token_color(TOKEN_DIALOG)}
+		tokens[pos] = {"color": _get_token_color(TOKEN_DIALOG if not in_dialog else TOKEN_NORMAL)}
 		return pos + 1
 	return -1
 
@@ -96,7 +96,7 @@ func _process_inline_markers(
 		state_changes["italic"] = !in_italic
 		return state_changes
 
-	new_pos = _process_dialog(text, tokens, pos)
+	new_pos = _process_dialog(text, tokens, pos, in_dialog)
 	if new_pos != -1:
 		state_changes["pos"] = new_pos
 		state_changes["dialog"] = !in_dialog
