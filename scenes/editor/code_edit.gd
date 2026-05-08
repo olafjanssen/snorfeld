@@ -2,14 +2,9 @@ extends CodeEdit
 
 # gdlint:ignore-file:file-length
 
-# Constants
-const FILE_CHECK_INTERVAL: float = 5.0
-
 var current_file_path: String = ""
 var last_text: String = ""
-
-var last_modified_time: float = 0.0
-var file_check_timer: Timer
+var last_cursor_line: int = -1
 
 func _ready():
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
@@ -20,55 +15,40 @@ func _ready():
 	CommandBus.save_all_files.connect(_on_save_all_files)
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 	CommandBus.navigate_to_line.connect(_on_navigate_to_line_command)
-	EventBus.content_changed.connect(_on_book_content_changed)
+	EventBus.content_changed.connect(_on_content_changed)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
-
-	# Setup timer to check for external file changes
-	file_check_timer = Timer.new()
-	file_check_timer.timeout.connect(_on_file_check_timeout)
-	file_check_timer.wait_time = FILE_CHECK_INTERVAL
-	add_child(file_check_timer)
-	file_check_timer.start()
-
-func _exit_tree():
-	# Clean up timers
-	if file_check_timer:
-		file_check_timer.queue_free()
-		file_check_timer = null
-	# Note: syntax_highlighter is a RefCounted object and is managed automatically
 
 func _on_save_all_files():
 	# Emit final file_changed with current content before shutdown
 	if current_file_path != "" and FileUtils.file_exists(current_file_path):
 		EventBus.file_changed.emit(current_file_path, get_text())
 
-func _on_file_check_timeout():
-	if current_file_path == "":
-		return
+func _on_content_changed():
+	# BookService detected a content change - reload current file if it exists
+	if current_file_path != "" and FileUtils.file_exists(current_file_path):
+		var cursor_line: int = get_caret_line()
+		var cursor_column: int = get_caret_column()
+		var scroll_pos: float = get_v_scroll_bar().value
 
-	if FileUtils.file_exists(current_file_path):
-		var current_mod_time: float = FileUtils.get_modified_time(current_file_path)
-		if current_mod_time > last_modified_time:
-			# File was modified externally - save cursor position
-			var cursor_line: int = get_caret_line()
-			var cursor_column: int = get_caret_column()
-			var scroll_pos: float = get_v_scroll_bar().value
+		# Reload the file
+		var content: String = FileUtils.read_file(current_file_path)
+		if content != last_text:
+			last_cursor_line = -1  # Force paragraph re-analysis
+			call_deferred("_reload_and_restore", content, cursor_line, cursor_column, scroll_pos)
 
-			last_modified_time = current_mod_time
-
-			# Reload the file
-			var content: String = FileUtils.read_file(current_file_path)
-			set_text(content)
-			last_text = content
-
-			# Restore cursor position
-			if cursor_line >= 0:
-				set_caret_line(cursor_line)
-				var line_length: int = get_line(cursor_line).length()
-				set_caret_column(min(cursor_column, line_length))
-			get_v_scroll_bar().value = scroll_pos
+func _reload_and_restore(content: String, cursor_line: int, cursor_column: int, scroll_pos: float):
+	set_text(content)
+	last_text = content
+	last_cursor_line = -1  # Force paragraph re-analysis
+	if cursor_line >= 0:
+		var line_count: int = get_line_count()
+		cursor_line = clamp(cursor_line, 0, line_count - 1)
+		set_caret_line(cursor_line)
+		var line_length: int = get_line(cursor_line).length()
+		set_caret_column(min(cursor_column, line_length))
+	get_v_scroll_bar().value = scroll_pos
 
 func _on_show_git_diff(_file_path: String, _diff: String):
 	visible = false
@@ -85,7 +65,6 @@ func _on_navigate_to_line_command(file_path: String, line_number: int):
 		var content: String = FileUtils.read_file(file_path)
 		if content != "":
 			last_text = content
-			last_modified_time = FileUtils.get_modified_time(file_path)
 			set_text(content)
 			var line_count: int = get_line_count()
 			var target_line: int = clamp(line_number - 1, 0, line_count - 1)
@@ -107,11 +86,11 @@ func _on_file_selected(path: String):
 
 	current_file_path = path
 	last_text = ""
+	last_cursor_line = -1  # Force paragraph re-analysis
 	var content: String = FileUtils.read_file(path)
 	if content != "":
 		set_text(content)
 		last_text = content
-		last_modified_time = FileUtils.get_modified_time(path)
 
 	# Make sure panel is visible
 	visible = true
@@ -121,16 +100,10 @@ func _on_cursor_changed():
 	if cursor_line < 0:
 		return
 
-	# Emit signal with file_path and line number (1-based)
-	# Consumers will use BookService to get paragraph data
-	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
-
-func _on_book_content_changed():
-	# BookService content changed - refresh our view if we have a file loaded
-	if current_file_path != "":
-		# Force a cursor change to update paragraph selection
-		_on_cursor_changed()
-
+	# Only emit when line changes, not column
+	if cursor_line != last_cursor_line:
+		last_cursor_line = cursor_line
+		EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 
 func _on_text_changed():
 	# Emit file_changed signal when text changes

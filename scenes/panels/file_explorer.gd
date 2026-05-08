@@ -87,7 +87,7 @@ func _ensure_trailing_slash(path: String) -> String:
 		return path + "/"
 	return path
 
-func _setup_file_tree():
+func _setup_file_tree(should_select_first: bool = false):
 	if is_building_tree or current_path == "":
 		return
 	is_building_tree = true
@@ -102,8 +102,9 @@ func _setup_file_tree():
 	root_item.set_metadata(0, {"path": current_path, "is_dir": true})
 	_refresh_files(root_item, _ensure_trailing_slash(current_path))
 
-	# Select first text file after building tree
-	call_deferred("_select_first_text_file")
+	# Select first text file after building tree (only on initial open, not refresh)
+	if should_select_first:
+		call_deferred("_select_first_text_file")
 	is_building_tree = false
 
 func _refresh_files(parent_item: TreeItem, path: String):
@@ -181,7 +182,7 @@ func _on_folder_opened(path: String):
 	current_path = path
 	last_dir_state = _scan_directory_state(current_path)
 	# Use call_deferred to avoid clear() during tree processing
-	call_deferred("_setup_file_tree_deferred")
+	call_deferred("_setup_file_tree_deferred", true)
 
 func _update_icon_colors():
 	var icon_color: Color = get_theme_color("font_color", "Button")
@@ -190,7 +191,7 @@ func _update_icon_colors():
 	file_icon_img = _create_modulated_texture(file_icon, icon_color)
 	# Force tree redraw
 	if is_building_tree == false:
-		call_deferred("_setup_file_tree_deferred")
+		call_deferred("_setup_file_tree_deferred", false)
 	queue_redraw()
 
 func _create_modulated_texture(base: Texture2D, color: Color) -> ImageTexture:
@@ -227,7 +228,7 @@ func _on_dir_check_timeout():
 	if has_changes:
 		last_dir_state = current_state
 		# Refresh only the tree, don't emit file_selected signals
-		call_deferred("_setup_file_tree_deferred")
+		call_deferred("_setup_file_tree_deferred", false)
 
 func _scan_directory_state(base_path: String) -> Dictionary:
 	var state: Dictionary = {}
@@ -259,8 +260,8 @@ func _dir_scan_recursive(dir: DirAccess, path: String, state: Dictionary):
 		else:
 			state[full_path] = mod_time
 
-func _setup_file_tree_deferred():
-	_setup_file_tree()
+func _setup_file_tree_deferred(should_select_first: bool = false):
+	_setup_file_tree(should_select_first)
 
 func _select_first_text_file():
 	if current_path == "":

@@ -20,10 +20,28 @@ var paragraphs: Dictionary = {}
 # Track loaded state
 var loaded_project_path: String = ""
 
+# File monitoring
+const FILE_CHECK_INTERVAL: float = 5.0
+const FILE_TIME_EPSILON: float = 0.1  # Tolerance for timestamp comparisons
+var file_check_timer: Timer
+var file_modified_times: Dictionary = {}
+
 func _ready() -> void:
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.file_changed.connect(_on_file_changed)
 	EventBus.file_saved.connect(_on_file_saved)
+
+	# Setup timer to check for external file changes
+	file_check_timer = Timer.new()
+	file_check_timer.timeout.connect(_on_file_check_timeout)
+	file_check_timer.wait_time = FILE_CHECK_INTERVAL
+	add_child(file_check_timer)
+	file_check_timer.start()
+
+func _exit_tree() -> void:
+	if file_check_timer:
+		file_check_timer.queue_free()
+		file_check_timer = null
 
 
 # Load project content from a directory
@@ -38,7 +56,11 @@ func load_project(path: String) -> void:
 		return
 
 	loaded_project_path = path
+	file_modified_times.clear()
 	_build_content_model(path)
+	# Initialize modified times for all files
+	for file_path in files:
+		file_modified_times[file_path] = FileUtils.get_modified_time(file_path)
 	EventBus.project_loaded.emit(path)
 
 
@@ -47,6 +69,7 @@ func unload_project() -> void:
 	files.clear()
 	chapters.clear()
 	paragraphs.clear()
+	file_modified_times.clear()
 	loaded_project_path = ""
 	EventBus.project_unloaded.emit()
 
@@ -60,10 +83,11 @@ func _build_content_model(project_path: String) -> void:
 
 
 # Add or update a file in the model
-func _add_file(file_path: String) -> void:
-	var content: String = FileUtils.read_file(file_path)
+func _add_file(file_path: String, content: String = "") -> void:
 	if content == "":
-		return
+		content = FileUtils.read_file(file_path)
+		if content == "":
+			return
 
 	var file_data: Dictionary = {
 		"path": file_path,
@@ -455,16 +479,34 @@ func _on_folder_opened(path: String) -> void:
 
 
 # Handle file changed event
-func _on_file_changed(file_path: String, _content: String) -> void:
+func _on_file_changed(file_path: String, content: String) -> void:
 	if file_path != "" and loaded_project_path != "":
-		_add_file(file_path)
-		EventBus.content_changed.emit()
+		_add_file(file_path, content)
+		file_modified_times[file_path] = FileUtils.get_modified_time(file_path)
 
 
 # Handle file saved event
 func _on_file_saved(file_path: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path)
+		file_modified_times[file_path] = FileUtils.get_modified_time(file_path)
+
+# Check for external file modifications
+func _on_file_check_timeout() -> void:
+	if loaded_project_path == "":
+		return
+
+	var any_changed: bool = false
+	for file_path in files:
+		if FileUtils.file_exists(file_path):
+			var current_mod_time: float = FileUtils.get_modified_time(file_path)
+			var last_known_time: float = file_modified_times.get(file_path, 0.0)
+			if current_mod_time > last_known_time + FILE_TIME_EPSILON:
+				file_modified_times[file_path] = current_mod_time
+				_add_file(file_path)
+				any_changed = true
+
+	if any_changed:
 		EventBus.content_changed.emit()
 
 
