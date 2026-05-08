@@ -12,6 +12,8 @@ const SECOND_TO_LAST_INDEX: int = -2
 var config: ConfigFile = ConfigFile.new()
 var current_path: String = ""
 var is_building_tree: bool = false
+var selected_file_path: String = ""
+var is_initial_load: bool = true
 
 var text_file_whitelist: Array = [
 	'txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml',
@@ -92,6 +94,9 @@ func _setup_file_tree(should_select_first: bool = false):
 		return
 	is_building_tree = true
 
+	# Remember current selection before clearing
+	var previous_selection: String = selected_file_path
+
 	clear()
 	var root_item: TreeItem = create_item()
 	var path_parts: Array = current_path.split("/")
@@ -102,10 +107,19 @@ func _setup_file_tree(should_select_first: bool = false):
 	root_item.set_metadata(0, {"path": current_path, "is_dir": true})
 	_refresh_files(root_item, _ensure_trailing_slash(current_path))
 
-	# Select first text file after building tree (only on initial open, not refresh)
-	if should_select_first:
+	# Restore previous selection or select first file
+	if previous_selection != "" and not should_select_first:
+		call_deferred("_select_file_by_path", previous_selection)
+	elif should_select_first:
 		call_deferred("_select_first_text_file")
 	is_building_tree = false
+
+func _select_file_by_path(path: String):
+	var found: TreeItem = _find_tree_item_by_path(get_root(), path)
+	if found != null:
+		selected_file_path = path
+		found.select(0)
+		scroll_to_item(found)
 
 func _refresh_files(parent_item: TreeItem, path: String):
 	var dir: DirAccess = DirAccess.open(path)
@@ -144,6 +158,9 @@ func _is_text_file(file_path: String) -> bool:
 	return false
 
 func _on_item_selected():
+	if not is_initial_load and selected_file_path != "":
+		# Ignore if we're restoring selection during refresh
+		return
 	var item: TreeItem = get_selected()
 	if item == null:
 		return
@@ -152,6 +169,8 @@ func _on_item_selected():
 		return
 	var path: String = info["path"]
 	var is_dir: bool = info["is_dir"]
+
+	selected_file_path = path if not is_dir else ""
 
 	if is_dir:
 		current_path = path
@@ -181,6 +200,7 @@ func _on_folder_opened(path: String):
 		return
 	current_path = path
 	last_dir_state = _scan_directory_state(current_path)
+	is_initial_load = false
 	# Use call_deferred to avoid clear() during tree processing
 	call_deferred("_setup_file_tree_deferred", true)
 
@@ -281,6 +301,7 @@ func _try_select_last_opened_file() -> bool:
 	var found: TreeItem = _find_tree_item_by_path(get_root(), last_file)
 	if found != null:
 		found.select(0)
+		scroll_to_item(found)
 		return true
 	return false
 
@@ -311,6 +332,7 @@ func _select_first_text_file_from_tree():
 			var is_dir: bool = info["is_dir"]
 			if not is_dir and _is_text_file(path):
 				child.select(0)
+				scroll_to_item(child)
 				return
 			if is_dir:
 				stack.append(child)
