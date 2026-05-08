@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ThemeDefinition" format=3 uid="uid://master_theme_def"]
+[gd_resource type="Resource" script_class="ThemeDefinition" format=3 uid="uid://mhrxdbtxevuo"]
 
 [ext_resource type="Script" uid="uid://dvhxal0u683o1" path="res://scripts/resources/theme_definition.gd" id="1_vufns"]
 
@@ -19,148 +19,148 @@ styles = {
 "type": "StyleBoxEmpty"
 },
 "StyleBoxFlat_button_hover": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_primary",
 "border_color": "border_primary",
 "border_width_all": 1,
-"corner_radius_all": 4
+"corner_radius_all": 4,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_button_normal": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_primary",
 "border_color": "border_primary",
 "border_width_all": 1,
-"corner_radius_all": 4
+"corner_radius_all": 4,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_button_pressed": {
-"type": "StyleBoxFlat",
 "border_color": "border_primary",
 "border_width_all": 1,
-"corner_radius_all": 4
+"corner_radius_all": 4,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_git_panel": {
+"bg_color": "bg_lightest",
+"border_color": "border_primary",
+"border_width_top": 1,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_panel_codeedit": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_lighter"
+"bg_color": "bg_lighter",
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_panel_popupwindow": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_lighter",
 "border_color": "border_primary",
-"border_width_all": 1
+"border_width_all": 1,
+"type": "StyleBoxFlat"
 },
-"StyleBoxFlat_tabcontainer_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary",
+"StyleBoxFlat_paneled_label": {
+"bg_color": "bg_lighter",
 "border_color": "border_primary",
-"border_width_left": 1
+"border_width_all": 1,
+"corner_radius_all": 6,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_settings_panel": {
+"bg_color": "bg_secondary",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_statusbar": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_top": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_storybible_panel": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_top": 1,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_tab_hovered": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_dark",
-"border_color": "border_primary",
-"border_width_left": 1,
-"border_width_right": 1,
-"expand_margin_left": 4,
-"expand_margin_right": 4
-},
-"StyleBoxFlat_tab_selected": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary",
 "border_color": "border_primary",
 "border_width_left": 1,
 "border_width_right": 1,
 "expand_margin_left": 4,
 "expand_margin_right": 4,
-"expand_margin_bottom": 1
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tab_selected": {
+"bg_color": "bg_secondary",
+"border_color": "border_primary",
+"border_width_left": 1,
+"border_width_right": 1,
+"expand_margin_bottom": 1,
+"expand_margin_left": 4,
+"expand_margin_right": 4,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_tab_unselected": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_primary",
 "border_color": "border_primary",
 "border_width_left": 1,
 "border_width_right": 1,
 "expand_margin_left": 4,
-"expand_margin_right": 4
+"expand_margin_right": 4,
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_tabbar_background": {
-"type": "StyleBoxFlat",
+"bg_color": "bg_secondary",
+"border_color": "border_primary",
+"border_width_bottom": 1,
+"border_width_right": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tabcontainer_panel": {
+"bg_color": "bg_secondary",
+"border_color": "border_primary",
+"border_width_left": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_textedit_normal": {
+"bg_color": "bg_lightest",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_texteditor_panel": {
+"bg_color": "bg_secondary",
+"border_color": "border_primary",
+"border_width_bottom": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tree_hovered": {
+"bg_color": "bg_medium",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tree_hovered_dimmed": {
+"bg_color": "bg_secondary",
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tree_hovered_selected": {
+"bg_color": "bg_dark",
+"border_color": "border_accent",
+"border_width_bottom": 1,
+"border_width_top": 1,
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_tree_panel": {
 "bg_color": "bg_secondary",
 "border_color": "border_primary",
 "border_width_right": 1,
-"border_width_bottom": 1
-},
-"StyleBoxFlat_textedit_normal": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_lightest"
-},
-"StyleBoxFlat_settings_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary"
-},
-"StyleBoxFlat_storybible_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_primary",
-"border_color": "border_primary",
-"border_width_top": 1
-},
-"StyleBoxFlat_git_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_lightest",
-"border_color": "border_primary",
-"border_width_top": 1
-},
-"StyleBoxFlat_paneled_label": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_lighter",
-"border_color": "border_primary",
-"border_width_all": 1,
-"corner_radius_all": 6
-},
-"StyleBoxFlat_statusbar": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_primary",
-"border_color": "border_primary",
-"border_width_top": 1
-},
-"StyleBoxFlat_windowbar": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_primary",
-"border_color": "border_primary",
-"border_width_bottom": 1
-},
-"StyleBoxFlat_texteditor_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary",
-"border_color": "border_primary",
-"border_width_bottom": 1
-},
-"StyleBoxFlat_tree_hovered": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_medium"
-},
-"StyleBoxFlat_tree_hovered_dimmed": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary"
-},
-"StyleBoxFlat_tree_hovered_selected": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_dark",
-"border_color": "border_accent",
-"border_width_top": 1,
-"border_width_bottom": 1
-},
-"StyleBoxFlat_tree_panel": {
-"type": "StyleBoxFlat",
-"bg_color": "bg_secondary",
-"border_color": "border_primary",
-"border_width_right": 1
+"type": "StyleBoxFlat"
 },
 "StyleBoxFlat_tree_selected": {
-"type": "StyleBoxFlat",
 "bg_color": "bg_dark",
 "border_color": "border_accent",
+"border_width_bottom": 1,
 "border_width_top": 1,
-"border_width_bottom": 1
+"type": "StyleBoxFlat"
+},
+"StyleBoxFlat_windowbar": {
+"bg_color": "bg_primary",
+"border_color": "border_primary",
+"border_width_bottom": 1,
+"type": "StyleBoxFlat"
 }
 }
 external_resources = [{
@@ -246,6 +246,26 @@ control_overrides = {
 "diff_insert_bg": "diff_insert_bg"
 }
 },
+"EditorStatusMessage": {
+"base_type": "RichTextLabel",
+"font_sizes": {
+"normal_font_size": 12
+},
+"fonts": {
+"normal_font": "Inter_Regular"
+}
+},
+"GitCommitPanel": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_git_panel"
+}
+},
+"HSeparator": {
+"styles": {
+"separator": "StyleBoxEmpty_paragraph_separator"
+}
+},
 "Label": {
 "colors": {
 "font_color": "text_secondary"
@@ -263,18 +283,6 @@ control_overrides = {
 "base_type": "Panel",
 "styles": {
 "panel": "StyleBoxFlat_paneled_label"
-}
-},
-"GitCommitPanel": {
-"base_type": "Panel",
-"styles": {
-"panel": "StyleBoxFlat_git_panel"
-}
-},
-"StatusBar": {
-"base_type": "Panel",
-"styles": {
-"panel": "StyleBoxFlat_statusbar"
 }
 },
 "PopupMenu": {
@@ -324,6 +332,12 @@ control_overrides = {
 "base_type": "Panel",
 "styles": {
 "panel": "StyleBoxFlat_settings_panel"
+}
+},
+"StatusBar": {
+"base_type": "Panel",
+"styles": {
+"panel": "StyleBoxFlat_statusbar"
 }
 },
 "StoryBibleCharacterSheet": {
@@ -448,20 +462,6 @@ control_overrides = {
 "base_type": "Panel",
 "styles": {
 "panel": "StyleBoxFlat_windowbar"
-}
-},
-"HSeparator": {
-"styles": {
-"separator": "StyleBoxEmpty_paragraph_separator"
-}
-},
-"EditorStatusMessage": {
-"base_type": "RichTextLabel",
-"font_sizes": {
-"normal_font_size": 12
-},
-"fonts": {
-"normal_font": "Inter_Regular"
 }
 }
 }

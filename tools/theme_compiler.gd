@@ -34,8 +34,6 @@ const THEME_EXT := ".tres"
 
 func _run():
 	_compile_all_themes()
-	print("Completed!")
-
 
 ## Compile all color theme resources found in COLORS_DIR
 func _compile_all_themes() -> bool:
@@ -76,7 +74,7 @@ func _compile_all_themes() -> bool:
 						push_error("Failed to save compiled theme: %s" % output_path)
 						success = false
 					else:
-						print("Compiled: %s" % output_name)
+						push_warning("Compiled: %s" % output_name)
 				else:
 					push_error("Failed to compile theme from: %s" % color_path)
 					success = false
