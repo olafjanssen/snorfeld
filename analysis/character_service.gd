@@ -162,7 +162,7 @@ func _on_folder_opened(path: String) -> void:
 	if DirAccess.dir_exists_absolute(cache_path):
 		_ensure_cache_loaded(cache_path)
 		EventBus.analysis_cleanup_started.emit("character")
-		var removed_count: int = _cleanup_unused_cache_files(cache_path, path)
+		var removed_count: int = _cleanup_unused_cache_entries(cache_path, path)
 		EventBus.analysis_cleanup_completed.emit("character", removed_count)
 
 
@@ -383,7 +383,7 @@ Chapter: %s
 Chapter Text:
 %s
 
-For each character that appears in this chapter, return their complete profile:
+For each character that appears in this chapter, return their complete updated profile:
 - name: EXACT match with existing characters if they exist
 - plot_roles: Array of their role(s) in the story
 - archetypes: Array of their character archetype(s) - use consistent, standard terms
@@ -398,13 +398,13 @@ Respond with a JSON object:
 {
   "characters": [
     {
-	  "name": "Character Name",
-	  "plot_roles": ["protagonist"],
-	  "archetypes": ["hero"],
-	  "traits": ["brave", "determined"],
-	  "relationships": {"OtherChar": "friend"},
-	  "aliases": ["Nickname"],
-	  "notes": "What they do in this chapter"
+\t  "name": "Character Name",
+\t  "plot_roles": ["protagonist"],
+\t  "archetypes": ["hero"],
+\t  "traits": ["brave", "determined"],
+\t  "relationships": {"OtherChar": "friend"},
+\t  "aliases": ["Nickname"],
+\t  "notes": "What they do in this chapter"
     }
   ]
 }
@@ -517,8 +517,8 @@ func get_character(char_name: String, cache_path: String) -> Dictionary:
 ## Cleanup
 ## ============================================================================
 
-# Clean up character cache files that don't have corresponding source files in the project
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+# Clean up character cache entries that don't have corresponding source files in the project
+func _cleanup_unused_cache_entries(cache_path: String, project_path: String) -> int:
 	var removed_count: int = 0
 	var project_files: Array = FileUtils.get_all_text_files(project_path)
 

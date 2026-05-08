@@ -138,7 +138,7 @@ func _merge_data(existing: Dictionary, new: Dictionary) -> Dictionary:
 
 ## Clean up cache entries that don't have corresponding source files
 ## Override for custom cleanup logic
-func _cleanup_unused_cache_files(_cache_path: String, _project_path: String) -> int:
+func _cleanup_unused_cache_entries(_cache_path: String, _project_path: String) -> int:
 	# Default implementation: remove entries not in BookService
 	# Override in subclasses for custom cleanup logic
 	return 0
@@ -435,7 +435,7 @@ func _on_folder_opened(path: String) -> void:
 	if FileUtils.dir_exists(cache_dir):
 		_ensure_cache_loaded(cache_dir)
 		EventBus.analysis_cleanup_started.emit(_get_service_name())
-		var removed_count: int = _cleanup_unused_cache_files(cache_dir, path)
+		var removed_count: int = _cleanup_unused_cache_entries(cache_dir, path)
 		EventBus.analysis_cleanup_completed.emit(_get_service_name(), removed_count)
 
 func _on_file_selected(path: String) -> void:

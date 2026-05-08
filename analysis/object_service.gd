@@ -158,7 +158,7 @@ func _on_folder_opened(path: String) -> void:
 	if DirAccess.dir_exists_absolute(cache_path):
 		_ensure_cache_loaded(cache_path)
 		EventBus.analysis_cleanup_started.emit("object")
-		var removed_count: int = _cleanup_unused_cache_files(cache_path, path)
+		var removed_count: int = _cleanup_unused_cache_entries(cache_path, path)
 		EventBus.analysis_cleanup_completed.emit("object", removed_count)
 
 
@@ -522,8 +522,8 @@ func get_object(obj_name: String, cache_path: String) -> Dictionary:
 ## Cleanup
 ## ============================================================================
 
-# Clean up object cache files that don't have corresponding source files in the project
-func _cleanup_unused_cache_files(cache_path: String, project_path: String) -> int:
+# Clean up object cache entries that don't have corresponding source files in the project
+func _cleanup_unused_cache_entries(cache_path: String, project_path: String) -> int:
 	var removed_count: int = 0
 	var project_files: Array = FileUtils.get_all_text_files(project_path)
 

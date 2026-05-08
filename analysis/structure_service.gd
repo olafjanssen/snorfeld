@@ -232,7 +232,7 @@ func _on_start_analysis(service_type: String, scope: String) -> void:
 ## ============================================================================
 
 # Clean up cache entries that don't exist in the project anymore
-func _cleanup_unused_cache_files(cache_path: String, _project_path: String) -> int:
+func _cleanup_unused_cache_entries(cache_path: String, _project_path: String) -> int:
 	var removed_count: int = 0
 
 	# Get valid hashes from BookService

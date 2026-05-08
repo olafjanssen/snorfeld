@@ -283,7 +283,7 @@ func _emit_task_completed(remaining: int) -> void:
 
 
 # Override: Clean up cache entries that don't have corresponding source files
-func _cleanup_unused_cache_files(cache_path: String, _project_path: String) -> int:
+func _cleanup_unused_cache_entries(cache_path: String, _project_path: String) -> int:
 	# Get valid hashes from BookService
 	var valid_paragraph_hashes := BookService.get_all_paragraph_hashes()
 	var valid_chapter_hashes := BookService.get_all_chapter_hashes()
@@ -332,7 +332,7 @@ func _on_folder_opened(path: String) -> void:
 		# Ensure cache is loaded before cleanup
 		_ensure_cache_loaded(cache_dir)
 		EventBus.analysis_cleanup_started.emit("embedding")
-		var removed_count := _cleanup_unused_cache_files(cache_dir, path)
+		var removed_count := _cleanup_unused_cache_entries(cache_dir, path)
 		EventBus.analysis_cleanup_completed.emit("embedding", removed_count)
 
 
