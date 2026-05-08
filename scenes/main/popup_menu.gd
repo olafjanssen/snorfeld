@@ -69,6 +69,9 @@ func _on_item_pressed(id: int):
 
 	if analysis_actions.has(id):
 		var action: Dictionary = analysis_actions[id]
+		if action["scope"] == "project":
+			CommandBus.delete_analysis_cache.emit(action["type"])
+
 		CommandBus.start_analysis.emit(action["type"], action["scope"])
 		return
 

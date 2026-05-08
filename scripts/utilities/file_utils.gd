@@ -32,6 +32,14 @@ static func write_file(file_path: String, content: String) -> bool:
 	file.close()
 	return true
 
+## File deletion
+
+static func remove_file(file_path: String) -> bool:
+	if not file_exists(file_path):
+		return false
+	var err := DirAccess.remove_absolute(file_path)
+	return err == OK
+
 ## File existence check
 
 static func file_exists(path: String) -> bool:

@@ -398,6 +398,20 @@ func clear_all_caches() -> void:
 	queued_keys.clear()
 	loaded_cache_dirs.clear()
 
+## Delete the cache file for this analysis service
+func delete_cache() -> void:
+	var project_path: String = BookService.loaded_project_path
+	var cache_dir: String = project_path.path_join(".snorfeld").path_join(_get_cache_subdir())
+	var jsonl_path: String = cache_dir.path_join(_get_cache_filename())
+
+	# Clear memory cache
+	memory_cache.clear()
+	queued_keys.clear()
+	loaded_cache_dirs.erase(cache_dir)
+
+	# Delete the JSONL file
+	FileUtils.remove_file(jsonl_path)
+
 ## Get cache statistics
 func get_stats() -> Dictionary:
 	return {
@@ -415,6 +429,7 @@ func get_stats() -> Dictionary:
 func _ready() -> void:
 	# Connect common signals
 	CommandBus.priority_analysis.connect(_on_priority_analysis_requested)
+	CommandBus.delete_analysis_cache.connect(_on_delete_analysis_cache)
 	EventBus.project_loaded.connect(_on_project_loaded)
 	EventBus.project_unloaded.connect(_on_project_unloaded)
 
@@ -423,6 +438,11 @@ func _on_priority_analysis_requested(service_type: String, _file_path: String, p
 		return
 	# Default: queue with priority
 	queue_task(payload, true)
+
+func _on_delete_analysis_cache(analysis_type: String) -> void:
+	if analysis_type != _get_service_name().to_upper():
+		return
+	delete_cache()
 
 func _on_start_analysis(service_type: String, _scope: String) -> void:
 	if service_type != _get_service_name().to_upper():
