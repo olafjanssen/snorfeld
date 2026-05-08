@@ -20,7 +20,7 @@ var file_contents := {}
 func _ready():
 	# Connect to global signals
 	CommandBus.save_file.connect(_on_save_file)
-	EventBus.file_changed.connect(_on_file_changed)
+	EventBus.editor_content_changed.connect(_on_editor_content_changed)
 	EventBus.file_selected.connect(_on_file_selected)
 	CommandBus.save_all_files.connect(_on_save_all_files)
 
@@ -46,7 +46,7 @@ func _on_save_file(path: String):
 	# Save immediately
 	_save_file(path)
 
-func _on_file_changed(path: String, content: String):
+func _on_editor_content_changed(path: String, content: String):
 	# Mark file as having unsaved changes
 	has_unsaved_changes = true
 	current_file_path = path

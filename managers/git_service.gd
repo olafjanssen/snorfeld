@@ -26,7 +26,7 @@ func _ready():
 	# Connect to folder opened signal
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.file_saved.connect(_on_file_saved)
-	EventBus.file_changed.connect(_on_file_changed)
+	EventBus.editor_content_changed.connect(_on_editor_content_changed)
 
 ### Configuration
 
@@ -375,7 +375,9 @@ func _on_file_saved(_path: String):
 		file_status_cache.clear()
 		call_deferred("refresh_status")
 
-func _on_file_changed(_path: String, _content: String):
-	if is_git_repo_cached:
-		file_status_cache.clear()
-		call_deferred("refresh_status")
+func _on_editor_content_changed(_path: String, _content: String):
+	# Don't refresh git status on in-memory changes - git only sees saved files
+	# But we could clear cache so that when file IS saved, it will be accurate
+	# For now, just clear the cache for this specific file
+	if is_git_repo_cached and _path != "":
+		file_status_cache.erase(_path)

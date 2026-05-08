@@ -13,7 +13,7 @@ var config: ConfigFile = ConfigFile.new()
 var current_path: String = ""
 var is_building_tree: bool = false
 var selected_file_path: String = ""
-var is_initial_load: bool = true
+var is_programmatic_selection: bool = false
 
 var text_file_whitelist: Array = [
 	'txt', 'md', 'yml', 'yaml', 'json', 'csv', 'html', 'htm', 'xml',
@@ -118,7 +118,9 @@ func _select_file_by_path(path: String):
 	var found: TreeItem = _find_tree_item_by_path(get_root(), path)
 	if found != null:
 		selected_file_path = path
+		is_programmatic_selection = true
 		found.select(0)
+		is_programmatic_selection = false
 		scroll_to_item(found)
 
 func _refresh_files(parent_item: TreeItem, path: String):
@@ -158,8 +160,7 @@ func _is_text_file(file_path: String) -> bool:
 	return false
 
 func _on_item_selected():
-	if not is_initial_load and selected_file_path != "":
-		# Ignore if we're restoring selection during refresh
+	if is_programmatic_selection:
 		return
 	var item: TreeItem = get_selected()
 	if item == null:
@@ -200,7 +201,6 @@ func _on_folder_opened(path: String):
 		return
 	current_path = path
 	last_dir_state = _scan_directory_state(current_path)
-	is_initial_load = false
 	# Use call_deferred to avoid clear() during tree processing
 	call_deferred("_setup_file_tree_deferred", true)
 
@@ -300,6 +300,7 @@ func _try_select_last_opened_file() -> bool:
 
 	var found: TreeItem = _find_tree_item_by_path(get_root(), last_file)
 	if found != null:
+		selected_file_path = last_file
 		found.select(0)
 		scroll_to_item(found)
 		return true

@@ -21,9 +21,9 @@ func _ready():
 	text_changed.connect(_on_text_changed)
 
 func _on_save_all_files():
-	# Emit final file_changed with current content before shutdown
+	# Emit final editor_content_changed with current content before shutdown
 	if current_file_path != "" and FileUtils.file_exists(current_file_path):
-		EventBus.file_changed.emit(current_file_path, get_text())
+		EventBus.editor_content_changed.emit(current_file_path, get_text())
 
 func _on_content_changed():
 	# BookService detected a content change - reload current file if it exists
@@ -78,10 +78,10 @@ func _set_caret_and_center(line_number: int):
 	center_viewport_to_caret()
 
 func _on_file_selected(path: String):
-	# Save current file before switching - emit file_changed with current content
+	# Save current file before switching - emit editor_content_changed with current content
 	if current_file_path != "" and current_file_path != path:
 		var current_content: String = get_text()
-		EventBus.file_changed.emit(current_file_path, current_content)
+		EventBus.editor_content_changed.emit(current_file_path, current_content)
 		CommandBus.save_file.emit(current_file_path)
 
 	current_file_path = path
@@ -106,11 +106,11 @@ func _on_cursor_changed():
 		EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 
 func _on_text_changed():
-	# Emit file_changed signal when text changes
+	# Emit editor_content_changed signal when text changes
 	var current_text: String = get_text()
 	if current_text != last_text:
 		last_text = current_text
-		EventBus.file_changed.emit(current_file_path, current_text)
+		EventBus.editor_content_changed.emit(current_file_path, current_text)
 
 
 
@@ -221,5 +221,5 @@ func _restore_editor_with_modified_line(
 
 	# Re-trigger paragraph selection to update diff display
 	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
-	# Emit file_changed signal since text was modified
-	EventBus.file_changed.emit(current_file_path, get_text())
+	# Emit editor_content_changed signal since text was modified
+	EventBus.editor_content_changed.emit(current_file_path, get_text())

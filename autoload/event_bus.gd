@@ -21,7 +21,8 @@ signal theme_changed
 
 # File saving
 signal file_saved(path: String)
-signal file_changed(path: String, content: String)
+# In-memory editor content changed (not yet saved to disk)
+signal editor_content_changed(path: String, content: String)
 
 # Project lifecycle
 signal project_loaded(path: String)

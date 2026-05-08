@@ -28,7 +28,7 @@ var file_modified_times: Dictionary = {}
 
 func _ready() -> void:
 	EventBus.folder_opened.connect(_on_folder_opened)
-	EventBus.file_changed.connect(_on_file_changed)
+	EventBus.editor_content_changed.connect(_on_editor_content_changed)
 	EventBus.file_saved.connect(_on_file_saved)
 
 	# Setup timer to check for external file changes
@@ -478,18 +478,20 @@ func _on_folder_opened(path: String) -> void:
 	load_project(path)
 
 
-# Handle file changed event
-func _on_file_changed(file_path: String, content: String) -> void:
+# Handle editor content changed (in-memory, not yet saved)
+func _on_editor_content_changed(file_path: String, content: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path, content)
-		file_modified_times[file_path] = FileUtils.get_modified_time(file_path)
+		# Don't update file_modified_times - file not saved yet
 
 
-# Handle file saved event
+# Handle file saved event (now actually written to disk)
 func _on_file_saved(file_path: String) -> void:
 	if file_path != "" and loaded_project_path != "":
 		_add_file(file_path)
 		file_modified_times[file_path] = FileUtils.get_modified_time(file_path)
+		# File is now saved, emit content_changed for any listeners
+		EventBus.content_changed.emit()
 
 # Check for external file modifications
 func _on_file_check_timeout() -> void:
