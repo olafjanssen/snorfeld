@@ -17,6 +17,10 @@ func _ready() -> void:
 	# Connect signals
 	super()
 
+	# Connect service-specific signals
+	CommandBus.start_analysis.connect(_on_start_analysis)
+	EventBus.file_selected.connect(_on_file_selected)
+
 
 # Override: Get cache key from data (uses paragraph_hash)
 func _get_cache_key_from_data(data: Dictionary) -> String:

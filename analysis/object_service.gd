@@ -44,7 +44,12 @@ func _ready() -> void:
 
 # Override: Get cache key from payload
 # For objects, the key is the MD5 hash of the canonical object name
+# For file-level payloads, use file path hash
 func _get_cache_key(payload: Dictionary) -> String:
+	# File-level analysis (from queue_objects_for_cache)
+	if payload.has("file_path"):
+		return HashingUtils.hash_md5(payload["file_path"])
+	# Object-level analysis
 	var obj_name: String = payload.get("name", "")
 	if obj_name != "":
 		return _hash_object(obj_name)
@@ -121,9 +126,9 @@ func queue_objects_for_cache(file_path: String, file_content: String = "") -> vo
 	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 
-	# Check if already cached or queued
-	var file_hash: String = HashingUtils.hash_md5(file_content)
-	if is_cached(file_hash) and not should_merge_on_duplicate:
+	# Check if already cached or queued (using file path as key for deduplication)
+	var file_path_hash: String = HashingUtils.hash_md5(file_path)
+	if is_cached(file_path_hash) and not should_merge_on_duplicate:
 		return
 
 	# Queue task

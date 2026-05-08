@@ -47,7 +47,12 @@ func _ready() -> void:
 
 # Override: Get cache key from payload
 # For characters, the key is the MD5 hash of the canonical character name
+# For file-level payloads, use file path hash
 func _get_cache_key(payload: Dictionary) -> String:
+	# File-level analysis (from queue_characters_for_cache)
+	if payload.has("file_path"):
+		return HashingUtils.hash_md5(payload["file_path"])
+	# Character-level analysis
 	var char_name: String = payload.get("name", "")
 	if char_name != "":
 		return _hash_character(char_name)
@@ -125,9 +130,9 @@ func queue_characters_for_cache(file_path: String, file_content: String = "") ->
 	if not FileUtils.dir_exists(cache_path):
 		_create_cache_directory(cache_path)
 
-	# Check if already cached or queued
-	var file_hash: String = HashingUtils.hash_md5(file_content)
-	if is_cached(file_hash) and not should_merge_on_duplicate:
+	# Check if already cached or queued (using file path as key for deduplication)
+	var file_path_hash: String = HashingUtils.hash_md5(file_path)
+	if is_cached(file_path_hash) and not should_merge_on_duplicate:
 		return
 
 	# Queue task
@@ -389,13 +394,13 @@ Respond with a JSON object:
 {
   "characters": [
     {
-      "name": "Character Name",
-      "plot_roles": ["protagonist"],
-      "archetypes": ["hero"],
-      "traits": ["brave", "determined"],
-      "relationships": {"OtherChar": "friend"},
-      "aliases": ["Nickname"],
-      "notes": "What they do in this chapter"
+	  "name": "Character Name",
+	  "plot_roles": ["protagonist"],
+	  "archetypes": ["hero"],
+	  "traits": ["brave", "determined"],
+	  "relationships": {"OtherChar": "friend"},
+	  "aliases": ["Nickname"],
+	  "notes": "What they do in this chapter"
     }
   ]
 }
