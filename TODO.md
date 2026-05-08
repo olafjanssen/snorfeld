@@ -2,7 +2,7 @@
 - [ ] Story Bible panel
   - [x] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
-  - [ ] Object or chekov's gun overview
+  - [x] Object or chekov's gun overview
   - [ ] Plot overview and suggestions
 - [ ] Usability improvements
 	- [x] Create an outline tab showing the chapter outline instead of files
@@ -10,9 +10,10 @@
 	- [x] Detect screen pixel density to scale the UI
 	- [x] Allow switching between light/dark/OS-auto mode
 - [ ] Statistics
-  - [ ] Create paragraph and chapter embeddings
+  - [x] Create paragraph and chapter embeddings
 - [ ] Architectural design
-  - [ ] Create a book service that can give an entire overview of the structure of the project
+  - [x] Create a book service that can give an entire overview of the structure of the project
+  - [x] Split up complex methods and classes according to GDScript linter issues 
 
 ## Features Done
 - [x] LLM Generation

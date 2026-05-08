@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://byidirrbvn4no" path="res://scenes/main/window_bar.gd" id="3_ubhtb"]
 [ext_resource type="Texture2D" uid="uid://it6ym7og3e31" path="res://icons/folder.svg" id="4_dfoqb"]
 [ext_resource type="Texture2D" uid="uid://cm1hl7ros7kjh" path="res://icons/menu.svg" id="5_1hmye"]
-[ext_resource type="Script" uid="uid://get5gets10qy" path="res://managers/file_service.gd" id="5_file_service"]
+[ext_resource type="Script" uid="uid://bkpaa5uoiijsk" path="res://managers/file_service.gd" id="5_file_service"]
 [ext_resource type="Script" uid="uid://cg5eg1hv4u742" path="res://scenes/main/project_folder_label.gd" id="5_qd5yd"]
 [ext_resource type="PackedScene" uid="uid://qmnxby366n74" path="res://scenes/editor/text_editor.tscn" id="6_eqbpn"]
 [ext_resource type="PackedScene" uid="uid://bmpto71onui3w" path="res://scenes/panels/paragraph_check.tscn" id="7_5lcyj"]

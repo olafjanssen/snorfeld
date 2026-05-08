@@ -203,13 +203,11 @@ func get_status(base_path: String = "") -> Dictionary:
 	if repo_path == "":
 		return {"error": "No git repository"}
 
-	var output: Array = _execute_git_command(["status", "--porcelain", "-u"], repo_path)
-	if output[0] == "":
-		push_error("[GitService] %s" % output[1])
-		return {"error": output[1]}
-
+	var output: Array = _execute_git_command(["status", "--porcelain", "-uall"], repo_path)
 	var status: Dictionary = {"files": []}
-	_parse_status_output(output[0], status)
+
+	if output[0] != "":
+		_parse_status_output(output[0], status)
 	return status
 
 
