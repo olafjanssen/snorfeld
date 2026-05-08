@@ -18,11 +18,11 @@ func _ready() -> void:
 	# Configure merge strategies for object fields
 	merge_strategies = {
 		"name": MergeUtils.MergeStrategy.REPLACE,
-		"object_type": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"description": MergeUtils.MergeStrategy.CONCAT,
-		"thematic_relevance": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"object_type": MergeUtils.MergeStrategy.REPLACE,
+		"description": MergeUtils.MergeStrategy.REPLACE,
+		"thematic_relevance": MergeUtils.MergeStrategy.REPLACE,
 		"character_relations": MergeUtils.MergeStrategy.DICT_MERGE,
-		"symbolic_meaning": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"symbolic_meaning": MergeUtils.MergeStrategy.REPLACE,
 		"aliases": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
 		"appearances": MergeUtils.MergeStrategy.ARRAY_APPEND,
 		"notes": MergeUtils.MergeStrategy.DICT_MERGE,
@@ -378,7 +378,7 @@ Chapter: %s
 Chapter Text:
 %s
 
-For each important TANGIBLE OBJECT or ABSTRACT CONCEPT that appears in this chapter, return its complete profile:
+For each important TANGIBLE OBJECT or ABSTRACT CONCEPT that appears in this chapter, return its complete updated profile:
 - name: EXACT match with existing objects if they exist
 - object_type: Array of type categories (e.g., ["weapon", "family heirloom", "gift", "tool", "symbol", "concept", "idea"])
 - description: Physical description and purpose (for tangible objects) or definition (for concepts)

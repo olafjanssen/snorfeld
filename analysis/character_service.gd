@@ -17,18 +17,13 @@ func _ready() -> void:
 	# Configure merge strategies for character fields
 	merge_strategies = {
 		"name": MergeUtils.MergeStrategy.REPLACE,
-		"plot_roles": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"archetypes": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"traits": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
+		"plot_roles": MergeUtils.MergeStrategy.REPLACE,
+		"archetypes": MergeUtils.MergeStrategy.REPLACE,
+		"traits": MergeUtils.MergeStrategy.REPLACE,
 		"relationships": MergeUtils.MergeStrategy.DICT_MERGE,
 		"aliases": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
 		"appearances": MergeUtils.MergeStrategy.ARRAY_APPEND,
 		"notes": MergeUtils.MergeStrategy.DICT_MERGE,
-		"symbolic_meaning": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"object_type": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"description": MergeUtils.MergeStrategy.CONCAT,
-		"thematic_relevance": MergeUtils.MergeStrategy.ARRAY_MERGE_UNIQUE,
-		"character_relations": MergeUtils.MergeStrategy.DICT_MERGE,
 	}
 
 	# Call parent _ready for base signal connections
