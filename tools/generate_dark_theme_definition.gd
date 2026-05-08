@@ -79,6 +79,7 @@ func _run():
 		},
 		"StyleBoxFlat_tab_hovered": {
 			"type": "StyleBoxFlat",
+			"bg_color": "bg_dark",			
 			"border_color": "border_primary",
 			"border_width_left": ThemeConstants.BORDER_WIDTH_THIN,
 			"border_width_right": ThemeConstants.BORDER_WIDTH_THIN,
@@ -500,3 +501,5 @@ func _run():
 	var err: int = ResourceSaver.save(def, "res://themes/dark.theme_definition.tres")
 	if err != OK:
 		push_error("Failed to save theme definition: dark.theme_definition.tres")
+
+	print("Completed!")

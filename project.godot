@@ -45,7 +45,6 @@ enabled=PackedStringArray("res://addons/gdscript-linter/plugin.cfg")
 
 [gui]
 
-theme/custom="uid://byvp4t6w5eo1n"
 theme/custom_font="uid://n6fo8pgkbo3j"
 
 [physics]

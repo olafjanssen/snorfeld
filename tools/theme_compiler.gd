@@ -32,6 +32,7 @@ const THEME_EXT := ".tres"
 
 func _run():
 	_compile_all_themes()
+	print("Completed!")
 
 
 ## Compile all ThemeDefinition resources found in DEFINITIONS_PATH
@@ -174,7 +175,7 @@ func _create_font_from_variation(def: ThemeDefinition, font_name: String, font_d
 	if not base_font:
 		push_error("Failed to load base font: %s" % font_path)
 		return null
-	
+
 	var font = FontVariation.new();
 	font.base_font = base_font
 	var variation: Dictionary = font_def.get("variation_opentype", {})
@@ -363,7 +364,7 @@ func _apply_border_widths(style: StyleBoxFlat, config: Dictionary) -> void:
 		style.border_width_top = width
 		style.border_width_right = width
 		style.border_width_bottom = width
-	return
+		return
 
 	if config.has("border_width_left"):
 		style.border_width_left = config["border_width_left"]
