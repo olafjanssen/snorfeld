@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ThemeDefinition" format=3 uid="uid://dark_colors"]
+
+[ext_resource type="Script" uid="uid://dvhxal0u683o1" path="res://scripts/resources/theme_definition.gd" id="1_vufns"]
+
+[resource]
+script = ExtResource("1_vufns")
+colors = {
+"bg_dark": Color(0.2745098, 0.2941176, 0.3411765, 1),
+"bg_lighter": Color(0.2117647, 0.2352941, 0.2745098, 1),
+"bg_lightest": Color(0.2313725, 0.254902, 0.3019608, 1),
+"bg_medium": Color(0.25490196, 0.27843137, 0.32941176, 1),
+"bg_primary": Color(0.1843137, 0.2039216, 0.2431373, 1),
+"bg_secondary": Color(0.1803922, 0.2039216, 0.2431373, 1),
+"border_accent": Color(0.2784314, 0.4039216, 0.6196078, 1),
+"border_primary": Color(0.2745098, 0.2941176, 0.3411765, 1),
+"codeedit_selection": Color(0.45490196, 0.67843137, 0.90980392, 0.23921569),
+"diff_change_bg": Color(1, 0.64705884, 0, 0.3764706),
+"diff_delete_bg": Color(1, 0, 0, 0.3764706),
+"diff_insert_bg": Color(0, 1, 0, 0.3764706),
+"syntax_bold": Color(1, 1, 1, 1),
+"syntax_dialog": Color(0.8627451, 0.8784314, 0.8980392, 0.78431374),
+"syntax_header": Color(0.12941177, 0.52156866, 0.7254902, 1),
+"syntax_italic": Color(0.8627451, 0.8784314, 0.8980392, 0.78431374),
+"syntax_normal": Color(0.8627451, 0.8784314, 0.8980392, 1),
+"text_accent": Color(0, 0.47058824, 0.83137256, 1),
+"text_dimmed": Color(0.5294118, 0.5411765, 0.5960784, 1),
+"text_placeholder": Color(0.5294118, 0.5411765, 0.5960784, 1),
+"text_primary": Color(0.8627451, 0.8784314, 0.8980392, 1),
+"text_secondary": Color(0.6627451, 0.6862745, 0.7372549, 1),
+"text_tertiary": Color(0.6627451, 0.6862745, 0.7372549, 1)
+}

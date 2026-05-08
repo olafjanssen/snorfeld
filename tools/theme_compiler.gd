@@ -4,27 +4,29 @@ extends EditorScript
 # gdlint:ignore-file:file-length,too-many-params,long-function,deep-nesting,long-line,missing-type-hint
 ## ThemeCompiler - Editor tool to compile ThemeDefinition resources into Theme resources
 ##
-## This tool reads a ThemeDefinition resource and generates a standard Godot Theme
-## resource that can be used at runtime. The generated Theme uses the semantic colors
-## defined in the ThemeDefinition.
+## This tool reads a master ThemeDefinition (with all styles, fonts, overrides) and
+## individual color theme files, then compiles them into final Theme resources.
+##
+## File structure:
+##   themes/master.theme_definition.tres   - All styles, fonts, external_resources, control_overrides
+##   themes/colors/*.theme_definition.tres - Color-only theme definitions
+##   themes/light.tres, themes/dark.tres       - Output: compiled themes
 ##
 ## Usage:
-##   1. Create a ThemeDefinition resource (e.g., themes/light.theme_definition.tres)
-##   2. Run this tool from Script -> Run Tool Script
-##   3. The tool will compile it to themes/light/theme.tres
-##
-## The generated Theme can then be:
-##   - Opened in Godot's Theme editor for visual inspection
-##   - Loaded at runtime by ThemeManager
+##   1. Run this tool from Script -> Run Tool Script
+##   2. It will compile all color themes in themes/colors/ using the master structure
 
-## Path where ThemeDefinition resources are stored
-const DEFINITIONS_PATH := "res://themes/"
+## Path to master theme definition (all structure, no colors)
+const MASTER_PATH := "res://themes/master.theme_definition.tres"
+
+## Path where color theme definitions are stored
+const COLORS_DIR := "res://themes/colors/"
 
 ## Path where compiled Theme resources will be saved
-const OUTPUT_PATH := "res://themes/"
+const OUTPUT_DIR := "res://themes/"
 
-## File extension for ThemeDefinition resources
-const DEFINITION_EXT := ".theme_definition.tres"
+## File extension for color theme definitions
+const COLOR_THEME_EXT := ".theme_definition.tres"
 
 ## File extension for compiled Theme resources
 const THEME_EXT := ".tres"
@@ -35,47 +37,72 @@ func _run():
 	print("Completed!")
 
 
-## Compile all ThemeDefinition resources found in DEFINITIONS_PATH
+## Compile all color theme resources found in COLORS_DIR
 func _compile_all_themes() -> bool:
-	var success: bool = true
-	var dir: DirAccess = DirAccess.open(DEFINITIONS_PATH)
-
-	if dir == null:
-		push_error("Could not open themes directory: %s" % DEFINITIONS_PATH)
+	var master: ThemeDefinition = load(MASTER_PATH)
+	if master == null:
+		push_error("Could not load master theme definition: %s" % MASTER_PATH)
 		return false
 
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
+	var colors_dir: DirAccess = DirAccess.open(COLORS_DIR)
+	if colors_dir == null:
+		push_error("Could not open colors directory: %s" % COLORS_DIR)
+		return false
+
+	var success: bool = true
+	colors_dir.list_dir_begin()
+	var file_name: String = colors_dir.get_next()
 
 	while file_name != "":
-		if file_name.ends_with(DEFINITION_EXT):
-			var def_path: String = DEFINITIONS_PATH + file_name
-			var output_name: String = file_name.replace(DEFINITION_EXT, THEME_EXT)
-			var output_path: String = OUTPUT_PATH + output_name
-
-			var def: ThemeDefinition = load(def_path)
-			if def == null:
-				push_error("Could not load ThemeDefinition: %s" % def_path)
+		if file_name.ends_with(COLOR_THEME_EXT):
+			var color_path: String = COLORS_DIR + file_name
+			var color_theme: ThemeDefinition = load(color_path)
+			if color_theme == null:
+				push_error("Could not load color theme: %s" % color_path)
 				success = false
 			else:
-				if def.control_overrides.size() == 0:
-					push_warning("control_overrides is EMPTY for %s" % file_name)
+				# Merge master structure with color theme
+				var merged_def: ThemeDefinition = _merge_definitions(master, color_theme)
 
-				var theme: Theme = _compile_theme(def)
+				# Determine output path: themes/light.tres from themes/colors/light.theme_definition.tres
+				var output_name: String = file_name.replace(COLOR_THEME_EXT, THEME_EXT)
+				var output_path: String = OUTPUT_DIR + output_name
+
+				var theme: Theme = _compile_theme(merged_def)
 				if theme != null:
 					DirAccess.remove_absolute(output_path)
 					var err: int = ResourceSaver.save(theme, output_path, ResourceSaver.FLAG_BUNDLE_RESOURCES)
 					if err != OK:
 						push_error("Failed to save compiled theme: %s" % output_path)
 						success = false
+					else:
+						print("Compiled: %s" % output_name)
 				else:
-					push_error("Failed to compile theme from: %s" % def_path)
+					push_error("Failed to compile theme from: %s" % color_path)
 					success = false
 
-		file_name = dir.get_next()
+		file_name = colors_dir.get_next()
 
-	dir.list_dir_end()
+	colors_dir.list_dir_end()
 	return success
+
+
+## Merge master theme structure with a color theme
+## Master provides styles, fonts, external_resources, control_overrides
+## Color theme provides colors
+func _merge_definitions(master: ThemeDefinition, color_theme: ThemeDefinition) -> ThemeDefinition:
+	var merged: ThemeDefinition = ThemeDefinition.new()
+
+	# Use color theme's colors (this is the only thing that differs)
+	merged.colors = color_theme.colors
+
+	# Use master's structure
+	merged.styles = master.styles
+	merged.fonts = master.fonts
+	merged.external_resources = master.external_resources
+	merged.control_overrides = master.control_overrides
+
+	return merged
 
 
 ## Compile a single ThemeDefinition into a Theme resource
@@ -176,7 +203,7 @@ func _create_font_from_variation(def: ThemeDefinition, font_name: String, font_d
 		push_error("Failed to load base font: %s" % font_path)
 		return null
 
-	var font = FontVariation.new();
+	var font = FontVariation.new()
 	font.base_font = base_font
 	var variation: Dictionary = font_def.get("variation_opentype", {})
 	font.variation_opentype = variation
@@ -278,7 +305,7 @@ func _apply_font_sizes(theme: Theme, control_type: String, font_sizes: Dictionar
 func _apply_fonts(theme: Theme, control_type: String, fonts: Dictionary, created_fonts: Dictionary, ext_resources: Array) -> void:
 	for font_name in fonts:
 		var font_ref: Variant = fonts[font_name]
-		var font : Font = _resolve_font_reference(font_ref, created_fonts, ext_resources, control_type, font_name)
+		var font: Font = _resolve_font_reference(font_ref, created_fonts, ext_resources, control_type, font_name)
 		if font != null:
 			theme.set_font(font_name, control_type, font)
 

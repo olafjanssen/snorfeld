@@ -393,16 +393,16 @@ IMPORTANT: Only include an alias if that exact string is used as a name for the 
 Respond with a JSON object:
 {
   "objects": [
-    {
-      "name": "Object Name",
-      "object_type": ["type1", "type2"],
-      "description": "Physical description or concept definition",
-      "thematic_relevance": ["theme1", "theme2"],
-      "character_relations": {"CharacterName": "how they relate to it"},
-      "symbolic_meaning": ["meaning1"],
-      "aliases": ["Nickname"],
-      "notes": "What happens with this object in this chapter"
-    }
+	{
+	  "name": "Object Name",
+	  "object_type": ["type1", "type2"],
+	  "description": "Physical description or concept definition",
+	  "thematic_relevance": ["theme1", "theme2"],
+	  "character_relations": {"CharacterName": "how they relate to it"},
+	  "symbolic_meaning": ["meaning1"],
+	  "aliases": ["Nickname"],
+	  "notes": "What happens with this object in this chapter"
+	}
   ]
 }
 """ % [existing_objects_json, chapter_id, text]
