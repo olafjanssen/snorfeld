@@ -174,9 +174,11 @@ func _create_font_from_variation(def: ThemeDefinition, font_name: String, font_d
 	if not base_font:
 		push_error("Failed to load base font: %s" % font_path)
 		return null
-	var font: FontFile = FontFile.new()
+	
+	var font = FontVariation.new();
+	font.base_font = base_font
 	var variation: Dictionary = font_def.get("variation_opentype", {})
-	font.set_opentype_feature_overrides(variation)
+	font.variation_opentype = variation
 	return font
 
 

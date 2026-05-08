@@ -421,6 +421,9 @@ func _run():
 		# === Scene-specific control types with Font overrides ===
 		"StoryBibleCharacterSheet": {
 			"base_type": "RichTextLabel",
+			"colors": {
+				"default_color": "text_primary"
+			},
 			"fonts": {
 				"normal_font": "Inter_Regular",
 				"bold_font": "Inter_Bold",

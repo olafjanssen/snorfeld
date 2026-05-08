@@ -414,6 +414,9 @@ func _run():
 		},
 		"StoryBibleCharacterSheet": {
 			"base_type": "RichTextLabel",
+			"colors": {
+				"default_color": "text_primary"
+			},
 			"fonts": {
 				"normal_font": "Inter_Regular",
 				"bold_font": "Inter_Bold",
