@@ -10,6 +10,10 @@ signal open_folder(path: String)
 signal save_file(path: String)
 signal save_all_files
 
+# Settings
+signal open_settings
+
+
 # Analysis commands
 signal priority_analysis(service_type: String, file_path: String, payload: Dictionary)
 signal start_analysis(service_type: String, scope: String)

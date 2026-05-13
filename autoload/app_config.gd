@@ -40,7 +40,7 @@ var settings_panel: Window
 
 func _ready() -> void:
 	# Connect to EventBus signals for UI
-	EventBus.open_settings.connect(_on_open_settings)
+	CommandBus.open_settings.connect(_on_open_settings)
 	EventBus.settings_closed.connect(_on_settings_closed)
 
 	# Load settings
