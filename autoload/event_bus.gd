@@ -50,11 +50,11 @@ signal analysis_cleanup_completed(service_type: String, removed_count: int)
 
 # Git integration signals
 signal show_git_diff(file_path: String, diff: String)
-signal git_status_updated()
+signal git_status_updated
 signal git_operation_started(operation: String)
 signal git_operation_completed(success: bool, message: String)
 signal git_repo_changed(is_git_repo: bool)
 signal file_status_changed(file_path: String, status: String)
 
 # UI sizes
-signal editor_resized(size: Vector2)
+signal editor_resized

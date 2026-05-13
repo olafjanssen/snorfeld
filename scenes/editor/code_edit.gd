@@ -6,16 +6,17 @@ var current_file_path: String = ""
 var last_text: String = ""
 var last_cursor_line: int = -1
 var font_size: int
+var default_font_size : int
 
 func _ready():
 	# Get font size from theme, fallback to 16
-	font_size = get_theme_font_size("font_size", "CodeEdit")
-	if font_size == 0:
-		font_size = 16
+
+	default_font_size = get_theme_font_size("font_size", "CodeEdit")
+	font_size = default_font_size
 	add_theme_font_size_override("font_size", font_size)
 
-	# Set width for 80 characters
-	call_deferred('_set_width_for_80_chars')
+	# Set width based on editor line length setting
+	call_deferred('_set_editor_width')
 
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
@@ -252,27 +253,26 @@ func _unhandled_input(event: InputEvent) -> void:
 					zoom_out()
 					get_viewport().set_input_as_handled()
 				elif key_event.keycode == KEY_0 or key_event.keycode == KEY_KP_0:
-					font_size = get_theme_font_size("font_size", "CodeEdit")
-					if font_size == 0:
-						font_size = 16
+					font_size = default_font_size
 					add_theme_font_size_override("font_size", font_size)
-					_set_width_for_80_chars()
+					_set_editor_width()
 					get_viewport().set_input_as_handled()
 
 func zoom_in() -> void:
 	font_size += 2
 	add_theme_font_size_override("font_size", font_size)
-	_set_width_for_80_chars()
+	_set_editor_width()
 
 func zoom_out() -> void:
 	font_size = max(font_size - 2, 6)
 	add_theme_font_size_override("font_size", font_size)
-	_set_width_for_80_chars()
+	_set_editor_width()
 
-func _set_width_for_80_chars() -> void:
-	var line_width: float = 0.5 * font_size * 66
+func _set_editor_width() -> void:
+	var line_length: int = AppConfig.get_editor_line_length()
+	var line_width: float = 0.5 * font_size * line_length
 	var margins : int = 50;
 	custom_minimum_size.x = min(line_width, get_parent().get_parent_area_size().x - margins)
 
-func _on_editor_resized(_size : Vector2) -> void:
-	call_deferred("_set_width_for_80_chars")
+func _on_editor_resized() -> void:
+	call_deferred("_set_editor_width")

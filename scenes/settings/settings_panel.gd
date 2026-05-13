@@ -18,6 +18,8 @@ func _ready() -> void:
 	# Now load settings (after items are added)
 	load_llm_settings()
 	load_theme_settings()
+	load_editor_settings()
+	load_cache_settings()
 
 	# Detect screen DPI and set appropriate scale
 	var dpi := DisplayServer.screen_get_dpi(0)
@@ -33,7 +35,6 @@ func load_llm_settings() -> void:
 	$ScrollContainer/MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
 	$ScrollContainer/MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text = AppConfig.get_embedding_endpoint()
 	$ScrollContainer/MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
-	load_cache_settings()
 
 func load_cache_settings() -> void:
 	var checkbox : CheckBox = $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox
@@ -48,6 +49,9 @@ func load_theme_settings() -> void:
 		ThemeManager.ThemeMode.AUTO: index = 2
 	$ScrollContainer/MarginContainer/VBoxContainer/ThemeOptionButton.select(index)
 
+func load_editor_settings() -> void:
+	$ScrollContainer/MarginContainer/VBoxContainer/LineLengthSpinBox.value = AppConfig.get_editor_line_length()
+
 func save_llm_settings() -> void:
 	AppConfig.set_llm_endpoint($ScrollContainer/MarginContainer/VBoxContainer/EndpointLineEdit.text)
 	AppConfig.set_llm_check_endpoint($ScrollContainer/MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
@@ -56,7 +60,6 @@ func save_llm_settings() -> void:
 	AppConfig.set_llm_max_tokens(int($ScrollContainer/MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
 	AppConfig.set_embedding_endpoint($ScrollContainer/MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text)
 	AppConfig.set_embedding_model($ScrollContainer/MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
-	save_cache_settings()
 
 func save_cache_settings() -> void:
 	var checkbox : CheckBox = $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox
@@ -72,12 +75,18 @@ func save_theme_settings() -> void:
 		2: theme_mode = ThemeManager.ThemeMode.AUTO
 	ThemeManager.set_mode(theme_mode)
 
+func save_editor_settings() -> void:
+	AppConfig.set_editor_line_length(int($ScrollContainer/MarginContainer/VBoxContainer/LineLengthSpinBox.value))
+	EventBus.editor_resized.emit()
+
 func _on_theme_selected() -> void:
 	save_theme_settings()
 
 func _on_close_pressed() -> void:
 	save_llm_settings()
 	save_theme_settings()
+	save_cache_settings()
+	save_editor_settings()
 	EventBus.settings_closed.emit()
 	queue_free()
 
@@ -85,5 +94,7 @@ func _on_close_pressed() -> void:
 func _on_close_requested() -> void:
 	save_llm_settings()
 	save_theme_settings()
+	save_cache_settings()
+	save_editor_settings()
 	EventBus.settings_closed.emit()
 	queue_free()

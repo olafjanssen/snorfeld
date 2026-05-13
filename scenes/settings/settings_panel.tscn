@@ -56,6 +56,10 @@ text = "Settings"
 [node name="HSeparator" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1878981586]
 layout_mode = 2
 
+[node name="LLMSettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=149477148]
+layout_mode = 2
+text = "LLM Settings"
+
 [node name="EndpointLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=133958194]
 layout_mode = 2
 text = "API Endpoint:"
@@ -149,9 +153,19 @@ layout_mode = 2
 [node name="HSeparator3" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-961633963]
 layout_mode = 2
 
-[node name="LLMSettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=149477148]
+[node name="EditorSettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=149477149]
 layout_mode = 2
-text = "LLM Settings"
+text = "Editor Settings"
+
+[node name="LineLengthLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1710866676]
+layout_mode = 2
+text = "Editor line length:"
+
+[node name="LineLengthSpinBox" type="SpinBox" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=2063742028]
+layout_mode = 2
+min_value = 10.0
+max_value = 200.0
+value = 66.0
 
 [node name="CloseButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1992816154]
 layout_mode = 2

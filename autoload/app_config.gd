@@ -21,6 +21,9 @@ const DEFAULT_EMBEDDING_MODEL := "qwen3-embedding:0.6b"
 # Cache location: "local" for project folder, "global" for user data folder
 const DEFAULT_CACHE_LOCATION := "global"
 
+# Editor line length default (number of characters)
+const DEFAULT_EDITOR_LINE_LENGTH := 66
+
 # Cached values
 var _llm_endpoint: String
 var _llm_check_endpoint: String
@@ -34,6 +37,9 @@ var _embedding_model: String
 
 # Cache location setting
 var _cache_location: String = DEFAULT_CACHE_LOCATION
+
+# Editor line length
+var _editor_line_length: int = DEFAULT_EDITOR_LINE_LENGTH
 
 # UI state
 var settings_panel: Window
@@ -60,6 +66,7 @@ func load_settings() -> void:
 		_embedding_endpoint = config.get_value("embedding", "endpoint", DEFAULT_EMBEDDING_ENDPOINT)
 		_embedding_model = config.get_value("embedding", "model", DEFAULT_EMBEDDING_MODEL)
 		_cache_location = config.get_value("cache", "location", DEFAULT_CACHE_LOCATION)
+		_editor_line_length = config.get_value("editor", "line_length", DEFAULT_EDITOR_LINE_LENGTH)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -70,6 +77,7 @@ func load_settings() -> void:
 		_embedding_endpoint = DEFAULT_EMBEDDING_ENDPOINT
 		_embedding_model = DEFAULT_EMBEDDING_MODEL
 		_cache_location = DEFAULT_CACHE_LOCATION
+		_editor_line_length = DEFAULT_EDITOR_LINE_LENGTH
 
 # Save all settings to config file
 func save_settings() -> void:
@@ -83,6 +91,7 @@ func save_settings() -> void:
 	config.set_value("embedding", "endpoint", _embedding_endpoint)
 	config.set_value("embedding", "model", _embedding_model)
 	config.set_value("cache", "location", _cache_location)
+	config.set_value("editor", "line_length", _editor_line_length)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
@@ -148,6 +157,15 @@ func set_embedding_model(model: String) -> void:
 # Cache location setter
 func set_cache_location(location: String) -> void:
 	_cache_location = location
+	save_settings()
+
+# Editor line length getter
+func get_editor_line_length() -> int:
+	return _editor_line_length
+
+# Editor line length setter
+func set_editor_line_length(length: int) -> void:
+	_editor_line_length = length
 	save_settings()
 
 # Settings panel management
