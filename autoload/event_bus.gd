@@ -55,3 +55,6 @@ signal git_operation_started(operation: String)
 signal git_operation_completed(success: bool, message: String)
 signal git_repo_changed(is_git_repo: bool)
 signal file_status_changed(file_path: String, status: String)
+
+# UI sizes
+signal editor_resized(size: Vector2)

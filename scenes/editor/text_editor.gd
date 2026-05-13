@@ -9,6 +9,11 @@ func _ready():
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 
 	TitleMessage.text = ""
+	
+	resized.connect(_on_resized)
+
+func _on_resized():
+	EventBus.editor_resized.emit(size)
 
 func _on_file_selected(path: String):
 	TitleMessage.text = path.get_file() if path else ""

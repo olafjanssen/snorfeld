@@ -13,6 +13,10 @@ func _ready():
 	if font_size == 0:
 		font_size = 16
 	add_theme_font_size_override("font_size", font_size)
+
+	# Set width for 80 characters
+	call_deferred('_set_width_for_80_chars')
+
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
@@ -22,6 +26,7 @@ func _ready():
 	EventBus.show_git_diff.connect(_on_show_git_diff)
 	CommandBus.navigate_to_line.connect(_on_navigate_to_line_command)
 	EventBus.content_changed.connect(_on_content_changed)
+	EventBus.editor_resized.connect(_on_editor_resized)
 
 	caret_changed.connect(_on_cursor_changed)
 	text_changed.connect(_on_text_changed)
@@ -247,14 +252,27 @@ func _unhandled_input(event: InputEvent) -> void:
 					zoom_out()
 					get_viewport().set_input_as_handled()
 				elif key_event.keycode == KEY_0 or key_event.keycode == KEY_KP_0:
-					font_size = 16
+					font_size = get_theme_font_size("font_size", "CodeEdit")
+					if font_size == 0:
+						font_size = 16
 					add_theme_font_size_override("font_size", font_size)
+					_set_width_for_80_chars()
 					get_viewport().set_input_as_handled()
 
 func zoom_in() -> void:
 	font_size += 2
 	add_theme_font_size_override("font_size", font_size)
+	_set_width_for_80_chars()
 
 func zoom_out() -> void:
 	font_size = max(font_size - 2, 6)
 	add_theme_font_size_override("font_size", font_size)
+	_set_width_for_80_chars()
+
+func _set_width_for_80_chars() -> void:
+	var line_width: float = 0.5 * font_size * 66
+	var margins : int = 50;
+	custom_minimum_size.x = min(line_width, get_parent().get_parent_area_size().x - margins)
+
+func _on_editor_resized(_size : Vector2) -> void:
+	call_deferred("_set_width_for_80_chars")
