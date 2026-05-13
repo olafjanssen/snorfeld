@@ -4,11 +4,6 @@
 [ext_resource type="Script" uid="uid://q4e3ujtx5cig" path="res://scenes/editor/text_editor.gd" id="2"]
 [ext_resource type="Script" uid="uid://b1duug47uaj00" path="res://scenes/editor/diff_editor.gd" id="4_4sqaq"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_texteditor_panel"]
-bg_color = Color(0.92156863, 0.92156863, 0.9254902, 1)
-border_width_bottom = 1
-border_color = Color(0.7882353, 0.7882353, 0.7921569, 1)
-
 [node name="TextEditor" type="Control" unique_id=1652980615]
 layout_mode = 3
 anchors_preset = 15
@@ -43,27 +38,46 @@ theme_type_variation = &"TextEditorTitleMessage"
 text = "Nothing to report!"
 horizontal_alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer" unique_id=325234074]
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer" unique_id=627252821]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 16
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
 
-[node name="CodeEdit" type="CodeEdit" parent="VBoxContainer/MarginContainer" unique_id=266735972]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer2" unique_id=688563861]
 layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MarginContainer2/ScrollContainer" unique_id=325234074]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_right = 36
+
+[node name="CodeEdit" type="CodeEdit" parent="VBoxContainer/MarginContainer2/ScrollContainer/MarginContainer" unique_id=266735972]
+layout_mode = 2
+placeholder_text = "# Chapter heading
+
+Your great content."
 context_menu_enabled = false
 emoji_menu_enabled = false
 drag_and_drop_selection_enabled = false
 wrap_mode = 1
 scroll_past_end_of_file = true
+scroll_fit_content_height = true
 caret_blink = true
 line_length_guidelines = Array[int]([20])
 script = ExtResource("1_sdthn")
 
-[node name="RichTextLabel" type="RichTextLabel" parent="VBoxContainer/MarginContainer" unique_id=1069037849]
+[node name="RichTextLabel" type="RichTextLabel" parent="VBoxContainer/MarginContainer2/ScrollContainer/MarginContainer" unique_id=1069037849]
 visible = false
 layout_mode = 2
 bbcode_enabled = true
+fit_content = true
+scroll_active = false
 meta_underlined = false
 hint_underlined = false
 script = ExtResource("4_4sqaq")

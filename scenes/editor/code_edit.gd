@@ -5,8 +5,14 @@ extends CodeEdit
 var current_file_path: String = ""
 var last_text: String = ""
 var last_cursor_line: int = -1
+var font_size: int
 
 func _ready():
+	# Get font size from theme, fallback to 16
+	font_size = get_theme_font_size("font_size", "CodeEdit")
+	if font_size == 0:
+		font_size = 16
+	add_theme_font_size_override("font_size", font_size)
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
@@ -223,3 +229,32 @@ func _restore_editor_with_modified_line(
 	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 	# Emit editor_content_changed signal since text was modified
 	EventBus.editor_content_changed.emit(current_file_path, get_text())
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event.pressed:
+			var is_meta_pressed: bool = key_event.meta_pressed
+			var is_ctrl_pressed: bool = key_event.ctrl_pressed
+			# Use Meta (Cmd) on macOS, Ctrl on other platforms
+			var modifier_pressed: bool = is_meta_pressed or is_ctrl_pressed
+
+			if modifier_pressed:
+				if key_event.keycode == KEY_EQUAL or key_event.keycode == KEY_KP_ADD:
+					zoom_in()
+					get_viewport().set_input_as_handled()
+				elif key_event.keycode == KEY_MINUS or key_event.keycode == KEY_KP_SUBTRACT:
+					zoom_out()
+					get_viewport().set_input_as_handled()
+				elif key_event.keycode == KEY_0 or key_event.keycode == KEY_KP_0:
+					font_size = 16
+					add_theme_font_size_override("font_size", font_size)
+					get_viewport().set_input_as_handled()
+
+func zoom_in() -> void:
+	font_size += 2
+	add_theme_font_size_override("font_size", font_size)
+
+func zoom_out() -> void:
+	font_size = max(font_size - 2, 6)
+	add_theme_font_size_override("font_size", font_size)
