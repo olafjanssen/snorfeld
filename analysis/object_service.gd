@@ -62,9 +62,7 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 		return _hash_object(data["name"])
 	return ""
 
-# Get the cache directory for a file path
-func _get_cache_dir_for_file(file_path: String) -> String:
-	return file_path.get_base_dir().path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+
 
 # Creates an MD5 hash from an object name string
 func _hash_object(object_name: String) -> String:
@@ -479,10 +477,16 @@ func _find_matching_object_key(obj_name: String) -> String:
 
 # Get the object cache path for the current project
 func get_cache_path() -> String:
-	var project_path: String = BookService.loaded_project_path
-	if project_path == "":
-		project_path = "res://"
-	return project_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		var project_path: String = BookService.loaded_project_path
+		var project_hash := HashingUtils.hash_md5(project_path)
+		return "user://.snorfeld/global_cache/%s" % project_hash.path_join(OBJECT_DIR_NAME)
+	else:
+		var project_path: String = BookService.loaded_project_path
+		if project_path == "":
+			project_path = "res://"
+		return project_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
 
 
 # Get all object files in the cache directory

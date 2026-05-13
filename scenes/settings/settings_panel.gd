@@ -33,6 +33,10 @@ func load_llm_settings() -> void:
 	$MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
 	$MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text = AppConfig.get_embedding_endpoint()
 	$MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
+	load_cache_settings()
+
+func load_cache_settings() -> void:
+	$MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed = AppConfig.get_cache_location() == "global"
 
 func load_theme_settings() -> void:
 	var theme_mode: ThemeManager.ThemeMode = ThemeManager.get_mode()
@@ -51,6 +55,11 @@ func save_llm_settings() -> void:
 	AppConfig.set_llm_max_tokens(int($MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
 	AppConfig.set_embedding_endpoint($MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text)
 	AppConfig.set_embedding_model($MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
+	save_cache_settings()
+
+func save_cache_settings() -> void:
+	var location := "global" if $MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed else "local"
+	AppConfig.set_cache_location(location)
 
 func save_theme_settings() -> void:
 	var index: int = $MarginContainer/VBoxContainer/ThemeOptionButton.selected

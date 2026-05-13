@@ -18,6 +18,9 @@ const DEFAULT_LLM_MAX_TOKENS := 512
 const DEFAULT_EMBEDDING_ENDPOINT := "http://localhost:11434/api/embeddings"
 const DEFAULT_EMBEDDING_MODEL := "qwen3-embedding:0.6b"
 
+# Cache location: "local" for project folder, "global" for user data folder
+const DEFAULT_CACHE_LOCATION := "global"
+
 # Cached values
 var _llm_endpoint: String
 var _llm_check_endpoint: String
@@ -28,6 +31,9 @@ var _llm_max_tokens: int
 # Embedding configuration cached values
 var _embedding_endpoint: String
 var _embedding_model: String
+
+# Cache location setting
+var _cache_location: String = DEFAULT_CACHE_LOCATION
 
 # UI state
 var settings_panel: Window
@@ -53,6 +59,7 @@ func load_settings() -> void:
 		_llm_max_tokens = config.get_value("llm", "max_tokens", DEFAULT_LLM_MAX_TOKENS)
 		_embedding_endpoint = config.get_value("embedding", "endpoint", DEFAULT_EMBEDDING_ENDPOINT)
 		_embedding_model = config.get_value("embedding", "model", DEFAULT_EMBEDDING_MODEL)
+		_cache_location = config.get_value("cache", "location", DEFAULT_CACHE_LOCATION)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -62,6 +69,7 @@ func load_settings() -> void:
 		_llm_max_tokens = DEFAULT_LLM_MAX_TOKENS
 		_embedding_endpoint = DEFAULT_EMBEDDING_ENDPOINT
 		_embedding_model = DEFAULT_EMBEDDING_MODEL
+		_cache_location = DEFAULT_CACHE_LOCATION
 
 # Save all settings to config file
 func save_settings() -> void:
@@ -74,6 +82,7 @@ func save_settings() -> void:
 	config.set_value("llm", "max_tokens", _llm_max_tokens)
 	config.set_value("embedding", "endpoint", _embedding_endpoint)
 	config.set_value("embedding", "model", _embedding_model)
+	config.set_value("cache", "location", _cache_location)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
@@ -123,6 +132,10 @@ func get_embedding_endpoint() -> String:
 func get_embedding_model() -> String:
 	return _embedding_model
 
+# Cache location getter
+func get_cache_location() -> String:
+	return _cache_location
+
 # Embedding configuration setters
 func set_embedding_endpoint(endpoint: String) -> void:
 	_embedding_endpoint = endpoint
@@ -130,6 +143,11 @@ func set_embedding_endpoint(endpoint: String) -> void:
 
 func set_embedding_model(model: String) -> void:
 	_embedding_model = model
+	save_settings()
+
+# Cache location setter
+func set_cache_location(location: String) -> void:
+	_cache_location = location
 	save_settings()
 
 # Settings panel management

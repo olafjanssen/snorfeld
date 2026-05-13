@@ -66,9 +66,7 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 	return ""
 
 
-# Get the cache directory for a file path
-func _get_cache_dir_for_file(file_path: String) -> String:
-	return file_path.get_base_dir().path_join(".snorfeld").path_join(EMBEDDING_DIR_NAME)
+
 
 
 # Create cache key from directory, hash, and whether it's a chapter

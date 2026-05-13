@@ -133,6 +133,13 @@ text = "Theme:"
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="CacheLocationLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=3000000001]
+layout_mode = 2
+text = "Use Global Cache:"
+
+[node name="CacheLocationCheckBox" type="CheckBox" parent="MarginContainer/VBoxContainer" unique_id=3000000002]
+layout_mode = 2
+
 [node name="HSeparator3" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=3333333333]
 layout_mode = 2
 

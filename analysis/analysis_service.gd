@@ -106,8 +106,19 @@ func _analyze(_payload: Dictionary) -> Dictionary:
 	return {}
 
 ## Get the cache directory for a file path
+## If cache location is "global", uses user data folder with project hash; otherwise uses project folder
 func _get_cache_dir_for_file(file_path: String) -> String:
-	return file_path.get_base_dir().path_join(".snorfeld").path_join(_get_cache_subdir())
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		return _get_global_cache_dir_for_path(file_path)
+	else:
+		return file_path.get_base_dir().path_join(".snorfeld").path_join(_get_cache_subdir())
+
+## Get the global cache directory for a given file path (user data folder with project hash)
+func _get_global_cache_dir_for_path(file_path: String) -> String:
+	var project_path := file_path.get_base_dir()
+	var project_hash := HashingUtils.hash_md5(project_path)
+	return "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
 
 ## Called when a task is about to be processed - allows custom preprocessing
 func _will_process_task(_task: Dictionary) -> void:
@@ -400,8 +411,15 @@ func clear_all_caches() -> void:
 
 ## Delete the cache file for this analysis service
 func delete_cache() -> void:
-	var project_path: String = BookService.loaded_project_path
-	var cache_dir: String = project_path.path_join(".snorfeld").path_join(_get_cache_subdir())
+	var cache_dir: String
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		var project_path: String = BookService.loaded_project_path
+		var project_hash := HashingUtils.hash_md5(project_path)
+		cache_dir = "user://global_cache/%s" % project_hash.path_join(_get_cache_subdir())
+	else:
+		var project_path: String = BookService.loaded_project_path
+		cache_dir = project_path.path_join(".snorfeld").path_join(_get_cache_subdir())
 	var jsonl_path: String = cache_dir.path_join(_get_cache_filename())
 
 	# Clear memory cache
@@ -451,7 +469,13 @@ func _on_start_analysis(service_type: String, _scope: String) -> void:
 	pass
 
 func _on_folder_opened(path: String) -> void:
-	var cache_dir: String = path.path_join(".snorfeld").path_join(_get_cache_subdir())
+	var cache_dir: String
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		var project_hash := HashingUtils.hash_md5(path)
+		cache_dir = "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
+	else:
+		cache_dir = path.path_join(".snorfeld").path_join(_get_cache_subdir())
 	if FileUtils.dir_exists(cache_dir):
 		_ensure_cache_loaded(cache_dir)
 		EventBus.analysis_cleanup_started.emit(_get_service_name())
@@ -463,7 +487,13 @@ func _on_file_selected(path: String) -> void:
 	current_file_content = FileUtils.read_file(path)
 
 func _on_project_loaded(path: String) -> void:
-	var cache_dir: String = path.path_join(".snorfeld").path_join(_get_cache_subdir())
+	var cache_dir: String
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		var project_hash := HashingUtils.hash_md5(path)
+		cache_dir = "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
+	else:
+		cache_dir = path.path_join(".snorfeld").path_join(_get_cache_subdir())
 	_ensure_cache_loaded(cache_dir)
 
 func _on_project_unloaded() -> void:
