@@ -36,7 +36,8 @@ func load_llm_settings() -> void:
 	load_cache_settings()
 
 func load_cache_settings() -> void:
-	$ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed = AppConfig.get_cache_location() == "global"
+	var checkbox : CheckBox = $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox
+	checkbox.button_pressed = AppConfig.get_cache_location() == "global"
 
 func load_theme_settings() -> void:
 	var theme_mode: ThemeManager.ThemeMode = ThemeManager.get_mode()
@@ -58,7 +59,8 @@ func save_llm_settings() -> void:
 	save_cache_settings()
 
 func save_cache_settings() -> void:
-	var location := "global" if $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed else "local"
+	var checkbox : CheckBox = $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox
+	var location := "global" if checkbox.button_pressed else "local"
 	AppConfig.set_cache_location(location)
 
 func save_theme_settings() -> void:

@@ -13,7 +13,6 @@ signal paragraph_selected(file_path: String, line_number: int)
 signal diff_span_clicked(operation: String, word_index: int, text: String)
 
 # Settings
-signal open_settings
 signal settings_closed
 
 # Theme

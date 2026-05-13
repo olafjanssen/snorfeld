@@ -80,7 +80,7 @@ func _on_item_pressed(id: int):
 		return
 
 	if id == SETTINGS_ID:
-		EventBus.open_settings.emit()
+		CommandBus.open_settings.emit()
 		return
 
 	if id == STORY_BIBLE_ID:
