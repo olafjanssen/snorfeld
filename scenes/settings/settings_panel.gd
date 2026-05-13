@@ -5,13 +5,13 @@ const DPI_THRESHOLD: int = 144
 
 func _ready() -> void:
 	# Setup theme option button first (before loading settings)
-	var theme_option: OptionButton = $MarginContainer/VBoxContainer/ThemeOptionButton
+	var theme_option: OptionButton = $ScrollContainer/MarginContainer/VBoxContainer/ThemeOptionButton
 	theme_option.add_item("Light")
 	theme_option.add_item("Dark")
 	theme_option.add_item("Auto (OS)")
 
-	$MarginContainer/VBoxContainer/CloseButton.pressed.connect(_on_close_pressed)
-	$MarginContainer/VBoxContainer/ThemeOptionButton.pressed.connect(_on_theme_selected)
+	$ScrollContainer/MarginContainer/VBoxContainer/CloseButton.pressed.connect(_on_close_pressed)
+	$ScrollContainer/MarginContainer/VBoxContainer/ThemeOptionButton.pressed.connect(_on_theme_selected)
 	close_requested.connect(_on_close_requested)
 	size = DEFAULT_WINDOW_SIZE
 
@@ -26,17 +26,17 @@ func _ready() -> void:
 
 
 func load_llm_settings() -> void:
-	$MarginContainer/VBoxContainer/EndpointLineEdit.text = AppConfig.get_llm_endpoint()
-	$MarginContainer/VBoxContainer/CheckEndpointLineEdit.text = AppConfig.get_llm_check_endpoint()
-	$MarginContainer/VBoxContainer/ModelLineEdit.text = AppConfig.get_llm_model()
-	$MarginContainer/VBoxContainer/TemperatureSpinBox.value = AppConfig.get_llm_temperature()
-	$MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
-	$MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text = AppConfig.get_embedding_endpoint()
-	$MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
+	$ScrollContainer/MarginContainer/VBoxContainer/EndpointLineEdit.text = AppConfig.get_llm_endpoint()
+	$ScrollContainer/MarginContainer/VBoxContainer/CheckEndpointLineEdit.text = AppConfig.get_llm_check_endpoint()
+	$ScrollContainer/MarginContainer/VBoxContainer/ModelLineEdit.text = AppConfig.get_llm_model()
+	$ScrollContainer/MarginContainer/VBoxContainer/TemperatureSpinBox.value = AppConfig.get_llm_temperature()
+	$ScrollContainer/MarginContainer/VBoxContainer/MaxTokensSpinBox.value = AppConfig.get_llm_max_tokens()
+	$ScrollContainer/MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text = AppConfig.get_embedding_endpoint()
+	$ScrollContainer/MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text = AppConfig.get_embedding_model()
 	load_cache_settings()
 
 func load_cache_settings() -> void:
-	$MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed = AppConfig.get_cache_location() == "global"
+	$ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed = AppConfig.get_cache_location() == "global"
 
 func load_theme_settings() -> void:
 	var theme_mode: ThemeManager.ThemeMode = ThemeManager.get_mode()
@@ -45,24 +45,24 @@ func load_theme_settings() -> void:
 		ThemeManager.ThemeMode.LIGHT: index = 0
 		ThemeManager.ThemeMode.DARK: index = 1
 		ThemeManager.ThemeMode.AUTO: index = 2
-	$MarginContainer/VBoxContainer/ThemeOptionButton.select(index)
+	$ScrollContainer/MarginContainer/VBoxContainer/ThemeOptionButton.select(index)
 
 func save_llm_settings() -> void:
-	AppConfig.set_llm_endpoint($MarginContainer/VBoxContainer/EndpointLineEdit.text)
-	AppConfig.set_llm_check_endpoint($MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
-	AppConfig.set_llm_model($MarginContainer/VBoxContainer/ModelLineEdit.text)
-	AppConfig.set_llm_temperature($MarginContainer/VBoxContainer/TemperatureSpinBox.value)
-	AppConfig.set_llm_max_tokens(int($MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
-	AppConfig.set_embedding_endpoint($MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text)
-	AppConfig.set_embedding_model($MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
+	AppConfig.set_llm_endpoint($ScrollContainer/MarginContainer/VBoxContainer/EndpointLineEdit.text)
+	AppConfig.set_llm_check_endpoint($ScrollContainer/MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
+	AppConfig.set_llm_model($ScrollContainer/MarginContainer/VBoxContainer/ModelLineEdit.text)
+	AppConfig.set_llm_temperature($ScrollContainer/MarginContainer/VBoxContainer/TemperatureSpinBox.value)
+	AppConfig.set_llm_max_tokens(int($ScrollContainer/MarginContainer/VBoxContainer/MaxTokensSpinBox.value))
+	AppConfig.set_embedding_endpoint($ScrollContainer/MarginContainer/VBoxContainer/EmbeddingEndpointLineEdit.text)
+	AppConfig.set_embedding_model($ScrollContainer/MarginContainer/VBoxContainer/EmbeddingModelLineEdit.text)
 	save_cache_settings()
 
 func save_cache_settings() -> void:
-	var location := "global" if $MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed else "local"
+	var location := "global" if $ScrollContainer/MarginContainer/VBoxContainer/CacheLocationCheckBox.button_pressed else "local"
 	AppConfig.set_cache_location(location)
 
 func save_theme_settings() -> void:
-	var index: int = $MarginContainer/VBoxContainer/ThemeOptionButton.selected
+	var index: int = $ScrollContainer/MarginContainer/VBoxContainer/ThemeOptionButton.selected
 	var theme_mode: ThemeManager.ThemeMode = ThemeManager.ThemeMode.LIGHT
 	match index:
 		0: theme_mode = ThemeManager.ThemeMode.LIGHT

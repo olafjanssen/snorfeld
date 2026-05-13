@@ -156,7 +156,7 @@ func _on_open_settings() -> void:
 		settings_panel.queue_free()
 	settings_panel = SettingsPanelScene.instantiate()
 	get_tree().root.add_child(settings_panel)
-	settings_panel.popup_centered()
+	settings_panel.popup_centered(Vector2i(900, 1300))
 
 func _on_settings_closed() -> void:
 	if settings_panel:

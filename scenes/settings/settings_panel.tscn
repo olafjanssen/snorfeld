@@ -8,7 +8,7 @@ snap_2d_vertices_to_pixel = true
 oversampling_override = 1.0
 title = "Settings"
 initial_position = 2
-size = Vector2i(800, 840)
+size = Vector2i(900, 1300)
 min_size = Vector2i(800, 800)
 content_scale_aspect = 4
 content_scale_stretch = 1
@@ -24,7 +24,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_type_variation = &"SettingsPanel"
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=508918967]
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1564552110]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -32,121 +32,127 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+horizontal_scroll_mode = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1684629027]
+[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer" unique_id=508918967]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer" unique_id=1684629027]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1826043352]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1826043352]
 layout_mode = 2
 text = "Settings"
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=1878981586]
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1878981586]
 layout_mode = 2
 
-[node name="EndpointLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=133958194]
+[node name="EndpointLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=133958194]
 layout_mode = 2
 text = "API Endpoint:"
 
-[node name="EndpointLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=1130790741]
+[node name="EndpointLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1130790741]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "http://localhost:11434/api/generate"
 
-[node name="CheckEndpointLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1044903681]
+[node name="CheckEndpointLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1044903681]
 layout_mode = 2
 text = "Check Endpoint:"
 
-[node name="CheckEndpointLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=589480368]
+[node name="CheckEndpointLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=589480368]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "http://localhost:11434/api/tags"
 
-[node name="ModelLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=234182613]
+[node name="ModelLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=234182613]
 layout_mode = 2
 text = "Model:"
 
-[node name="ModelLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=61230668]
+[node name="ModelLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=61230668]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "qwen3.5:9b"
 
-[node name="TemperatureLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=622506797]
+[node name="TemperatureLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=622506797]
 layout_mode = 2
 text = "Temperature:"
 
-[node name="TemperatureSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer" unique_id=2005235928]
+[node name="TemperatureSpinBox" type="SpinBox" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=2005235928]
 layout_mode = 2
 max_value = 2.0
 step = 0.1
 value = 0.3
 
-[node name="MaxTokensLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1710866675]
+[node name="MaxTokensLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1710866675]
 layout_mode = 2
 text = "Max Tokens:"
 
-[node name="MaxTokensSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer" unique_id=2063742027]
+[node name="MaxTokensSpinBox" type="SpinBox" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=2063742027]
 layout_mode = 2
 min_value = 1.0
 max_value = 4096.0
 value = 512.0
 
-[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=60580143]
+[node name="HSeparator2" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=60580143]
 layout_mode = 2
 
-[node name="EmbeddingSettingsLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=7777777777]
+[node name="EmbeddingSettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-812156815]
 layout_mode = 2
 text = "Embedding Settings"
 
-[node name="EmbeddingEndpointLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=8888888888]
+[node name="EmbeddingEndpointLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=298954296]
 layout_mode = 2
 text = "Embedding Endpoint:"
 
-[node name="EmbeddingEndpointLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=9999999999]
+[node name="EmbeddingEndpointLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1410065407]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "http://localhost:11434/api/embeddings"
 
-[node name="EmbeddingModelLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1111111112]
+[node name="EmbeddingModelLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1111111112]
 layout_mode = 2
 text = "Embedding Model:"
 
-[node name="EmbeddingModelLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer" unique_id=2222222223]
+[node name="EmbeddingModelLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-2072745073]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "qwen3-embedding:0.6b"
 
-[node name="HSeparator4" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=60580144]
+[node name="HSeparator4" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=60580144]
 layout_mode = 2
 
-[node name="ThemeLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1111111111]
+[node name="ThemeLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1111111111]
 layout_mode = 2
 text = "Theme:"
 
-[node name="ThemeOptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer" unique_id=2222222222]
+[node name="ThemeOptionButton" type="OptionButton" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-2072745074]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CacheLocationLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=3000000001]
+[node name="CacheLocationLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-1294967295]
 layout_mode = 2
 text = "Use Global Cache:"
 
-[node name="CacheLocationCheckBox" type="CheckBox" parent="MarginContainer/VBoxContainer" unique_id=3000000002]
+[node name="CacheLocationCheckBox" type="CheckBox" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-1294967294]
 layout_mode = 2
 
-[node name="HSeparator3" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=3333333333]
+[node name="HSeparator3" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=-961633963]
 layout_mode = 2
 
-[node name="LLMSettingsLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=4444444444]
+[node name="LLMSettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=149477148]
 layout_mode = 2
 text = "LLM Settings"
 
-[node name="CloseButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1992816154]
+[node name="CloseButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1992816154]
 layout_mode = 2
 text = "Close"
