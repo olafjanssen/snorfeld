@@ -70,32 +70,7 @@ func _reload_and_restore(content: String, cursor_line: int, cursor_column: int, 
 func _on_show_git_diff(_file_path: String, _diff: String):
 	visible = false
 
-func _on_navigate_to_line_command(file_path: String, line_number: int):
-	if current_file_path == file_path:
-		var line_count: int = get_line_count()
-		var target_line: int = clamp(line_number - 1, 0, line_count - 1)
-		call_deferred("_set_caret_and_center", target_line)
-		grab_focus()
-	else:
-		current_file_path = file_path
-		last_text = ""
-		var content: String = FileUtils.read_file(file_path)
-		if content != "":
-			last_text = content
-			set_text(content)
-			var line_count: int = get_line_count()
-			var target_line: int = clamp(line_number - 1, 0, line_count - 1)
-			call_deferred("_set_caret_and_center", target_line)
-			grab_focus()
-		visible = true
-
-func _set_caret_and_center(line_number: int):
-	set_caret_column(0)
-	set_caret_line(line_number)
-	center_viewport_to_caret()
-
-func _on_file_selected(path: String):
-	# Save current file before switching - emit editor_content_changed with current content
+func _load_file(path: String) -> void:
 	if current_file_path != "" and current_file_path != path:
 		var current_content: String = get_text()
 		EventBus.editor_content_changed.emit(current_file_path, current_content)
@@ -103,14 +78,31 @@ func _on_file_selected(path: String):
 
 	current_file_path = path
 	last_text = ""
-	last_cursor_line = -1  # Force paragraph re-analysis
+	last_cursor_line = -1
 	var content: String = FileUtils.read_file(path)
 	if content != "":
-		set_text(content)
 		last_text = content
-
-	# Make sure panel is visible
+		set_text(content)
+		clear_undo_history()
+		grab_focus()
 	visible = true
+
+func _on_navigate_to_line_command(file_path: String, line_number: int):
+	if current_file_path == file_path:
+		var target_line: int = clamp(line_number - 1, 0, get_line_count() - 1)
+		call_deferred("_set_caret_and_center", target_line)
+		grab_focus()
+	else:
+		_load_file(file_path)
+		_on_navigate_to_line_command(file_path, line_number)
+
+func _set_caret_and_center(line_number: int):
+	set_caret_column(0)
+	set_caret_line(line_number)
+	center_viewport_to_caret()
+
+func _on_file_selected(path: String):
+	_load_file(path)
 
 func _ensure_caret_in_center_view():
 	var verticalPosition : float = get_caret_draw_pos().y

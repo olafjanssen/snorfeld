@@ -6,14 +6,22 @@
   - [ ] Plot overview and suggestions
 - [ ] Usability improvements
 	- [x] Create an outline tab showing the chapter outline instead of files
+	- [ ] Scrolling in the text editor is too fast
 - [ ] Styling and UI improvement
 	- [x] Detect screen pixel density to scale the UI
 	- [x] Allow switching between light/dark/OS-auto mode
+	- [x] Allow font size scaling of editor
+	- [x] Set target editor line length
 - [ ] Statistics
   - [x] Create paragraph and chapter embeddings
 - [ ] Architectural design
   - [x] Create a book service that can give an entire overview of the structure of the project
   - [x] Split up complex methods and classes according to GDScript linter issues 
+  - [x] Allow choosing between storing cache globally or in project folder
+- [ ] Bugs
+  - [ ] Clicking the diffs no longer work
+  - [x] Undo-ing the text editor when switching files, replaces the file with data from the other file
+  - [x] The text editor does not scroll when the user moves the cursor with arrow keys
 
 ## Features Done
 - [x] LLM Generation
