@@ -23,7 +23,7 @@ func _ready():
 	call_deferred('_set_editor_width')
 
 	scrollContainer = get_parent_control()
-	
+
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
@@ -120,14 +120,14 @@ func _ensure_caret_in_view():
 		scrollContainer.set_v_scroll(int(verticalPosition - font_size))
 	elif verticalPosition + font_size > scrollContainer.get_v_scroll() + scrollContainer.size.y:
 		scrollContainer.set_v_scroll(int(verticalPosition - scrollContainer.size.y + font_size))
-	
+
 func _on_caret_changed():
 	var cursor_line: int = get_caret_line()
 	if cursor_line < 0:
 		return
-	
+
 	_ensure_caret_in_view()
-	
+
 	# Only emit when line changes, not column
 	if cursor_line != last_cursor_line:
 		last_cursor_line = cursor_line
@@ -252,27 +252,25 @@ func _restore_editor_with_modified_line(
 	# Emit editor_content_changed signal since text was modified
 	EventBus.editor_content_changed.emit(current_file_path, get_text())
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
-		if key_event.pressed:
-			var is_meta_pressed: bool = key_event.meta_pressed
-			var is_ctrl_pressed: bool = key_event.ctrl_pressed
-			# Use Meta (Cmd) on macOS, Ctrl on other platforms
-			var modifier_pressed: bool = is_meta_pressed or is_ctrl_pressed
-
-			if modifier_pressed:
-				if key_event.keycode == KEY_EQUAL or key_event.keycode == KEY_KP_ADD:
-					zoom_in()
-					get_viewport().set_input_as_handled()
-				elif key_event.keycode == KEY_MINUS or key_event.keycode == KEY_KP_SUBTRACT:
-					zoom_out()
-					get_viewport().set_input_as_handled()
-				elif key_event.keycode == KEY_0 or key_event.keycode == KEY_KP_0:
-					font_size = default_font_size
-					add_theme_font_size_override("font_size", font_size)
-					_set_editor_width()
-					get_viewport().set_input_as_handled()
+		var is_meta_pressed: bool = key_event.meta_pressed
+		var is_ctrl_pressed: bool = key_event.ctrl_pressed
+		# Use Meta (Cmd) on macOS, Ctrl on other platforms
+		var modifier_pressed: bool = is_meta_pressed or is_ctrl_pressed
+		if key_event.pressed and modifier_pressed:
+			if key_event.keycode == KEY_EQUAL or key_event.keycode == KEY_KP_ADD:
+				zoom_in()
+				get_viewport().set_input_as_handled()
+			elif key_event.keycode == KEY_MINUS or key_event.keycode == KEY_KP_SUBTRACT:
+				zoom_out()
+				get_viewport().set_input_as_handled()
+			elif key_event.keycode == KEY_0 or key_event.keycode == KEY_KP_0:
+				font_size = default_font_size
+				add_theme_font_size_override("font_size", font_size)
+				_set_editor_width()
+				get_viewport().set_input_as_handled()
 
 func zoom_in() -> void:
 	font_size += 2
