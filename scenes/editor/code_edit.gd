@@ -2,7 +2,6 @@ extends CodeEdit
 
 # gdlint:ignore-file:file-length
 
-const SCROLL_BUFFER : int = 20
 const MIN_FONT_SIZE : int = 6
 const EDITOR_MARGIN : int = 50
 
@@ -113,8 +112,12 @@ func _on_file_selected(path: String):
 	# Make sure panel is visible
 	visible = true
 
+func _ensure_caret_in_center_view():
+	var verticalPosition : float = get_caret_draw_pos().y
+	var scrollPosition : int = max(0, int(verticalPosition - scrollContainer.size.y/2))
+	scrollContainer.set_v_scroll(scrollPosition)
+
 func _ensure_caret_in_view():
-	# Ensure outer ScrollContainer scrolls along with the caret and vice versa
 	var verticalPosition : float = get_caret_draw_pos().y
 	if verticalPosition - font_size < scrollContainer.get_v_scroll():
 		scrollContainer.set_v_scroll(int(verticalPosition - font_size))
@@ -287,6 +290,7 @@ func _set_editor_width() -> void:
 	var line_width: float = 0.5 * font_size * line_length
 	var margins : int = EDITOR_MARGIN;
 	custom_minimum_size.x = min(line_width, get_parent().get_parent_area_size().x - margins)
+	call_deferred('_ensure_caret_in_center_view')
 
 func _on_editor_resized() -> void:
 	call_deferred("_set_editor_width")
