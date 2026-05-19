@@ -22,11 +22,6 @@ class Diff:
 # Use pipe as delimiter - URL-safe and can be properly escaped
 const DELIMITER := "|"
 
-# URL encoding constants
-const URL_ENCODE_SPACE := "%20"
-const URL_ENCODE_COLON := "%3A"
-const URL_ENCODE_PIPE := "%7C"
-
 # Look-ahead limit for matching words in diff algorithm
 const MAX_LOOK_AHEAD := 5
 
@@ -34,10 +29,10 @@ const MAX_LOOK_AHEAD := 5
 const URL_TAG_OPEN_LENGTH := 5  # Length of "[url="
 const URL_TAG_CLOSE_LENGTH := 6  # Length of "[/url]"
 
-# Encode text for URL meta: replace spaces, colons, and pipe delimiter
+# Encode text for URL meta using Base64 to handle all special characters
 func _encode_text(text: String) -> String:
-	return text.replace(" ", URL_ENCODE_SPACE).replace(":", URL_ENCODE_COLON).replace(DELIMITER, URL_ENCODE_PIPE)
-
+	return Marshalls.utf8_to_base64(text)
+	
 var _control: Control
 
 func set_control(control: Control) -> void:
