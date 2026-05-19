@@ -2,15 +2,19 @@ extends CodeEdit
 
 # gdlint:ignore-file:file-length
 
+const SCROLL_BUFFER : int = 20
+const MIN_FONT_SIZE : int = 6
+const EDITOR_MARGIN : int = 50
+
 var current_file_path: String = ""
 var last_text: String = ""
 var last_cursor_line: int = -1
 var font_size: int
 var default_font_size : int
+var scrollContainer : ScrollContainer
 
 func _ready():
 	# Get font size from theme, fallback to 16
-
 	default_font_size = get_theme_font_size("font_size", "CodeEdit")
 	font_size = default_font_size
 	add_theme_font_size_override("font_size", font_size)
@@ -18,6 +22,8 @@ func _ready():
 	# Set width based on editor line length setting
 	call_deferred('_set_editor_width')
 
+	scrollContainer = get_parent_control()
+	
 	var highlighter: RefCounted = load("res://scripts/utilities/syntax_highlighter.gd").new()
 	syntax_highlighter = highlighter
 
@@ -29,7 +35,7 @@ func _ready():
 	EventBus.content_changed.connect(_on_content_changed)
 	EventBus.editor_resized.connect(_on_editor_resized)
 
-	caret_changed.connect(_on_cursor_changed)
+	caret_changed.connect(_on_caret_changed)
 	text_changed.connect(_on_text_changed)
 
 func _on_save_all_files():
@@ -107,11 +113,21 @@ func _on_file_selected(path: String):
 	# Make sure panel is visible
 	visible = true
 
-func _on_cursor_changed():
+func _ensure_caret_in_view():
+	# Ensure outer ScrollContainer scrolls along with the caret and vice versa
+	var verticalPosition : float = get_caret_draw_pos().y
+	if verticalPosition - font_size < scrollContainer.get_v_scroll():
+		scrollContainer.set_v_scroll(int(verticalPosition - font_size))
+	elif verticalPosition + font_size > scrollContainer.get_v_scroll() + scrollContainer.size.y:
+		scrollContainer.set_v_scroll(int(verticalPosition - scrollContainer.size.y + font_size))
+	
+func _on_caret_changed():
 	var cursor_line: int = get_caret_line()
 	if cursor_line < 0:
 		return
-
+	
+	_ensure_caret_in_view()
+	
 	# Only emit when line changes, not column
 	if cursor_line != last_cursor_line:
 		last_cursor_line = cursor_line
@@ -264,14 +280,14 @@ func zoom_in() -> void:
 	_set_editor_width()
 
 func zoom_out() -> void:
-	font_size = max(font_size - 2, 6)
+	font_size = max(font_size - 2, MIN_FONT_SIZE)
 	add_theme_font_size_override("font_size", font_size)
 	_set_editor_width()
 
 func _set_editor_width() -> void:
 	var line_length: int = AppConfig.get_editor_line_length()
 	var line_width: float = 0.5 * font_size * line_length
-	var margins : int = 50;
+	var margins : int = EDITOR_MARGIN;
 	custom_minimum_size.x = min(line_width, get_parent().get_parent_area_size().x - margins)
 
 func _on_editor_resized() -> void:

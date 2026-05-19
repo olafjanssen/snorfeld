@@ -24,6 +24,9 @@ const DEFAULT_CACHE_LOCATION := "global"
 # Editor line length default (number of characters)
 const DEFAULT_EDITOR_LINE_LENGTH := 66
 
+const SETTINGS_PANEL_WIDTH : int = 900
+const SETTINGS_PANEL_HEIGHT: int = 1300
+
 # Cached values
 var _llm_endpoint: String
 var _llm_check_endpoint: String
@@ -174,7 +177,7 @@ func _on_open_settings() -> void:
 		settings_panel.queue_free()
 	settings_panel = SettingsPanelScene.instantiate()
 	get_tree().root.add_child(settings_panel)
-	settings_panel.popup_centered(Vector2i(900, 1300))
+	settings_panel.popup_centered(Vector2i(SETTINGS_PANEL_WIDTH, SETTINGS_PANEL_HEIGHT))
 
 func _on_settings_closed() -> void:
 	if settings_panel:
