@@ -136,7 +136,6 @@ func _on_text_changed():
 		EventBus.editor_content_changed.emit(current_file_path, current_text)
 
 
-
 # gdlint:ignore-function:too-many-params,long-function,long-line
 func _on_apply_diff_patch_command(
 	file_path: String,
@@ -232,6 +231,7 @@ func _restore_editor_with_modified_line(
 	lines[cursor_line] = modified_paragraph
 	var new_text_full: String = "\n".join(lines)
 
+	last_text = new_text_full
 	set_text(new_text_full)
 
 	# Restore scroll position
@@ -242,9 +242,7 @@ func _restore_editor_with_modified_line(
 	var line_length: int = lines[cursor_line].length()
 	set_caret_column(min(saved_state["cursor_column"], line_length))
 
-	# Re-trigger paragraph selection to update diff display
-	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
-	# Emit editor_content_changed signal since text was modified
+	# Emit content changed FIRST so BookService updates before paragraph_selected
 	EventBus.editor_content_changed.emit(current_file_path, get_text())
 
 func _input(event: InputEvent) -> void:

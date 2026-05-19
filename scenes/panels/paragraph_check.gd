@@ -32,6 +32,7 @@ func _ready():
 	EventBus.diff_span_clicked.connect(_on_diff_span_clicked)
 	EventBus.theme_changed.connect(_on_theme_changed)
 	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
+	EventBus.editor_content_changed.connect(_on_editor_content_changed)
 	# Connect to tab changed signal
 	$TabContainer.tab_changed.connect(_on_tab_changed)
 
@@ -96,6 +97,15 @@ func _on_diff_span_clicked(operation: String, word_index: int, text: String):
 		word_index,
 		text
 	)
+
+func _on_editor_content_changed(path: String, _content: String):
+	if current_file_path != path:
+		return
+		
+	# Get latest paragraph text that we use with stale analysis data
+	var para_data: Dictionary = BookService.get_paragraph_at_line(current_file_path, current_line_number)
+	current_paragraph_text = para_data.get("text", "")
+	_update_diff_displays()
 
 func _on_paragraph_selected(file_path: String, line_number: int):
 	current_file_path = file_path
