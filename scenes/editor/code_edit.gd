@@ -195,7 +195,6 @@ func _on_apply_diff_patch_command(
 	elif operation == "change":
 		# For change operations, use old_text to determine deletion count
 		var old_words: PackedStringArray = old_text.split(" ")
-		var new_words: PackedStringArray = new_text.split(" ")
 		if word_index >= 0 && word_index + old_words.size() <= words.size():
 			# Verify old words match
 			var matches: bool = true
