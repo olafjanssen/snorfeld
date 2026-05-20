@@ -17,6 +17,7 @@ signal open_settings
 signal priority_analysis(service_type: String, file_path: String, payload: Dictionary)
 signal start_analysis(service_type: String, scope: String)
 signal delete_analysis_cache(analysis_type: String)
+signal optimize_embedding_cache
 
 # Other commands
 signal navigate_to_line(file_path: String, line_number: int)

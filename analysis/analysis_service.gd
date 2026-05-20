@@ -448,7 +448,6 @@ func _ready() -> void:
 	# Connect common signals
 	CommandBus.priority_analysis.connect(_on_priority_analysis_requested)
 	CommandBus.delete_analysis_cache.connect(_on_delete_analysis_cache)
-	EventBus.project_loaded.connect(_on_project_loaded)
 	EventBus.project_unloaded.connect(_on_project_unloaded)
 
 func _on_priority_analysis_requested(service_type: String, _file_path: String, payload: Dictionary) -> void:

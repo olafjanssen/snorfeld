@@ -23,6 +23,7 @@ const CLEAR_STRUCTURE_CACHE_ID: int = 402
 const CLEAR_CHARACTER_CACHE_ID: int = 403
 const CLEAR_OBJECT_CACHE_ID: int = 404
 const CLEAR_EMBEDDING_CACHE_ID: int = 405
+const OPTIMIZE_EMBEDDING_CACHE_ID: int = 406
 
 func _ready():
 	add_item("Open Folder...", OPEN_FOLDER_ID)
@@ -53,6 +54,7 @@ func _ready():
 	add_item("Index Project Embeddings", INDEX_PROJECT_EMBEDDINGS_ID)
 	add_item("Index Chapter Embeddings", INDEX_CHAPTER_EMBEDDINGS_ID)
 	add_item("Clear Embedding Cache", CLEAR_EMBEDDING_CACHE_ID)
+	add_item("Optimize Embedding Cache", OPTIMIZE_EMBEDDING_CACHE_ID)
 	add_separator()
 	add_item("Quit", 1)
 	id_pressed.connect(_on_item_pressed)
@@ -99,6 +101,10 @@ func _on_item_pressed(id: int):
 
 	if clear_cache_actions.has(id):
 		CommandBus.delete_analysis_cache.emit(clear_cache_actions[id])
+		return
+
+	if id == OPTIMIZE_EMBEDDING_CACHE_ID:
+		CommandBus.optimize_embedding_cache.emit()
 		return
 
 	if id == OPEN_FOLDER_ID:

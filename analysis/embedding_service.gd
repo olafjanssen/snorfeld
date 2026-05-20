@@ -29,6 +29,7 @@ func _ready() -> void:
 
 	# Connect service-specific signals
 	CommandBus.start_analysis.connect(_on_start_analysis)
+	CommandBus.optimize_embedding_cache.connect(_on_optimize_embedding_cache)
 	EventBus.folder_opened.connect(_on_folder_opened)
 	EventBus.file_selected.connect(_on_file_selected)
 
@@ -281,7 +282,7 @@ func _emit_task_completed(remaining: int) -> void:
 
 
 # Override: Clean up cache entries that don't have corresponding source files
-func _cleanup_unused_cache_entries(cache_path: String, _project_path: String) -> int:
+func _cleanup_unused_cache_entries(_cache_path: String, _project_path: String) -> int:
 	# Get valid hashes from BookService
 	var valid_paragraph_hashes := BookService.get_all_paragraph_hashes()
 	var valid_chapter_hashes := BookService.get_all_chapter_hashes()
@@ -314,10 +315,20 @@ func _cleanup_unused_cache_entries(cache_path: String, _project_path: String) ->
 	for key in keys_to_remove:
 		memory_cache.erase(key)
 
-	# Rewrite JSONL files to persist cleanup
-	_rewrite_jsonl_files(cache_path)
 
 	return keys_to_remove.size()
+
+func _on_optimize_embedding_cache():
+	_rewrite_jsonl_files(get_cache_dir_for_current_project())
+
+func get_cache_dir_for_current_project() -> String:
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		var project_path: String = BookService.loaded_project_path
+		var project_hash := HashingUtils.hash_md5(project_path)
+		return "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
+	else:
+		return BookService.loaded_project_path.path_join(".snorfeld").path_join(_get_cache_subdir())
 
 
 ## ============================================================================
