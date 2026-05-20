@@ -220,11 +220,6 @@ func _on_apply_diff_patch_command(
 
 	end_complex_operation()
 
-	# Update last_text and emit signals
-	last_text = get_text()
-	EventBus.editor_content_changed.emit(current_file_path, last_text)
-	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
-
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
