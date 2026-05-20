@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://b63nauax23pcv"]
+
+[ext_resource type="Script" path="res://scenes/panels/about_panel.gd" id="0"]
+[ext_resource type="Texture2D" uid="uid://clithau48cf73" path="res://icons/snorfeld.svg" id="2_vf5u6"]
+
+[node name="AboutPanel" type="Window" unique_id=994651930]
+disable_3d = true
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+oversampling_override = 2.0
+title = "About Snorfeld"
+initial_position = 2
+size = Vector2i(600, 600)
+min_size = Vector2i(600, 600)
+content_scale_aspect = 4
+content_scale_stretch = 1
+script = ExtResource("0")
+
+[node name="Panel" type="Panel" parent="." unique_id=52325768]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1684629028]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -118.0
+offset_top = -104.0
+offset_right = 118.0
+offset_bottom = 104.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Panel/VBoxContainer" unique_id=1826043353]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 2
+texture = ExtResource("2_vf5u6")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1826043354]
+layout_mode = 2
+theme_type_variation = &"SettingsPanelTitle"
+text = "Snorfeld"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1826043356]
+layout_mode = 2
+text = "A Reluctant Writing Companion"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer" unique_id=1878981587]
+layout_mode = 2
+
+[node name="VersionLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1826043355]
+layout_mode = 2
+theme_type_variation = &"EditorStatusMessage"
+text = "Version: 1.0.0"
+horizontal_alignment = 1

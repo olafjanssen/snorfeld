@@ -5,6 +5,7 @@ extends PopupMenu
 const OPEN_FOLDER_ID: int = 0
 const SETTINGS_ID: int = 2
 const STORY_BIBLE_ID: int = 3
+const ABOUT_ID: int = 4
 const RUN_ALL_GRAMMAR_ANALYSES_ID: int = 206
 const RUN_CHAPTER_GRAMMAR_ANALYSES_ID: int = 207
 const RUN_ALL_STYLE_ANALYSES_ID: int = 208
@@ -26,38 +27,48 @@ const CLEAR_EMBEDDING_CACHE_ID: int = 405
 const OPTIMIZE_EMBEDDING_CACHE_ID: int = 406
 
 func _ready():
+	# File menu
 	add_item("Open Folder...", OPEN_FOLDER_ID)
 	add_separator()
+
+	# View/Window menu
 	add_item("Settings...", SETTINGS_ID)
 	add_item("Story Bible", STORY_BIBLE_ID)
+	add_item("About", ABOUT_ID)
 	add_separator()
-	add_item("Run All Grammar Analyses", RUN_ALL_GRAMMAR_ANALYSES_ID)
-	add_item("Run Chapter Grammar Analyses", RUN_CHAPTER_GRAMMAR_ANALYSES_ID)
-	add_item("Clear Grammar Cache", CLEAR_GRAMMAR_CACHE_ID)
+
+	# Analysis submenus
+	_add_analysis_submenu("Grammar", RUN_ALL_GRAMMAR_ANALYSES_ID, RUN_CHAPTER_GRAMMAR_ANALYSES_ID, CLEAR_GRAMMAR_CACHE_ID)
+	_add_analysis_submenu("Style", RUN_ALL_STYLE_ANALYSES_ID, RUN_CHAPTER_STYLE_ANALYSES_ID, CLEAR_STYLE_CACHE_ID)
+	_add_analysis_submenu("Structure", RUN_ALL_STRUCTURE_ANALYSES_ID, RUN_CHAPTER_STRUCTURE_ANALYSES_ID, CLEAR_STRUCTURE_CACHE_ID)
+	_add_analysis_submenu("Character", RUN_ALL_CHARACTER_ANALYSES_ID, RUN_CHAPTER_CHARACTER_ANALYSES_ID, CLEAR_CHARACTER_CACHE_ID)
+	_add_analysis_submenu("Object", RUN_ALL_OBJECT_ANALYSES_ID, RUN_CHAPTER_OBJECT_ANALYSES_ID, CLEAR_OBJECT_CACHE_ID)
 	add_separator()
-	add_item("Run All Style Analyses", RUN_ALL_STYLE_ANALYSES_ID)
-	add_item("Run Chapter Style Analyses", RUN_CHAPTER_STYLE_ANALYSES_ID)
-	add_item("Clear Style Cache", CLEAR_STYLE_CACHE_ID)
+
+	# Embeddings submenu
+	var embeddings_menu := PopupMenu.new()
+	add_child(embeddings_menu)
+	embeddings_menu.add_item("Index Project Embeddings", INDEX_PROJECT_EMBEDDINGS_ID)
+	embeddings_menu.add_item("Index Chapter Embeddings", INDEX_CHAPTER_EMBEDDINGS_ID)
+	embeddings_menu.add_item("Clear Embedding Cache", CLEAR_EMBEDDING_CACHE_ID)
+	embeddings_menu.add_item("Optimize Embedding Cache", OPTIMIZE_EMBEDDING_CACHE_ID)
+	embeddings_menu.id_pressed.connect(_on_item_pressed)
+	add_submenu_node_item("Embeddings", embeddings_menu)
 	add_separator()
-	add_item("Run All Structure Analyses", RUN_ALL_STRUCTURE_ANALYSES_ID)
-	add_item("Run Chapter Structure Analyses", RUN_CHAPTER_STRUCTURE_ANALYSES_ID)
-	add_item("Clear Structure Cache", CLEAR_STRUCTURE_CACHE_ID)
-	add_separator()
-	add_item("Run All Character Analyses", RUN_ALL_CHARACTER_ANALYSES_ID)
-	add_item("Run Chapter Character Analyses", RUN_CHAPTER_CHARACTER_ANALYSES_ID)
-	add_item("Clear Character Cache", CLEAR_CHARACTER_CACHE_ID)
-	add_separator()
-	add_item("Run All Object Analyses", RUN_ALL_OBJECT_ANALYSES_ID)
-	add_item("Run Chapter Object Analyses", RUN_CHAPTER_OBJECT_ANALYSES_ID)
-	add_item("Clear Object Cache", CLEAR_OBJECT_CACHE_ID)
-	add_separator()
-	add_item("Index Project Embeddings", INDEX_PROJECT_EMBEDDINGS_ID)
-	add_item("Index Chapter Embeddings", INDEX_CHAPTER_EMBEDDINGS_ID)
-	add_item("Clear Embedding Cache", CLEAR_EMBEDDING_CACHE_ID)
-	add_item("Optimize Embedding Cache", OPTIMIZE_EMBEDDING_CACHE_ID)
-	add_separator()
+
+	# Quit at the end
 	add_item("Quit", 1)
+
 	id_pressed.connect(_on_item_pressed)
+
+func _add_analysis_submenu(label: String, run_all_id: int, run_chapter_id: int, clear_cache_id: int) -> void:
+	var submenu := PopupMenu.new()
+	add_child(submenu)
+	submenu.add_item("Run All %s Analyses" % label, run_all_id)
+	submenu.add_item("Run Chapter %s Analyses" % label, run_chapter_id)
+	submenu.add_item("Clear %s Cache" % label, clear_cache_id)
+	submenu.id_pressed.connect(_on_item_pressed)
+	add_submenu_node_item("%s" % label, submenu)
 
 
 func _on_item_pressed(id: int):
@@ -117,3 +128,8 @@ func _on_item_pressed(id: int):
 
 	if id == STORY_BIBLE_ID:
 		CommandBus.open_story_bible.emit()
+		return
+
+	if id == ABOUT_ID:
+		CommandBus.open_about.emit()
+		return

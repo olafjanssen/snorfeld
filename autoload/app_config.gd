@@ -7,12 +7,15 @@ extends Node
 const CONFIG_FILE := "user://settings.cfg"
 const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
 
+# Application version
+const VERSION := "0.1.0"
+
 # Default settings
 const DEFAULT_LLM_ENDPOINT := "http://localhost:11434/api/generate"
 const DEFAULT_LLM_CHECK_ENDPOINT := "http://localhost:11434/api/tags"
 const DEFAULT_LLM_MODEL := "qwen3.5:9b"
 const DEFAULT_LLM_TEMPERATURE := 0.3  # Default sampling temperature for LLM
-const DEFAULT_LLM_MAX_TOKENS := 512
+const DEFAULT_LLM_MAX_TOKENS := 1024
 
 # Embedding model defaults
 const DEFAULT_EMBEDDING_ENDPOINT := "http://localhost:11434/api/embeddings"
@@ -165,6 +168,10 @@ func set_cache_location(location: String) -> void:
 # Editor line length getter
 func get_editor_line_length() -> int:
 	return _editor_line_length
+
+# Version getter
+func get_version() -> String:
+	return VERSION
 
 # Editor line length setter
 func set_editor_line_length(length: int) -> void:

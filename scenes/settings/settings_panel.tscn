@@ -5,7 +5,7 @@
 [node name="SettingsPanel" type="Window" unique_id=994651929]
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
-oversampling_override = 1.0
+oversampling_override = 2.0
 title = "Settings"
 initial_position = 2
 size = Vector2i(900, 1300)

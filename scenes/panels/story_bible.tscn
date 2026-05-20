@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cx1qxlet1njrb" path="res://scenes/panels/story_bible.gd" id="1"]
 
 [node name="StoryBible" type="Window" unique_id=1329163322]
-oversampling_override = 1.0
+oversampling_override = 2.0
 title = "Story Bible"
 position = Vector2i(0, 36)
 size = Vector2i(800, 600)

@@ -8,6 +8,7 @@ const MAIN_PANEL_WIDTH: int = 800
 const RIGHT_PANEL_WIDTH: int = 1600
 
 var story_bible: Window
+var about_panel: Window
 
 func _ready():
 	await get_tree().process_frame
@@ -29,6 +30,7 @@ func _ready():
 
 	EventBus.theme_changed.connect(_update_icon_colors)
 	CommandBus.open_story_bible.connect(_open_story_bible)
+	CommandBus.open_about.connect(_open_about)
 
 func _open_story_bible():
 	if story_bible != null:
@@ -37,6 +39,14 @@ func _open_story_bible():
 	story_bible = StoryBibleScene.instantiate()
 	get_tree().root.add_child(story_bible)
 	story_bible.position = Vector2(SIDE_PANEL_X_POSITION, 0)
+
+func _open_about():
+	if about_panel != null:
+		about_panel.queue_free()
+	var AboutPanelScene: PackedScene = preload("res://scenes/panels/about_panel.tscn")
+	about_panel = AboutPanelScene.instantiate()
+	get_tree().root.add_child(about_panel)
+	about_panel.popup_centered(Vector2i(400, 300))
 
 func _on_sidebar_left_button_pressed():
 	$VBoxContainer/HSplitContainer/TabContainer.visible = !$VBoxContainer/HSplitContainer/TabContainer.visible
