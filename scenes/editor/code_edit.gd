@@ -51,21 +51,17 @@ func _on_content_changed():
 
 		# Reload the file
 		var content: String = FileUtils.read_file(current_file_path)
-		if content != last_text:
+		if content != get_text():
 			last_cursor_line = -1  # Force paragraph re-analysis
-			call_deferred("_reload_and_restore", content, cursor_line, cursor_column, scroll_pos)
-
-func _reload_and_restore(content: String, cursor_line: int, cursor_column: int, scroll_pos: float):
-	set_text(content)
-	last_text = content
-	last_cursor_line = -1  # Force paragraph re-analysis
-	if cursor_line >= 0:
-		var line_count: int = get_line_count()
-		cursor_line = clamp(cursor_line, 0, line_count - 1)
-		set_caret_line(cursor_line)
-		var line_length: int = get_line(cursor_line).length()
-		set_caret_column(min(cursor_column, line_length))
-	get_v_scroll_bar().value = scroll_pos
+			set_text(content)
+			last_text = content
+			get_v_scroll_bar().value = scroll_pos
+			if cursor_line >= 0:
+				var line_count: int = get_line_count()
+				cursor_line = clamp(cursor_line, 0, line_count - 1)
+				set_caret_line(cursor_line)
+				var line_length: int = get_line(cursor_line).length()
+				set_caret_column(min(cursor_column, line_length))
 
 func _on_show_git_diff(_file_path: String, _diff: String):
 	visible = false
@@ -147,103 +143,83 @@ func _on_apply_diff_patch_command(
 	if current_file_path != file_path:
 		return
 
-	var saved_state: Dictionary = _save_editor_state()
-	var lines: Array = get_text().split("\n")
 	var cursor_line: int = line_number - 1
-
-	if not _validate_patch_context(cursor_line, lines, file_path, line_number):
+	if cursor_line < 0 or cursor_line >= get_line_count():
 		return
 
-	var current_paragraph: String = lines[cursor_line]
-	var modified_paragraph: String = _apply_patch_operation(
-		current_paragraph,
-		operation,
-		word_index,
-		new_text
-	)
-
-	if modified_paragraph != current_paragraph:
-		_restore_editor_with_modified_line(lines, cursor_line, modified_paragraph, saved_state)
-
-## Save current editor state (cursor position and scroll)
-func _save_editor_state() -> Dictionary:
-	return {
-		"cursor_column": get_caret_column(),
-		"scroll_pos": get_v_scroll_bar().value
-	}
-
-## Validate patch context
-func _validate_patch_context(cursor_line: int, lines: Array, file_path: String, line_number: int) -> bool:
-	if cursor_line < 0 or cursor_line >= lines.size():
-		return false
+	# Validate via BookService
 	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
-	return not para_data.is_empty()
+	if para_data.is_empty():
+		return
 
-## Apply patch operation to a paragraph
-func _apply_patch_operation(current_paragraph: String, operation: String, word_index: int, new_text: String) -> String:
-	var words: Array = current_paragraph.split(" ")
+	var paragraph: String = get_line(cursor_line)
+	var words: PackedStringArray = paragraph.split(" ")
+	
+	begin_complex_operation()
 
 	if operation == "delete":
-		return _apply_delete_operation(words, word_index, new_text)
+		var delete_words: PackedStringArray = new_text.split(" ")
+		if word_index >= 0 && word_index + delete_words.size() <= words.size():
+			# Verify words match
+			var matches: bool = true
+			for k: int in range(delete_words.size()):
+				if words[word_index + k] != delete_words[k]:
+					matches = false
+					break
+			if matches:
+				# Calculate character range to remove
+				var start_col: int = 0
+				for i: int in range(word_index):
+					start_col += words[i].length() + 1
+				var text_to_remove: String = ""
+				for j: int in range(delete_words.size()):
+					if j > 0:
+						text_to_remove += " "
+					text_to_remove += delete_words[j]
+				remove_text(cursor_line, start_col, cursor_line, start_col + text_to_remove.length())
+
 	elif operation == "insert":
-		return _apply_insert_operation(words, word_index, new_text)
+		if word_index >= 0 && word_index <= words.size():
+			# Calculate position AFTER word at word_index
+			var insert_col: int = 0
+			for i: int in range(word_index):
+				insert_col += words[i].length() + 1
+			# This is position at start of word at word_index
+			# Add length of word at word_index
+			if word_index < words.size():
+				insert_col += words[word_index].length()
+			# Add space after word if not at end
+			if word_index < words.size() - 1:
+				insert_col += 1
+			# Insert text at this position
+			insert_text(new_text, cursor_line, insert_col)
+			# Add space after inserted text if not at end
+			if word_index < words.size() - 1:
+				insert_text(" ", cursor_line, insert_col + new_text.length())
+
 	elif operation == "change":
-		return _apply_change_operation(words, word_index, new_text)
-	return current_paragraph
+		var new_words: PackedStringArray = new_text.split(" ")
+		if word_index >= 0 && word_index + new_words.size() <= words.size():
+			# Calculate range to replace
+			var start_col: int = 0
+			for i: int in range(word_index):
+				start_col += words[i].length() + 1
+			var end_col: int = start_col
+			for i: int in range(new_words.size()):
+				end_col += words[word_index + i].length()
+				if i < new_words.size() - 1:
+					end_col += 1
+			# Remove old text
+			remove_text(cursor_line, start_col, cursor_line, end_col)
+			# Insert new text
+			insert_text(new_text, cursor_line, start_col)
 
-## Apply delete operation
-func _apply_delete_operation(words: Array, word_index: int, new_text: String) -> String:
-	var delete_words: Array = new_text.split(" ")
-	if word_index < 0 or word_index + delete_words.size() > words.size():
-		return " ".join(words)
+	end_complex_operation()
 
-	# Verify the words match what we expect to delete
-	for k: int in range(delete_words.size()):
-		if words[word_index + k] != delete_words[k]:
-			return " ".join(words)
-
-	# Remove multiple words starting at word_index
-	for _k: int in range(delete_words.size()):
-		words.remove_at(word_index)
-	return " ".join(words)
-
-## Apply insert operation
-func _apply_insert_operation(words: Array, word_index: int, new_text: String) -> String:
-	if word_index >= 0 and word_index <= words.size():
-		words.insert(word_index, new_text)
-	return " ".join(words)
-
-## Apply change operation
-func _apply_change_operation(words: Array, word_index: int, new_text: String) -> String:
-	var new_words_list: Array = new_text.split(" ")
-	if word_index >= 0 and word_index + new_words_list.size() <= words.size():
-		for k: int in range(new_words_list.size()):
-			words[word_index + k] = new_words_list[k]
-	return " ".join(words)
-
-## Restore editor with modified line
-func _restore_editor_with_modified_line(
-	lines: Array,
-	cursor_line: int,
-	modified_paragraph: String,
-	saved_state: Dictionary
-):
-	lines[cursor_line] = modified_paragraph
-	var new_text_full: String = "\n".join(lines)
-
-	last_text = new_text_full
-	set_text(new_text_full)
-
-	# Restore scroll position
-	get_v_scroll_bar().value = saved_state["scroll_pos"]
-
-	# Restore cursor to the same line
-	set_caret_line(cursor_line)
-	var line_length: int = lines[cursor_line].length()
-	set_caret_column(min(saved_state["cursor_column"], line_length))
-
-	# Emit content changed FIRST so BookService updates before paragraph_selected
-	EventBus.editor_content_changed.emit(current_file_path, get_text())
+	# Update last_text and emit signals
+	last_text = get_text()
+	EventBus.editor_content_changed.emit(current_file_path, last_text)
+	EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:

@@ -319,7 +319,7 @@ func _process_changes_with_match(result: Array[String], old_words: Array[String]
 	else:
 		# Different counts - show deletions and insertions separately
 		_process_deletions(result, old_changes, start_i, include_url_meta)
-		_process_insertions(result, new_changes, start_j, include_url_meta)
+		_process_insertions(result, new_changes, start_i, include_url_meta)
 
 
 func _process_single_word_change(result: Array[String], old_words: Array[String], new_words: Array[String], i: int, j: int, include_url_meta: bool) -> void:
@@ -335,7 +335,7 @@ func _process_single_word_change(result: Array[String], old_words: Array[String]
 		var bgcolor: String = _get_bgcolor("insert")
 		var word: String = new_words[j]
 		if include_url_meta:
-			result.append("[url=insert" + DELIMITER + str(j) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
+			result.append("[url=insert" + DELIMITER + str(i) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
 		else:
 			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
 	elif i < old_words.size():
