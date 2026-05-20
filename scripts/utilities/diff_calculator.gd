@@ -32,7 +32,43 @@ const URL_TAG_CLOSE_LENGTH := 6  # Length of "[/url]"
 # Encode text for URL meta using Base64 to handle all special characters
 func _encode_text(text: String) -> String:
 	return Marshalls.utf8_to_base64(text)
+
+# Check if meta string is a diff operation
+static func is_diff_meta(meta_str: String) -> bool:
+	return (meta_str.begins_with("delete" + DELIMITER) or
+		meta_str.begins_with("insert" + DELIMITER) or
+		meta_str.begins_with("change" + DELIMITER))
+
+# Extract patch info from diff meta for applying patches
+# Returns {operation: String, word_index: int, old_text: String, new_text: String}
+# For insert: old_text is empty, new_text is the text to insert
+# For delete: old_text is the text to delete, new_text is empty
+# For change: both old_text and new_text are set
+static func get_patch_info_from_meta(meta_str: String) -> Dictionary:
+	var parts: PackedStringArray = meta_str.split(DELIMITER)
+	if parts.size() < 3:
+		return {}
 	
+	var operation: String = parts[0]
+	var word_index: int = int(parts[1])
+	var old_text: String = ""
+	var new_text: String = ""
+	
+	if operation == "change" and parts.size() >= 4:
+		old_text = Marshalls.base64_to_utf8(parts[2])
+		new_text = Marshalls.base64_to_utf8(parts[3])
+	elif operation == "insert":
+		new_text = Marshalls.base64_to_utf8(parts[2])
+	elif operation == "delete":
+		old_text = Marshalls.base64_to_utf8(parts[2])
+	
+	return {
+		"operation": operation,
+		"word_index": word_index,
+		"old_text": old_text,
+		"new_text": new_text
+	}
+
 var _control: Control
 
 func set_control(control: Control) -> void:

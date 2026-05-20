@@ -181,21 +181,15 @@ func _on_apply_diff_patch_command(
 
 	elif operation == "insert":
 		if word_index >= 0 && word_index <= words.size():
-			# Calculate position AFTER word at word_index
+			# Calculate position BEFORE word at word_index
 			var insert_col: int = 0
 			for i: int in range(word_index):
 				insert_col += words[i].length() + 1
-			# This is position at start of word at word_index
-			# Add length of word at word_index
-			if word_index < words.size():
-				insert_col += words[word_index].length()
-			# Add space after word if not at end
-			if word_index < words.size() - 1:
-				insert_col += 1
+			# insert_col is now at the start of word at word_index (or at end if word_index == words.size())
 			# Insert text at this position
 			insert_text(new_text, cursor_line, insert_col)
 			# Add space after inserted text if not at end
-			if word_index < words.size() - 1:
+			if word_index < words.size():
 				insert_text(" ", cursor_line, insert_col + new_text.length())
 
 	elif operation == "change":
