@@ -13,7 +13,8 @@ config_version=5
 config/name="snorfeld"
 run/main_scene="res://scenes/main/editor.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+boot_splash/image="uid://5tg4qwh5iygq"
+config/icon="uid://clithau48cf73"
 
 [autoload]
 
