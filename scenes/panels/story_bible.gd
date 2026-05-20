@@ -135,8 +135,7 @@ func _on_tab_changed(tab_index: int):
 			var metadata: Dictionary = selected.get_metadata(0)
 			if metadata and metadata.get("type") == "character":
 				_display_character_sheet(metadata["data"])
-		else:
-			content_sheet.text = ""
+			return
 		content_sheet.text = ""
 	elif tab_index == 1:
 		# Objects tab - refresh object display
@@ -145,8 +144,7 @@ func _on_tab_changed(tab_index: int):
 			var metadata: Dictionary = selected.get_metadata(0)
 			if metadata and metadata.get("type") == "object":
 				_display_object_sheet(metadata["data"])
-		else:
-			content_sheet.text = ""
+				return
 		content_sheet.text = ""
 
 func _display_character_sheet(char_data: Dictionary):

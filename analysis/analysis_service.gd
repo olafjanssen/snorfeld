@@ -117,6 +117,9 @@ func _get_cache_dir_for_file(file_path: String) -> String:
 ## Get the global cache directory for a given file path (user data folder with project hash)
 func _get_global_cache_dir_for_path(file_path: String) -> String:
 	var project_path := file_path.get_base_dir()
+	# Ensure trailing slash for consistent hashing with _on_project_loaded
+	if not project_path.ends_with("/"):
+		project_path += "/"
 	var project_hash := HashingUtils.hash_md5(project_path)
 	return "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
 
@@ -243,6 +246,7 @@ func _ensure_cache_loaded(cache_dir: String) -> void:
 ## Load JSONL cache file into memory
 func _load_jsonl_cache(cache_dir: String) -> void:
 	var jsonl_path := cache_dir.path_join(_get_cache_filename())
+	print(service_name + " load jsonl: " + jsonl_path)
 	if not FileUtils.file_exists(jsonl_path):
 		return
 
@@ -472,10 +476,14 @@ func _on_folder_opened(path: String) -> void:
 	var cache_dir: String
 	var cache_location := AppConfig.get_cache_location()
 	if cache_location == "global":
+		# Normalize path with trailing slash for consistent hashing
+		if not path.ends_with("/"):
+			path += "/"
 		var project_hash := HashingUtils.hash_md5(path)
 		cache_dir = "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
 	else:
 		cache_dir = path.path_join(".snorfeld").path_join(_get_cache_subdir())
+
 	if FileUtils.dir_exists(cache_dir):
 		_ensure_cache_loaded(cache_dir)
 		EventBus.analysis_cleanup_started.emit(_get_service_name())
@@ -490,6 +498,9 @@ func _on_project_loaded(path: String) -> void:
 	var cache_dir: String
 	var cache_location := AppConfig.get_cache_location()
 	if cache_location == "global":
+		# Normalize path with trailing slash for consistent hashing
+		if not path.ends_with("/"):
+			path += "/"
 		var project_hash := HashingUtils.hash_md5(path)
 		cache_dir = "user://.snorfeld/global_cache/%s" % project_hash.path_join(_get_cache_subdir())
 	else:

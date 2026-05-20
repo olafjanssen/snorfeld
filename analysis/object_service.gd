@@ -151,23 +151,6 @@ func _on_priority_object_cache_requested(file_path: String, file_content: String
 ## Signal Handlers
 ## ============================================================================
 
-func _on_folder_opened(path: String) -> void:
-	var cache_path: String = path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
-	if DirAccess.dir_exists_absolute(cache_path):
-		_ensure_cache_loaded(cache_path)
-		EventBus.analysis_cleanup_started.emit("object")
-		var removed_count: int = _cleanup_unused_cache_entries(cache_path, path)
-		EventBus.analysis_cleanup_completed.emit("object", removed_count)
-
-
-func _on_project_loaded(_path: String) -> void:
-	pass  # Project loaded, BookService is ready
-
-
-func _on_project_unloaded() -> void:
-	pass  # Project unloaded
-
-
 func _on_start_analysis(service_type: String, scope: String) -> void:
 	if service_type != "OBJECT":
 		return
@@ -475,18 +458,18 @@ func _find_matching_object_key(obj_name: String) -> String:
 ## Public Getters
 ## ============================================================================
 
+
+
+
 # Get the object cache path for the current project
 func get_cache_path() -> String:
+	var path := BookService.loaded_project_path
 	var cache_location := AppConfig.get_cache_location()
 	if cache_location == "global":
-		var project_path: String = BookService.loaded_project_path
-		var project_hash := HashingUtils.hash_md5(project_path)
-		return "user://.snorfeld/global_cache/%s" % project_hash.path_join(OBJECT_DIR_NAME)
+		var project_hash := HashingUtils.hash_md5(path)
+		return "user://.snorfeld/global_cache/%s" % project_hash.path_join(cache_subdir)
 	else:
-		var project_path: String = BookService.loaded_project_path
-		if project_path == "":
-			project_path = "res://"
-		return project_path.path_join(".snorfeld").path_join(OBJECT_DIR_NAME)
+		return path.path_join(".snorfeld").path_join(cache_subdir)
 
 
 # Get all object files in the cache directory
