@@ -88,14 +88,35 @@ func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 		var active_tab: int = $TabContainer.get_current_tab()
 		_update_display_for_active_tab(active_tab)
 
-func _on_diff_span_clicked(operation: String, word_index: int, text: String):
+func _on_diff_span_clicked(operation: String, word_index: int, text: String, new_text: String):
+	# For change operations: text is old_text, new_text is new_text
+	# For insert operations: text is the text to insert, new_text is empty -> old_text="", new_text=text
+	# For delete operations: text is the text to delete, new_text is empty -> old_text=text, new_text=""
+	var old_text: String
+	var actual_new_text: String
+	
+	match operation:
+		"change":
+			old_text = text
+			actual_new_text = new_text
+		"insert":
+			old_text = ""
+			actual_new_text = text
+		"delete":
+			old_text = text
+			actual_new_text = ""
+		_:
+			old_text = text
+			actual_new_text = new_text
+	
 	# Emit signal with line_number - editor will verify via BookService
 	CommandBus.apply_diff_patch.emit(
 		current_file_path,
 		current_line_number,
 		operation,
 		word_index,
-		text
+		old_text,
+		actual_new_text
 	)
 
 func _on_editor_content_changed(path: String, _content: String):

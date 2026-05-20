@@ -10,7 +10,9 @@ signal file_selected(path: String)
 # Paragraph and diff management
 # Carries line number - consumers use BookService to get paragraph data
 signal paragraph_selected(file_path: String, line_number: int)
-signal diff_span_clicked(operation: String, word_index: int, text: String)
+# For change operations, text is old_text and new_text is provided separately
+# For insert/delete, new_text is empty
+signal diff_span_clicked(operation: String, word_index: int, text: String, new_text: String)
 
 # Settings
 signal settings_closed

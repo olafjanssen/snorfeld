@@ -152,33 +152,52 @@ func _are_spans_consecutive(span1: Dictionary, span2: Dictionary) -> bool:
 	if parts1.size() < 2 or parts2.size() < 2:
 		return false
 
-	# parts[1] = "word_indexDELIMITERencoded_text"
-	var subparts1: PackedStringArray = parts1[1].split(DELIMITER, 1)
-	var subparts2: PackedStringArray = parts2[1].split(DELIMITER, 1)
-
-	if subparts1.size() < 1 or subparts2.size() < 1:
-		return false
-
-	var word_idx1: int = int(subparts1[0])
-	var word_idx2: int = int(subparts2[0])
+	# For change ops, meta has 4 parts: operation|index|base64_old|base64_new
+	# For insert/delete, meta has 3 parts: operation|index|base64_text
+	# parts[1] is the word_index
+	var word_idx1: int = int(parts1[1])
+	var word_idx2: int = int(parts2[1])
 
 	return word_idx2 == word_idx1 + span1["text"].split(" ").size()
 
 
 func _merge_two_spans(span1: Dictionary, span2: Dictionary) -> Dictionary:
-	var merged_text: String = span1["text"] + " " + span2["text"]
-	var parts1: PackedStringArray = span1["meta"].split(DELIMITER, 2)
-	var subparts1: PackedStringArray = parts1[1].split(DELIMITER, 1)
-	var current_word_idx: int = int(subparts1[0])
-	var merged_meta: String = span1["operation"] + DELIMITER + str(current_word_idx) + DELIMITER + _encode_text(merged_text)
+	# For change operations, span["text"] is NEW text (visible content)
+	# The meta contains OLD text (and NEW text for change ops). When merging change spans, 
+	# we need to merge OLD texts and NEW texts separately.
+	var merged_new_text: String = span1["text"] + " " + span2["text"]
+	var parts1: PackedStringArray = span1["meta"].split(DELIMITER, 3)
+	var parts2: PackedStringArray = span2["meta"].split(DELIMITER, 3)
+	
+	var operation: String = span1["operation"]
+	var current_word_idx: int = int(parts1[1])
+	var merged_meta: String = ""
+	
+	if operation == "change":
+		# For change ops, meta is: operation|index|base64_old|base64_new
+		# We need to merge both old and new texts
+		var old_text1: String = Marshalls.base64_to_utf8(parts1[2]) if parts1.size() > 2 else ""
+		var new_text1: String = Marshalls.base64_to_utf8(parts1[3]) if parts1.size() > 3 else ""
+		var old_text2: String = Marshalls.base64_to_utf8(parts2[2]) if parts2.size() > 2 else ""
+		var new_text2: String = Marshalls.base64_to_utf8(parts2[3]) if parts2.size() > 3 else ""
+		var merged_old_text: String = old_text1 + " " + old_text2
+		var merged_new_text_for_meta: String = new_text1 + " " + new_text2
+		merged_meta = operation + DELIMITER + str(current_word_idx) + DELIMITER + _encode_text(merged_old_text) + DELIMITER + _encode_text(merged_new_text_for_meta)
+	else:
+		# For insert/delete, meta is: operation|index|base64_text
+		# We only need to merge the text (which is the same for both old and new in meta)
+		var text1: String = Marshalls.base64_to_utf8(parts1[2]) if parts1.size() > 2 else ""
+		var text2: String = Marshalls.base64_to_utf8(parts2[2]) if parts2.size() > 2 else ""
+		var merged_text: String = text1 + " " + text2
+		merged_meta = operation + DELIMITER + str(current_word_idx) + DELIMITER + _encode_text(merged_text)
 
 	return {
 		"start": span1["start"],
 		"end": span2["end"],
-		"operation": span1["operation"],
+		"operation": operation,
 		"meta": merged_meta,
 		"bgcolor": span1["bgcolor"],
-		"text": merged_text
+		"text": merged_new_text
 	}
 
 
@@ -242,7 +261,13 @@ func _process_diff_step(result: Array[String], old_words: Array[String], new_wor
 	var best_match_idx: int = _find_best_match_ahead(old_words, new_words, i, j, max_look_ahead)
 
 	if best_match_idx != -1:
-		var best_match_old_idx: int = _get_old_index_for_match(old_words, new_words, i, j, max_look_ahead)
+		# Find the corresponding old index for the match at new_words[best_match_idx]
+		var best_match_old_idx: int = i
+		for look_ahead_old: int in range(0, max_look_ahead + 1):
+			var old_idx: int = i + look_ahead_old
+			if old_idx < old_words.size() and old_words[old_idx] == new_words[best_match_idx]:
+				best_match_old_idx = old_idx
+				break
 		_process_changes_with_match(result, old_words, new_words, i, j, best_match_old_idx, best_match_idx, include_url_meta)
 		pos["i"] = best_match_old_idx
 		pos["j"] = best_match_idx
@@ -280,23 +305,18 @@ func _process_matched_words(result: Array[String], old_words: Array[String], sta
 
 
 func _find_best_match_ahead(old_words: Array[String], new_words: Array[String], i: int, j: int, max_look_ahead: int) -> int:
-	# Look for old word matching new word ahead
-	for look_ahead: int in range(1, max_look_ahead + 1):
-		if i + look_ahead - 1 < old_words.size() and old_words[i + look_ahead - 1] == new_words[j]:
-			return j
-		if j + look_ahead - 1 < new_words.size() and old_words[i] == new_words[j + look_ahead - 1]:
-			return j + look_ahead - 1
+	# Look for any matching word within look-ahead range in both arrays
+	# Check up to max_look_ahead words ahead in both old and new
+	var max_old: int = min(i + max_look_ahead, old_words.size() - 1)
+	var max_new: int = min(j + max_look_ahead, new_words.size() - 1)
+	for old_idx: int in range(i, max_old + 1):
+		for new_idx: int in range(j, max_new + 1):
+			if old_words[old_idx] == new_words[new_idx]:
+				return new_idx
 	return -1
 
 
-func _get_old_index_for_match(old_words: Array[String], new_words: Array[String], i: int, j: int, max_look_ahead: int) -> int:
-	# Find the corresponding old index for the match
-	for look_ahead: int in range(1, max_look_ahead + 1):
-		if i + look_ahead - 1 < old_words.size() and old_words[i + look_ahead - 1] == new_words[j]:
-			return i + look_ahead - 1
-		if j + look_ahead - 1 < new_words.size() and old_words[i] == new_words[j + look_ahead - 1]:
-			return i
-	return i
+
 
 
 func _process_changes_with_match(result: Array[String], old_words: Array[String], new_words: Array[String], start_i: int, start_j: int, best_match_old_idx: int, best_match_idx: int, include_url_meta: bool) -> void:
@@ -313,12 +333,14 @@ func _process_changes_with_match(result: Array[String], old_words: Array[String]
 		new_changes.append(new_words[j])
 		j += 1
 
-	# If we have equal number of deletions and insertions, show as orange changes
-	if old_changes.size() == new_changes.size() and old_changes.size() > 0:
-		_process_change_block(result, new_changes, start_i, "change", include_url_meta)
-	else:
-		# Different counts - show deletions and insertions separately
+	# If we have both deletions and insertions, show as orange changes
+	if old_changes.size() > 0 and new_changes.size() > 0:
+		_process_change_block(result, old_changes, new_changes, start_i, "change", include_url_meta)
+	elif old_changes.size() > 0:
+		# Only deletions
 		_process_deletions(result, old_changes, start_i, include_url_meta)
+	elif new_changes.size() > 0:
+		# Only insertions
 		_process_insertions(result, new_changes, start_i, include_url_meta)
 
 
@@ -326,11 +348,12 @@ func _process_single_word_change(result: Array[String], old_words: Array[String]
 	if i < old_words.size() and j < new_words.size():
 		# This is a deletion+insertion pair at same position - show as orange
 		var bgcolor: String = _get_bgcolor("change")
-		var word: String = new_words[j]
+		var old_word: String = old_words[i]
+		var new_word: String = new_words[j]
 		if include_url_meta:
-			result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(word) + "][bgcolor=" + bgcolor + "]" + word + "[/bgcolor][/url]")
+			result.append("[url=change" + DELIMITER + str(i) + DELIMITER + _encode_text(old_word) + DELIMITER + _encode_text(new_word) + "][bgcolor=" + bgcolor + "]" + new_word + "[/bgcolor][/url]")
 		else:
-			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
+			result.append("[bgcolor=" + bgcolor + "]" + new_word + "[/bgcolor]")
 	elif j < new_words.size():
 		var bgcolor: String = _get_bgcolor("insert")
 		var word: String = new_words[j]
@@ -347,13 +370,18 @@ func _process_single_word_change(result: Array[String], old_words: Array[String]
 			result.append("[bgcolor=" + bgcolor + "]" + word + "[/bgcolor]")
 
 
-func _process_change_block(result: Array[String], changes: Array[String], word_idx: int, operation: String, include_url_meta: bool) -> void:
-	var merged_text: String = " ".join(changes)
+func _process_change_block(result: Array[String], old_changes: Array[String], new_changes: Array[String], word_idx: int, operation: String, include_url_meta: bool) -> void:
+	var old_text: String = " ".join(old_changes)
+	var new_text: String = " ".join(new_changes)
 	var bgcolor: String = _get_bgcolor(operation)
 	if include_url_meta:
-		result.append("[url=" + operation + DELIMITER + str(word_idx) + DELIMITER + _encode_text(merged_text) + "][bgcolor=" + bgcolor + "]" + merged_text + "[/bgcolor][/url]")
+		# For change operations, encode both old and new text
+		if operation == "change":
+			result.append("[url=" + operation + DELIMITER + str(word_idx) + DELIMITER + _encode_text(old_text) + DELIMITER + _encode_text(new_text) + "][bgcolor=" + bgcolor + "]" + new_text + "[/bgcolor][/url]")
+		else:
+			result.append("[url=" + operation + DELIMITER + str(word_idx) + DELIMITER + _encode_text(old_text) + "][bgcolor=" + bgcolor + "]" + new_text + "[/bgcolor][/url]")
 	else:
-		result.append("[bgcolor=" + bgcolor + "]" + merged_text + "[/bgcolor]")
+		result.append("[bgcolor=" + bgcolor + "]" + new_text + "[/bgcolor]")
 
 
 func _process_deletions(result: Array[String], deletions: Array[String], word_idx: int, include_url_meta: bool) -> void:

@@ -138,6 +138,7 @@ func _on_apply_diff_patch_command(
 	line_number: int,
 	operation: String,
 	word_index: int,
+	old_text: String,
 	new_text: String
 ):
 	if current_file_path != file_path:
@@ -158,7 +159,7 @@ func _on_apply_diff_patch_command(
 	begin_complex_operation()
 
 	if operation == "delete":
-		var delete_words: PackedStringArray = new_text.split(" ")
+		var delete_words: PackedStringArray = old_text.split(" ")
 		if word_index >= 0 && word_index + delete_words.size() <= words.size():
 			# Verify words match
 			var matches: bool = true
@@ -198,21 +199,30 @@ func _on_apply_diff_patch_command(
 				insert_text(" ", cursor_line, insert_col + new_text.length())
 
 	elif operation == "change":
+		# For change operations, use old_text to determine deletion count
+		var old_words: PackedStringArray = old_text.split(" ")
 		var new_words: PackedStringArray = new_text.split(" ")
-		if word_index >= 0 && word_index + new_words.size() <= words.size():
-			# Calculate range to replace
-			var start_col: int = 0
-			for i: int in range(word_index):
-				start_col += words[i].length() + 1
-			var end_col: int = start_col
-			for i: int in range(new_words.size()):
-				end_col += words[word_index + i].length()
-				if i < new_words.size() - 1:
-					end_col += 1
-			# Remove old text
-			remove_text(cursor_line, start_col, cursor_line, end_col)
-			# Insert new text
-			insert_text(new_text, cursor_line, start_col)
+		if word_index >= 0 && word_index + old_words.size() <= words.size():
+			# Verify old words match
+			var matches: bool = true
+			for k: int in range(old_words.size()):
+				if words[word_index + k] != old_words[k]:
+					matches = false
+					break
+			if matches:
+				# Calculate range to replace
+				var start_col: int = 0
+				for i: int in range(word_index):
+					start_col += words[i].length() + 1
+				var end_col: int = start_col
+				for i: int in range(old_words.size()):
+					end_col += words[word_index + i].length()
+					if i < old_words.size() - 1:
+						end_col += 1
+				# Remove old text
+				remove_text(cursor_line, start_col, cursor_line, end_col)
+				# Insert new text
+				insert_text(new_text, cursor_line, start_col)
 
 	end_complex_operation()
 
