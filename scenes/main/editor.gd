@@ -14,6 +14,8 @@ func _ready():
 	await get_tree().process_frame
 	_update_icon_colors()
 
+	get_window().set_title("Snorfeld - a reluctant writing assistant")
+
 	# Detect screen DPI and set appropriate scale
 	var dpi := DisplayServer.screen_get_dpi(0)
 
