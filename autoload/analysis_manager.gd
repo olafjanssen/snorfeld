@@ -10,6 +10,7 @@ const StructureServiceScript = preload("res://analysis/structure_service.gd")
 const CharacterServiceScript = preload("res://analysis/character_service.gd")
 const ObjectServiceScript = preload("res://analysis/object_service.gd")
 const EmbeddingServiceScript = preload("res://analysis/embedding_service.gd")
+const DictionaryServiceScript = preload("res://analysis/dictionary_service.gd")
 
 # Public references to child services
 var GrammarService: Node
@@ -18,6 +19,7 @@ var StructureService: Node
 var CharacterService: Node
 var ObjectService: Node
 var EmbeddingService: Node
+var DictionaryService: Node
 
 func _ready() -> void:
 	# Instantiate all cache services as children
@@ -44,3 +46,7 @@ func _ready() -> void:
 	EmbeddingService = EmbeddingServiceScript.new()
 	add_child(EmbeddingService)
 	EmbeddingService.name = "EmbeddingService"
+
+	DictionaryService = DictionaryServiceScript.new()
+	add_child(DictionaryService)
+	DictionaryService.name = "DictionaryService"

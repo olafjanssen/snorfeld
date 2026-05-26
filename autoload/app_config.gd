@@ -27,6 +27,10 @@ const DEFAULT_CACHE_LOCATION := "global"
 # Editor line length default (number of characters)
 const DEFAULT_EDITOR_LINE_LENGTH := 66
 
+# Dictionary/Thesaurus language defaults
+const DEFAULT_SOURCE_LANGUAGE := "en"
+const DEFAULT_TARGET_LANGUAGE := "en"
+
 const SETTINGS_PANEL_WIDTH : int = 900
 const SETTINGS_PANEL_HEIGHT: int = 1300
 
@@ -46,6 +50,10 @@ var _cache_location: String = DEFAULT_CACHE_LOCATION
 
 # Editor line length
 var _editor_line_length: int = DEFAULT_EDITOR_LINE_LENGTH
+
+# Dictionary/Thesaurus language settings
+var _source_language: String = DEFAULT_SOURCE_LANGUAGE
+var _target_language: String = DEFAULT_TARGET_LANGUAGE
 
 # UI state
 var settings_panel: Window
@@ -73,6 +81,8 @@ func load_settings() -> void:
 		_embedding_model = config.get_value("embedding", "model", DEFAULT_EMBEDDING_MODEL)
 		_cache_location = config.get_value("cache", "location", DEFAULT_CACHE_LOCATION)
 		_editor_line_length = config.get_value("editor", "line_length", DEFAULT_EDITOR_LINE_LENGTH)
+		_source_language = config.get_value("dictionary", "source_language", DEFAULT_SOURCE_LANGUAGE)
+		_target_language = config.get_value("dictionary", "target_language", DEFAULT_TARGET_LANGUAGE)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -84,6 +94,8 @@ func load_settings() -> void:
 		_embedding_model = DEFAULT_EMBEDDING_MODEL
 		_cache_location = DEFAULT_CACHE_LOCATION
 		_editor_line_length = DEFAULT_EDITOR_LINE_LENGTH
+		_source_language = DEFAULT_SOURCE_LANGUAGE
+		_target_language = DEFAULT_TARGET_LANGUAGE
 
 # Save all settings to config file
 func save_settings() -> void:
@@ -98,6 +110,8 @@ func save_settings() -> void:
 	config.set_value("embedding", "model", _embedding_model)
 	config.set_value("cache", "location", _cache_location)
 	config.set_value("editor", "line_length", _editor_line_length)
+	config.set_value("dictionary", "source_language", _source_language)
+	config.set_value("dictionary", "target_language", _target_language)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
@@ -176,6 +190,22 @@ func get_version() -> String:
 # Editor line length setter
 func set_editor_line_length(length: int) -> void:
 	_editor_line_length = length
+	save_settings()
+
+# Dictionary/Thesaurus language getters
+func get_source_language() -> String:
+	return _source_language
+
+func get_target_language() -> String:
+	return _target_language
+
+# Dictionary/Thesaurus language setters
+func set_source_language(language: String) -> void:
+	_source_language = language
+	save_settings()
+
+func set_target_language(language: String) -> void:
+	_target_language = language
 	save_settings()
 
 # Settings panel management
