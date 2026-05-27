@@ -282,9 +282,10 @@ func _on_word_selected(file_path: String, line_number: int, word_index: int, wor
 
 	# Clear old dictionary cache
 	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(_selected_word, current_paragraph_text)
-	_update_dictionary_display()
 
-
+	var active_tab: int = $TabContainer.get_current_tab()
+	if active_tab == DICTIONARY_TAB:
+		_update_dictionary_display()
 
 func _on_paragraph_selected(file_path: String, line_number: int):
 	current_file_path = file_path
@@ -299,14 +300,14 @@ func _on_paragraph_selected(file_path: String, line_number: int):
 	_corrected_text = ""
 	_enhanced_text = ""
 	_suggestion_text = ""
-	
+
 	# Load ALL analysis types for this paragraph
 	_grammar_cache_data = AnalysisManager.GrammarService.get_grammar_cache(current_paragraph_hash)
 	_style_cache_data = AnalysisManager.StyleService.get_style_cache(current_paragraph_hash)
 	_structure_cache_data = AnalysisManager.StructureService.get_structure_cache(current_paragraph_hash)
 	_cohesion_cache_data = AnalysisManager.CohesionService.get_cohesion(current_paragraph_hash, current_file_path)
 	_file_cohesion_stats = AnalysisManager.CohesionService.get_file_cohesion_stats(current_file_path)
-	
+
 	# Get the active tab
 	var active_tab: int = $TabContainer.get_current_tab()
 
