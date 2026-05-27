@@ -125,15 +125,10 @@ func _on_theme_changed() -> void:
 
 # gdlint:ignore-function:long-function,deep-nesting
 func _update_dictionary_display() -> void:
-	# Fetch word info with context from the paragraph
-	# First check cache, then request async fetch
-	var cached_info: Dictionary = AnalysisManager.DictionaryService.get_cached_word_info(_selected_word, current_paragraph_text)
-	if not cached_info.is_empty():
-		# Use cached data immediately
-		_dictionary_cache_data = cached_info
-		_on_word_info_ready(_selected_word, cached_info)
-	else:
-		# Request async fetch if tab is open
+	if _selected_word_index == -1 or _selected_word.is_empty():
+		return
+
+	if _dictionary_cache_data.is_empty():
 		AnalysisManager.DictionaryService.get_word_info(_selected_word, current_paragraph_text)
 
 	# Update dictionary tab with word info
@@ -286,7 +281,9 @@ func _on_word_selected(file_path: String, line_number: int, word_index: int, wor
 	current_paragraph_text = para_data.get("text", "")
 
 	# Clear old dictionary cache
-	_dictionary_cache_data = {}
+	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(_selected_word, current_paragraph_text)
+	_update_dictionary_display()
+
 
 
 func _on_paragraph_selected(file_path: String, line_number: int):

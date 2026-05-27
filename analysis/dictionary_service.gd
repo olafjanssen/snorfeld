@@ -26,7 +26,7 @@ func _ready() -> void:
 ## word: The word to look up
 ## context: The sentence or paragraph for context (used in LLM prompt but NOT in cache key)
 ## Returns: Dictionary with 'definition' and 'synonyms' arrays
-func get_word_info(word: String, context: String = "") -> Dictionary:
+func get_word_info(word: String, context: String) -> Dictionary:
 	# Ensure cache is loaded
 	var cache_dir: String = _get_dictionary_cache_dir()
 	_ensure_cache_loaded(cache_dir)
@@ -71,7 +71,7 @@ func get_word_info(word: String, context: String = "") -> Dictionary:
 
 ## Get word info synchronously from cache only (for tooltips)
 ## Returns empty dict if not cached
-func get_cached_word_info(word: String, context: String = "") -> Dictionary:
+func get_cached_word_info(word: String, context) -> Dictionary:
 	# Ensure cache is loaded
 	var cache_dir: String = _get_dictionary_cache_dir()
 	_ensure_cache_loaded(cache_dir)
@@ -79,7 +79,7 @@ func get_cached_word_info(word: String, context: String = "") -> Dictionary:
 	var source_lang: String = AppConfig.get_source_language()
 	var target_lang: String = AppConfig.get_target_language()
 	# Match the cache key format from get_word_info (no context)
-	var cache_key: String = _make_cache_key(word, source_lang, target_lang, HashingUtils.hash_md5(context))
+	var cache_key: String = _make_cache_key(word, source_lang, target_lang, context)
 
 	if memory_cache.has(cache_key):
 		return memory_cache[cache_key]
@@ -182,7 +182,8 @@ func _parse_dictionary_response(response: String) -> Dictionary:
 	return {"error": "Failed to parse LLM response", "raw_response": response}
 
 ## Make a cache key from word and languages (NO context to avoid mismatches)
-func _make_cache_key(word: String, source_lang: String, target_lang: String, context_hash: String = "") -> String:
+func _make_cache_key(word: String, source_lang: String, target_lang: String, context: String) -> String:
+	var context_hash : String = HashingUtils.hash_md5(context)
 	return "%s|%s|%s|%s" % [word.to_lower(), source_lang, target_lang, context_hash]
 
 ## Override _get_cache_key to use our custom key

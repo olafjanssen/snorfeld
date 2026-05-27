@@ -4,6 +4,8 @@ extends RefCounted
 
 ## Create an MD5 hash from a string
 static func hash_md5(input: String) -> String:
+	if input.is_empty():
+		return "";
 	var hash_ctx := HashingContext.new()
 	hash_ctx.start(HashingContext.HASH_MD5)
 	hash_ctx.update(input.to_utf8_buffer())
