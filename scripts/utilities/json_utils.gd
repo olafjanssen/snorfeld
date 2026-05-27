@@ -12,6 +12,7 @@ static func parse_json(json_string: String) -> Dictionary:
 	if error == OK:
 		return json.get_data()
 	else:
+		print(json_string)
 		push_error("JSON parse error at line %d: %s" % [json.get_error_line(), json.get_error_message()])
 		return {}
 

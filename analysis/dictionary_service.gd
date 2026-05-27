@@ -239,9 +239,6 @@ func _emit_task_completed(remaining: int, completed_word: String = "", completed
 	if completed_word != "" and not completed_result.is_empty():
 		word_info_ready.emit(completed_word, completed_result)
 
-
-	return await get_word_info(word, sentence)
-
 ## Extract sentence containing a specific word from paragraph
 func _extract_sentence_containing_word(paragraph: String, word: String) -> String:
 	var sentences: PackedStringArray = paragraph.split(". ")

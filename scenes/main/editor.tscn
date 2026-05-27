@@ -150,7 +150,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="ParagraphCheck" parent="VBoxContainer/HSplitContainer" unique_id=242299029 instance=ExtResource("7_5lcyj")]
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1364190975]

@@ -12,8 +12,8 @@ extends RefCounted
 const GRAMMAR_PROMPT := """
 You are a helpful writing assistant. Analyze the following text and provide:
 1. A corrected version with improved spelling and grammar (keep the original meaning),
-   be aware the text may contain dialogue between \"...\" and MarkDown markup.
-2. A brief explanation of the changes made
+   be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
+2. A brief textual explanation of the changes made
 
 Context:
 {context}
@@ -22,17 +22,18 @@ Paragraph to analyze:
 {paragraph}
 
 Respond with a JSON object containing 'corrected' and 'explanation' fields:
-{{
+{
   \"corrected\": \"[corrected text]\",
-  \"explanation\": \"[brief explanation of changes]\"
-}}
+  \"explanation\": \"[brief textual explanation of changes]\"
+}
 """
 
 # Style analysis prompt template
 const STYLE_PROMPT := """
 You are a helpful writing assistant. Analyze the following text and provide:
-1. An enhanced version with improved style, flow, and readability (keep the original meaning)
-2. A brief explanation of the stylistic improvements made
+1. An enhanced version with improved style, flow, and readability (keep the original meaning),
+   be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
+2. A brief textual explanation of the stylistic improvements made
 
 Context:
 {context}
@@ -41,17 +42,18 @@ Paragraph to analyze:
 {paragraph}
 
 Respond with a JSON object containing 'enhanced' and 'explanation' fields:
-{{
+{
   \"enhanced\": \"[enhanced text]\",
-  \"explanation\": \"[brief explanation of stylistic changes]\"
-}}
+  \"explanation\": \"[brief textual explanation of stylistic changes]\"
+}
 """
 
 # Structure analysis prompt template
 const STRUCTURE_PROMPT := """
 You are a helpful writing assistant specializing in story structure. Analyze the following text and provide:
-1. A rewrite for this paragraph to improve plot, pacing, or structural flow
-2. A brief explanation of how this suggestion enhances the narrative
+1. A rewrite for this paragraph to improve plot, pacing, or structural flow,
+   be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
+2. A brief textual explanation of how this suggestion enhances the narrative
 
 Context:
 {context}
@@ -60,10 +62,10 @@ Paragraph to analyze:
 {paragraph}
 
 Respond with a JSON object containing 'suggestion' and 'explanation' fields:
-{{
+{
   \"suggestion\": \"[structural suggestion]\",
-  \"explanation\": \"[brief explanation of the structural improvement]\"
-}}
+  \"explanation\": \"[brief textual explanation of the structural improvement]\"
+}
 """
 
 # ============================================================================
