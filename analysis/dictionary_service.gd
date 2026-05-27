@@ -84,19 +84,22 @@ func _analyze(payload: Dictionary) -> Dictionary:
 
 	# Generate response from LLM
 	var response: Dictionary = await LLMClient.generate_json("", prompt, {"temperature": 0.3, "max_tokens": 512})
-	
+
 	var result: Dictionary
-	if response.get("parsed_json", {}).is_empty() and not response.get("error", null):
-		# Try to parse raw response
-		var raw_response: String = response.get("raw_response", "")
-		if raw_response != "":
-			result = _parse_dictionary_response(raw_response)
-		else:
-			result = {"error": "No response from LLM", "word": word}
-	elif response.get("error", null):
+	if response.get("error", null) != null:
+		# LLM returned an error
 		result = {"error": response["error"], "word": word}
-	else:
+	elif response.get("parsed_json", null) != null:
+		# Successfully parsed JSON
 		result = response["parsed_json"]
+	elif response.get("raw_response", "") != "":
+		# Try to parse raw response
+		result = _parse_dictionary_response(response["raw_response"])
+		if result.has("error") and result["error"] == "Failed to parse LLM response":
+			result["word"] = word
+	else:
+		# No response from LLM
+		result = {"error": "No response from LLM", "word": word}
 
 	# Add metadata for caching
 	if not result.has("error"):
@@ -181,38 +184,35 @@ func _ensure_cache_loaded(_cache_dir: String) -> void:
 ## Override _process_task to skip file-based cache loading
 ## We handle our own caching since we're word-based, not file-based
 func _process_task(task: Dictionary) -> void:
-	
+	# Store task info before processing for signal emission
+	var task_word: String = task.get("word", "")
+	var task_hash: String = _get_cache_key(task)
+
 	# Call our analyze directly - skip AnalysisService's file-based logic
 	var result: Dictionary = await _analyze(task)
 
 	if result == null or result.is_empty():
 		# Clear queued flag on error
-		var task_key: String = _get_cache_key(task)
-		if queued_keys.has(task_key):
-			queued_keys.erase(task_key)
+		if queued_keys.has(task_hash):
+			queued_keys.erase(task_hash)
 		return
 
 	# Store in memory cache
-	var task_key: String = _get_cache_key(task)
-	memory_cache[task_key] = result
+	memory_cache[task_hash] = result
 
 	# Clear queued flag
-	if queued_keys.has(task_key):
-		queued_keys.erase(task_key)
+	if queued_keys.has(task_hash):
+		queued_keys.erase(task_hash)
 
-	_emit_task_completed(task_queue.size())
+	# Emit completion with task info for signal
+	_emit_task_completed(task_queue.size(), task_word, result)
 
 ## Override _emit_task_completed to also emit word_info_ready signal
-func _emit_task_completed(remaining: int) -> void:
+func _emit_task_completed(remaining: int, completed_word: String = "", completed_result: Dictionary = {}) -> void:
 	super._emit_task_completed(remaining)
-	# If we have a completed task, emit the word_info_ready signal
-	if task_queue.size() > 0:
-		var last_task: Dictionary = task_queue[task_queue.size() - 1]
-		if last_task.has("word"):
-			var word: String = last_task["word"]
-			if memory_cache.has(last_task.get("hash", "")):
-				var info: Dictionary = memory_cache[last_task.get("hash", "")]
-				word_info_ready.emit(word, info)
+	# Emit the word_info_ready signal with the completed task info
+	if completed_word != "" and not completed_result.is_empty():
+		word_info_ready.emit(completed_word, completed_result)
 
 ## Get word info with context from a sentence
 ## Extracts the sentence containing the word from the paragraph
