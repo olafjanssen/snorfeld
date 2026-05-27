@@ -20,6 +20,7 @@ func _ready() -> void:
 	load_theme_settings()
 	load_editor_settings()
 	load_cache_settings()
+	load_dictionary_settings()
 
 	# Detect screen DPI and set appropriate scale
 	var dpi := DisplayServer.screen_get_dpi(0)
@@ -52,6 +53,10 @@ func load_theme_settings() -> void:
 func load_editor_settings() -> void:
 	$ScrollContainer/MarginContainer/VBoxContainer/LineLengthSpinBox.value = AppConfig.get_editor_line_length()
 
+func load_dictionary_settings() -> void:
+	$ScrollContainer/MarginContainer/VBoxContainer/SourceLanguageLineEdit.text = AppConfig.get_source_language()
+	$ScrollContainer/MarginContainer/VBoxContainer/TargetLanguageLineEdit.text = AppConfig.get_target_language()
+
 func save_llm_settings() -> void:
 	AppConfig.set_llm_endpoint($ScrollContainer/MarginContainer/VBoxContainer/EndpointLineEdit.text)
 	AppConfig.set_llm_check_endpoint($ScrollContainer/MarginContainer/VBoxContainer/CheckEndpointLineEdit.text)
@@ -79,6 +84,10 @@ func save_editor_settings() -> void:
 	AppConfig.set_editor_line_length(int($ScrollContainer/MarginContainer/VBoxContainer/LineLengthSpinBox.value))
 	EventBus.editor_resized.emit()
 
+func save_dictionary_settings() -> void:
+	AppConfig.set_source_language($ScrollContainer/MarginContainer/VBoxContainer/SourceLanguageLineEdit.text)
+	AppConfig.set_target_language($ScrollContainer/MarginContainer/VBoxContainer/TargetLanguageLineEdit.text)
+
 func _on_theme_selected() -> void:
 	save_theme_settings()
 
@@ -87,6 +96,7 @@ func _on_close_pressed() -> void:
 	save_theme_settings()
 	save_cache_settings()
 	save_editor_settings()
+	save_dictionary_settings()
 	EventBus.settings_closed.emit()
 	queue_free()
 
@@ -96,5 +106,6 @@ func _on_close_requested() -> void:
 	save_theme_settings()
 	save_cache_settings()
 	save_editor_settings()
+	save_dictionary_settings()
 	EventBus.settings_closed.emit()
 	queue_free()

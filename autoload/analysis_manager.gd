@@ -11,6 +11,8 @@ const CharacterServiceScript = preload("res://analysis/character_service.gd")
 const ObjectServiceScript = preload("res://analysis/object_service.gd")
 const EmbeddingServiceScript = preload("res://analysis/embedding_service.gd")
 const CohesionServiceScript = preload("res://analysis/cohesion_service.gd")
+const DictionaryServiceScript = preload("res://analysis/dictionary_service.gd")
+const CohesionServiceScript = preload("res://analysis/cohesion_service.gd")
 
 # Public references to child services
 var GrammarService: Node
@@ -19,6 +21,8 @@ var StructureService: Node
 var CharacterService: Node
 var ObjectService: Node
 var EmbeddingService: Node
+var CohesionService: Node
+var DictionaryService: Node
 var CohesionService: Node
 
 func _ready() -> void:
@@ -50,3 +54,7 @@ func _ready() -> void:
 	CohesionService = CohesionServiceScript.new()
 	add_child(CohesionService)
 	CohesionService.name = "CohesionService"
+
+	DictionaryService = DictionaryServiceScript.new()
+	add_child(DictionaryService)
+	DictionaryService.name = "DictionaryService"

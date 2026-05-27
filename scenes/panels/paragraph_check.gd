@@ -6,6 +6,9 @@ extends Control
 @onready var StyleExplanation: Label = $TabContainer/Style/MarginContainer/VBoxContainer/StyleExplanation
 @onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
 @onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
+@onready var DefinitionValue: Label = $TabContainer/Dictionary/MarginContainer/VBoxContainer/DefinitionValue
+@onready var SynonymsList: PaneledRichTextLabel = $TabContainer/Dictionary/MarginContainer/VBoxContainer/SynonymsList
+@onready var WordValue: Label = $TabContainer/Dictionary/MarginContainer/VBoxContainer/WordValue
 
 # Stats tab references
 @onready var HeaderLabel: Label = $TabContainer/Stats/MarginContainer/VBoxContainer/HeaderLabel
@@ -33,6 +36,7 @@ var current_paragraph_hash: String = ""
 var _corrected_text: String = ""
 var _enhanced_text: String = ""
 var _suggestion_text: String = ""
+var bgcolor: String = ""
 
 # Store cache data for all analysis types
 var _grammar_cache_data: Dictionary = {}
@@ -40,6 +44,11 @@ var _style_cache_data: Dictionary = {}
 var _structure_cache_data: Dictionary = {}
 var _cohesion_cache_data: Dictionary = {}
 var _file_cohesion_stats: Dictionary = {}
+var _dictionary_cache_data: Dictionary = {}
+
+# Store selected word for dictionary lookup
+var _selected_word: String = ""
+var _selected_word_index: int = -1
 
 func _ready():
 	EventBus.paragraph_selected.connect(_on_paragraph_selected)
@@ -47,8 +56,13 @@ func _ready():
 	EventBus.theme_changed.connect(_on_theme_changed)
 	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
 	EventBus.editor_content_changed.connect(_on_editor_content_changed)
+	EventBus.word_selected.connect(_on_word_selected)
+	# Connect to dictionary word_info_ready signal
+	AnalysisManager.DictionaryService.word_info_ready.connect(_on_word_info_ready)
 	# Connect to tab changed signal
 	$TabContainer.tab_changed.connect(_on_tab_changed)
+
+	bgcolor = get_theme_color("diff_change_bg", "DiffCalculator").to_html()
 
 # gdlint:ignore-function:long-function
 func _update_diff_displays() -> void:
@@ -86,8 +100,82 @@ func _update_diff_displays() -> void:
 func _on_theme_changed() -> void:
 	_update_diff_displays()
 
+func _update_dictionary_display() -> void:
+	# Update dictionary tab with word info
+	if _dictionary_cache_data.is_empty():
+		WordValue.text = _selected_word if _selected_word != "" else "No word selected"
+		DefinitionValue.text = ""
+		SynonymsList.set_text("")
+		return
+
+	WordValue.text = _selected_word
+	DefinitionValue.text = _dictionary_cache_data.get("definition", "")
+
+	# Build synonyms list with clickable links
+	var synonyms: Array = _dictionary_cache_data.get("synonyms", [])
+	if synonyms.size() > 0:
+		# Find the word in the line (with punctuation)
+		var word_info: Dictionary = _find_word_in_line()
+		if word_info.is_empty():
+			SynonymsList.set_text("No synonyms available")
+			return
+		var word_index: int = word_info["word_index"]
+		var actual_word: String = word_info["actual_word"]
+		var synonyms_text: String = "[ul]"
+		for syn in synonyms:
+			if syn is Dictionary:
+				var synonym_word: String = syn.get("word", "")
+				var difference: String = syn.get("difference", "")
+				# Create clickable meta for this synonym
+				var meta: String = _create_synonym_meta(word_index, _selected_word, synonym_word)
+				synonyms_text += "[url=" + meta + "][bgcolor=" + bgcolor + "]" + synonym_word + "[/bgcolor][/url]: " + difference + "\n"
+			synonyms_text += "[/ul]"
+			SynonymsList.set_text(synonyms_text)
+	else:
+		SynonymsList.set_text("No synonyms available")
+
+func _find_word_in_line() -> Dictionary:
+	# Get the actual word at the stored word_index with its punctuation
+	# Returns {word_index: int, actual_word: String} or empty dict if not found
+
+	if _selected_word_index < 0 or current_paragraph_text == "":
+		return {}
+
+	var words: PackedStringArray = current_paragraph_text.split(" ")
+	if _selected_word_index >= words.size():
+		return {}
+
+	return {"word_index": _selected_word_index, "actual_word": words[_selected_word_index]}
+
+func _is_punctuation(character: String) -> bool:
+	var code: int = ord(character)
+	# ASCII punctuation
+	return (code >= 33 and code <= 47) or (code >= 58 and code <= 64) or (code >= 91 and code <= 96) or (code >= 123 and code <= 126)
+
+func _create_synonym_meta(word_index: int, old_word: String, new_word: String) -> String:
+	# Format: change|word_index|base64(old_word)|base64(new_word)
+	# Preserve trailing punctuation from old_word on new_word
+	# e.g., if old_word is "Okay," and new_word is "Alright", we want "Alright,"
+	var new_word_with_punct: String = new_word
+	# Get trailing punctuation from old_word
+	var old_trailing: String = ""
+	var old_clean: String = old_word
+	while old_clean.length() > 0 and _is_punctuation(old_clean.substr(old_clean.length() - 1, 1)):
+		old_trailing = old_clean.substr(old_clean.length() - 1, 1) + old_trailing
+		old_clean = old_clean.substr(0, old_clean.length() - 1)
+	# Get leading punctuation from old_word
+	var old_leading: String = ""
+	while old_clean.length() > 0 and old_clean.length() < old_word.length() and _is_punctuation(old_clean.substr(0, 1)):
+		old_leading += old_clean.substr(0, 1)
+		old_clean = old_clean.substr(1)
+	new_word_with_punct = old_leading + new_word + old_trailing
+
+	var encoded_old: String = Marshalls.utf8_to_base64(old_word)
+	var encoded_new: String = Marshalls.utf8_to_base64(new_word_with_punct)
+	return "change|%d|%s|%s" % [word_index, encoded_old, encoded_new]
+
 func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
-	if service_type not in ['grammar','style','structure','cohesion']:
+	if service_type not in ['grammar','style','structure','cohesion','dictionary']:
 		return
 
 	# When a cache task completes, refresh the display for the current paragraph
@@ -103,6 +191,14 @@ func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 		# Update display for the current active tab
 		var active_tab: int = $TabContainer.get_current_tab()
 		_update_display_for_active_tab(active_tab)
+
+func _on_word_info_ready(word: String, info: Dictionary) -> void:
+	# Store the word info for display
+	_dictionary_cache_data = info
+	_selected_word = word
+	# If dictionary tab is active, update display
+	if $TabContainer.get_current_tab() == 4:
+		_update_dictionary_display()
 
 func _on_diff_span_clicked(operation: String, word_index: int, old_text: String, new_text: String):
 	# old_text and new_text are already properly set by clickable_label.gd
@@ -125,6 +221,32 @@ func _on_editor_content_changed(path: String, _content: String):
 	current_paragraph_text = para_data.get("text", "")
 	_update_diff_displays()
 
+func _on_word_selected(file_path: String, line_number: int, word_index: int, word: String):
+	# Store the selected word and its index
+	_selected_word = word
+	_selected_word_index = word_index
+	current_file_path = file_path
+	current_line_number = line_number
+
+	# Get the paragraph containing the word for context
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	current_paragraph_hash = para_data.get("hash", "")
+	current_paragraph_text = para_data.get("text", "")
+
+	# Clear old dictionary cache
+	_dictionary_cache_data = {}
+
+	# Fetch word info with context from the paragraph
+	# First check cache, then request async fetch
+	var cached_info: Dictionary = AnalysisManager.DictionaryService.get_cached_word_info(word, current_paragraph_text)
+	if not cached_info.is_empty():
+		# Use cached data immediately
+		_dictionary_cache_data = cached_info
+		_on_word_info_ready(word, cached_info)
+	else:
+		# Request async fetch
+		AnalysisManager.DictionaryService.get_word_info(word, current_paragraph_text)
+
 func _on_paragraph_selected(file_path: String, line_number: int):
 	current_file_path = file_path
 	current_line_number = line_number
@@ -138,6 +260,8 @@ func _on_paragraph_selected(file_path: String, line_number: int):
 	_corrected_text = ""
 	_enhanced_text = ""
 	_suggestion_text = ""
+	_dictionary_cache_data = {}
+	_selected_word = ""
 
 	# Load ALL analysis types for this paragraph
 	_grammar_cache_data = AnalysisManager.GrammarService.get_grammar_cache(current_paragraph_hash)
@@ -197,6 +321,9 @@ func _update_display_for_active_tab(tab_index: int):
 				return
 		3:  # Stats tab
 			_update_stats_tab()
+			return
+		4:  # Dictionary tab
+			_update_dictionary_display()
 			return
 
 	_update_diff_displays()

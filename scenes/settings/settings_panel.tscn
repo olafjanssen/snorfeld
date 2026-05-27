@@ -167,6 +167,31 @@ min_value = 10.0
 max_value = 200.0
 value = 66.0
 
+[node name="HSeparator5" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=60580145]
+layout_mode = 2
+
+[node name="DictionarySettingsLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=149477150]
+layout_mode = 2
+text = "Dictionary Settings"
+
+[node name="SourceLanguageLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1710866677]
+layout_mode = 2
+text = "Source Language (descriptions):"
+
+[node name="SourceLanguageLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=2063742029]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "en"
+
+[node name="TargetLanguageLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1710866678]
+layout_mode = 2
+text = "Target Language (writing):"
+
+[node name="TargetLanguageLineEdit" type="LineEdit" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=2063742030]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "en"
+
 [node name="CloseButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer" unique_id=1992816154]
 layout_mode = 2
 text = "Close"

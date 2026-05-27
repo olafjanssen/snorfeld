@@ -83,6 +83,8 @@ func load_settings() -> void:
 		_editor_line_length = config.get_value("editor", "line_length", DEFAULT_EDITOR_LINE_LENGTH)
 		_cohesion_method = config.get_value("cohesion", "method", DEFAULT_COHESION_METHOD)
 		_cohesion_window_size = config.get_value("cohesion", "window_size", DEFAULT_COHESION_WINDOW_SIZE)
+		_source_language = config.get_value("dictionary", "source_language", DEFAULT_SOURCE_LANGUAGE)
+		_target_language = config.get_value("dictionary", "target_language", DEFAULT_TARGET_LANGUAGE)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -94,6 +96,8 @@ func load_settings() -> void:
 		_embedding_model = DEFAULT_EMBEDDING_MODEL
 		_cache_location = DEFAULT_CACHE_LOCATION
 		_editor_line_length = DEFAULT_EDITOR_LINE_LENGTH
+		_source_language = DEFAULT_SOURCE_LANGUAGE
+		_target_language = DEFAULT_TARGET_LANGUAGE
 
 # Save all settings to config file
 func save_settings() -> void:
@@ -110,6 +114,8 @@ func save_settings() -> void:
 	config.set_value("editor", "line_length", _editor_line_length)
 	config.set_value("cohesion", "method", _cohesion_method)
 	config.set_value("cohesion", "window_size", _cohesion_window_size)
+	config.set_value("dictionary", "source_language", _source_language)
+	config.set_value("dictionary", "target_language", _target_language)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
