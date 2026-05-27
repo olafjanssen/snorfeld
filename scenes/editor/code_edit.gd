@@ -8,6 +8,9 @@ const EDITOR_MARGIN : int = 50
 var current_file_path: String = ""
 var last_text: String = ""
 var last_cursor_line: int = -1
+var last_word_index: int = -1
+var last_word: String = ""
+
 var font_size: int
 var default_font_size : int
 var scrollContainer : ScrollContainer
@@ -124,12 +127,66 @@ func _on_caret_changed():
 		last_cursor_line = cursor_line
 		EventBus.paragraph_selected.emit(current_file_path, cursor_line + 1)
 
+	# Detect word under caret and emit word_selected if changed
+	var current_word: String = _get_word_at_caret()
+	if current_word != last_word:
+		last_word = current_word
+		if current_word != "":
+			EventBus.word_selected.emit(current_file_path, cursor_line + 1, current_word)
+
+func _get_word_at_caret() -> String:
+	var cursor_line: int = get_caret_line()
+	if cursor_line < 0:
+		return ""
+
+	var line_text: String = get_line(cursor_line)
+	var cursor_col: int = get_caret_column()
+
+	# Find the start of the word (first word boundary before caret)
+	var word_start: int = cursor_col
+	while word_start > 0:
+		var prev_char: String = line_text.substr(word_start - 1, 1)
+		if _is_word_boundary(prev_char):
+			break
+		word_start -= 1
+
+	# Find the end of the word (first word boundary after cursor_col)
+	var word_end: int = cursor_col
+	while word_end < line_text.length():
+		var char: String = line_text.substr(word_end, 1)
+		if _is_word_boundary(char):
+			break
+		word_end += 1
+
+	if word_end > word_start:
+		return line_text.substr(word_start, word_end - word_start)
+	return ""
+
+func _is_word_boundary(char: String) -> bool:
+	# Word boundaries: spaces, tabs, newlines, most punctuation
+	# Apostrophes and hyphens are NOT boundaries (keep contractions and hyphenated words together)
+	var code: int = ord(char)
+	# Space characters (space, tab, newline, carriage return, non-breaking space)
+	if code == 32 or code == 9 or code == 10 or code == 13 or code == 160:
+		return true
+	# ASCII punctuation - exclude apostrophe (39) and hyphen (45)
+	if (code >= 33 and code <= 44) or code == 46 or code == 47:
+		return true
+	if (code >= 58 and code <= 64) or (code >= 91 and code <= 96) or (code >= 123 and code <= 126):
+		return true
+	# Common typographic punctuation (Unicode) - exclude smart apostrophes
+	if code == 8211 or code == 8212 or code == 8220 or code == 8221:
+		return true
+	return false
+
 func _on_text_changed():
 	# Emit editor_content_changed signal when text changes
 	var current_text: String = get_text()
 	if current_text != last_text:
 		last_text = current_text
 		EventBus.editor_content_changed.emit(current_file_path, current_text)
+		# Reset last_word since text changed - caret will trigger word detection again
+		last_word = ""
 
 
 # gdlint:ignore-function:too-many-params,long-function,long-line
@@ -155,7 +212,7 @@ func _on_apply_diff_patch_command(
 
 	var paragraph: String = get_line(cursor_line)
 	var words: PackedStringArray = paragraph.split(" ")
-	
+
 	begin_complex_operation()
 
 	if operation == "delete":

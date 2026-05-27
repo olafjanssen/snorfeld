@@ -1,7 +1,14 @@
 [gd_scene format=3 uid="uid://bmpto71onui3w"]
 
 [ext_resource type="Script" uid="uid://ccyrsq8s2bfeu" path="res://scenes/panels/paragraph_check.gd" id="0"]
+[ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="3_oubh2"]
 [ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/components/paneled_richtextlabel.tscn" id="4_6m5l1"]
+
+[sub_resource type="FontVariation" id="FontVariation_jadwe"]
+variation_opentype = {
+1869640570: 14,
+2003265652: 800
+}
 
 [node name="ParagraphCheck" type="Control" unique_id=242299029]
 layout_mode = 3
@@ -22,6 +29,7 @@ grow_vertical = 2
 current_tab = 0
 
 [node name="Grammar" type="ScrollContainer" parent="TabContainer" unique_id=1483406397]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -174,7 +182,6 @@ text = "Structure explanation"
 autowrap_mode = 3
 
 [node name="Dictionary" type="ScrollContainer" parent="TabContainer" unique_id=161645133]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 
@@ -196,6 +203,12 @@ size_flags_vertical = 3
 layout_mode = 2
 text = "Word:"
 
+[node name="WordValue" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=800771276]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_jadwe")
+autowrap_mode = 3
+
 [node name="SmallSpacer3" type="HSeparator" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=26302086]
 layout_mode = 2
 theme_type_variation = &"HSeparator"
@@ -208,24 +221,13 @@ text = "Definition:"
 [node name="DefinitionValue" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=1531681236]
 custom_minimum_size = Vector2(10, 10)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_oubh2")
 autowrap_mode = 3
 
 [node name="MediumSpacer2" type="HSeparator" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=1616199657]
 layout_mode = 2
 theme_type_variation = &"HSeparator"
 theme_override_constants/separation = 12
-
-[node name="PartOfSpeechLabel" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=504151170]
-layout_mode = 2
-text = "Part of Speech:"
-
-[node name="SmallSpacer4" type="HSeparator" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=504151171]
-layout_mode = 2
-theme_type_variation = &"HSeparator"
-theme_override_constants/separation = 4
-
-[node name="PartOfSpeechValue" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=504151172]
-layout_mode = 2
 
 [node name="SynonymsLabel" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=834381665]
 layout_mode = 2

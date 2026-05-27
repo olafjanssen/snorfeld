@@ -18,11 +18,19 @@ func _ready() -> void:
 	# Call parent ready to set up signals and state
 	super()
 
+	# Load dictionary cache from disk
+	var cache_dir: String = _get_dictionary_cache_dir()
+	_ensure_cache_loaded(cache_dir)
+
 ## Get dictionary and thesaurus info for a word (async version)
 ## word: The word to look up
 ## context: The sentence or paragraph for context (used in LLM prompt but NOT in cache key)
 ## Returns: Dictionary with 'definition' and 'synonyms' arrays
 func get_word_info(word: String, context: String = "") -> Dictionary:
+	# Ensure cache is loaded
+	var cache_dir: String = _get_dictionary_cache_dir()
+	_ensure_cache_loaded(cache_dir)
+
 	var source_lang: String = AppConfig.get_source_language()
 	var target_lang: String = AppConfig.get_target_language()
 
@@ -41,14 +49,15 @@ func get_word_info(word: String, context: String = "") -> Dictionary:
 		return memory_cache.get(cache_key, {})
 
 	# Create payload for analysis
-	# Note: AnalysisService requires file_path, we use current_file_path from CodeEdit
+	# Note: AnalysisService requires file_path, but DictionaryService is word-based
+	# We use a placeholder since we don't need file-based caching
 	var payload: Dictionary = {
 		"hash": cache_key,
 		"word": word,
 		"context": context,
 		"source_lang": source_lang,
 		"target_lang": target_lang,
-		"file_path": current_file_path if current_file_path != "" else "dictionary.gd"
+		"file_path": "dictionary.gd"
 	}
 
 	# Queue the task
@@ -63,6 +72,10 @@ func get_word_info(word: String, context: String = "") -> Dictionary:
 ## Get word info synchronously from cache only (for tooltips)
 ## Returns empty dict if not cached
 func get_cached_word_info(word: String, context: String = "") -> Dictionary:
+	# Ensure cache is loaded
+	var cache_dir: String = _get_dictionary_cache_dir()
+	_ensure_cache_loaded(cache_dir)
+
 	var source_lang: String = AppConfig.get_source_language()
 	var target_lang: String = AppConfig.get_target_language()
 	# Match the cache key format from get_word_info (no context)
@@ -119,15 +132,14 @@ Return a JSON object with the following structure for the word '{{WORD}}':
 {
   "word": "the word itself",
   "definition": "clear, concise definition in {{SOURCE_LANG}} language",
-  "part_of_speech": "noun/verb/adjective/adverb/etc.",
   "synonyms": [
     {
       "word": "synonym1",
-      "difference": "subtle difference from the original word"
+      "difference": "subtle difference from the original word and why it could work better in the context"
     },
     {
       "word": "synonym2",
-      "difference": "subtle difference from the original word"
+      "difference": "subtle difference from the original word and why it could work better in the context"
     }
   ]
 }
@@ -176,19 +188,27 @@ func _make_cache_key(word: String, source_lang: String, target_lang: String, con
 func _get_cache_key(payload: Dictionary) -> String:
 	return payload.get("hash", "")
 
-## Override _ensure_cache_loaded to skip file-based cache (we use memory only)
-func _ensure_cache_loaded(_cache_dir: String) -> void:
-	# DictionaryService uses memory cache only
-	pass
+## Get the cache directory for dictionary
+## Uses a global cache since dictionary is word-based, not file-based
+func _get_dictionary_cache_dir() -> String:
+	# Use global cache location
+	var cache_location := AppConfig.get_cache_location()
+	if cache_location == "global":
+		# Use a dummy file path to get the global cache dir
+		var cache_dir: String = _get_global_cache_dir_for_path("dummy.txt")
+		return cache_dir.get_base_dir().path_join(cache_subdir)
+	else:
+		# For project cache, use project .snorfeld dir
+		return "res://.snorfeld".path_join(cache_subdir)
 
-## Override _process_task to skip file-based cache loading
-## We handle our own caching since we're word-based, not file-based
+## Override _process_task to use dictionary cache directory
+## We still use file-based JSONL caching but with a global cache dir
 func _process_task(task: Dictionary) -> void:
 	# Store task info before processing for signal emission
 	var task_word: String = task.get("word", "")
 	var task_hash: String = _get_cache_key(task)
 
-	# Call our analyze directly - skip AnalysisService's file-based logic
+	# Call our analyze directly
 	var result: Dictionary = await _analyze(task)
 
 	if result == null or result.is_empty():
@@ -199,6 +219,10 @@ func _process_task(task: Dictionary) -> void:
 
 	# Store in memory cache
 	memory_cache[task_hash] = result
+
+	# Save to disk
+	var cache_dir: String = _get_dictionary_cache_dir()
+	_save_to_jsonl(cache_dir, result)
 
 	# Clear queued flag
 	if queued_keys.has(task_hash):

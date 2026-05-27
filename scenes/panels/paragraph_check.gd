@@ -7,8 +7,8 @@ extends Control
 @onready var Suggestion: PaneledRichTextLabel = $TabContainer/Structure/MarginContainer/VBoxContainer/Suggestion
 @onready var StructureExplanation: Label = $TabContainer/Structure/MarginContainer/VBoxContainer/StructureExplanation
 @onready var DefinitionValue: Label = $TabContainer/Dictionary/MarginContainer/VBoxContainer/DefinitionValue
-@onready var PartOfSpeechValue: Label = $TabContainer/Dictionary/MarginContainer/VBoxContainer/PartOfSpeechValue
 @onready var SynonymsList: PaneledRichTextLabel = $TabContainer/Dictionary/MarginContainer/VBoxContainer/SynonymsList
+@onready var WordValue: Label = $TabContainer/Dictionary/MarginContainer/VBoxContainer/WordValue
 
 const PULSE_EASE: float = -4.0
 var icon_text : String = "[pulse freq=1.0 color=#ffffff40 ease=%s]✲[/pulse] " % PULSE_EASE
@@ -40,6 +40,7 @@ func _ready():
 	EventBus.theme_changed.connect(_on_theme_changed)
 	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
 	EventBus.editor_content_changed.connect(_on_editor_content_changed)
+	EventBus.word_selected.connect(_on_word_selected)
 	# Connect to dictionary word_info_ready signal
 	AnalysisManager.DictionaryService.word_info_ready.connect(_on_word_info_ready)
 	# Connect to tab changed signal
@@ -84,23 +85,22 @@ func _on_theme_changed() -> void:
 func _update_dictionary_display() -> void:
 	# Update dictionary tab with word info
 	if _dictionary_cache_data.is_empty():
-		DefinitionValue.text = "No word selected"
-		PartOfSpeechValue.text = ""
+		WordValue.text = _selected_word if _selected_word != "" else "No word selected"
+		DefinitionValue.text = ""
 		SynonymsList.set_text("")
 		return
 
+	WordValue.text = _selected_word
 	DefinitionValue.text = _dictionary_cache_data.get("definition", "")
-	PartOfSpeechValue.text = _dictionary_cache_data.get("part_of_speech", "")
 
 	# Build synonyms list
 	var synonyms: Array = _dictionary_cache_data.get("synonyms", [])
 	if synonyms.size() > 0:
-		var synonyms_text: String = ""
+		var synonyms_text: String = "[ul]"
 		for syn in synonyms:
 			if syn is Dictionary:
-				synonyms_text += "\n\n" + syn.get("word", "") + "\n" + syn.get("difference", "")
-			else:
-				synonyms_text += "\n\n" + str(syn)
+				synonyms_text += "[b]" + syn.get("word", "") + "[/b]: " + syn.get("difference", "") + "\n"
+		synonyms_text += "[/ul]"
 		SynonymsList.set_text(synonyms_text)
 	else:
 		SynonymsList.set_text("No synonyms available")
@@ -149,6 +149,31 @@ func _on_editor_content_changed(path: String, _content: String):
 	var para_data: Dictionary = BookService.get_paragraph_at_line(current_file_path, current_line_number)
 	current_paragraph_text = para_data.get("text", "")
 	_update_diff_displays()
+
+func _on_word_selected(file_path: String, line_number: int, word: String):
+	# Store the selected word
+	_selected_word = word
+	current_file_path = file_path
+	current_line_number = line_number
+
+	# Get the paragraph containing the word for context
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	current_paragraph_hash = para_data.get("hash", "")
+	current_paragraph_text = para_data.get("text", "")
+
+	# Clear old dictionary cache
+	_dictionary_cache_data = {}
+
+	# Fetch word info with context from the paragraph
+	# First check cache, then request async fetch
+	var cached_info: Dictionary = AnalysisManager.DictionaryService.get_cached_word_info(word, current_paragraph_text)
+	if not cached_info.is_empty():
+		# Use cached data immediately
+		_dictionary_cache_data = cached_info
+		_on_word_info_ready(word, cached_info)
+	else:
+		# Request async fetch
+		AnalysisManager.DictionaryService.get_word_info(word, current_paragraph_text)
 
 func _on_paragraph_selected(file_path: String, line_number: int):
 	current_file_path = file_path
