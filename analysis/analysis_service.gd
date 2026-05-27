@@ -246,7 +246,6 @@ func _ensure_cache_loaded(cache_dir: String) -> void:
 ## Load JSONL cache file into memory
 func _load_jsonl_cache(cache_dir: String) -> void:
 	var jsonl_path := cache_dir.path_join(_get_cache_filename())
-	print(service_name + " load jsonl: " + jsonl_path)
 	if not FileUtils.file_exists(jsonl_path):
 		return
 

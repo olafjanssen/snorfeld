@@ -7,6 +7,10 @@ const SIDEBAR_WIDTH: int = 200
 const MAIN_PANEL_WIDTH: int = 800
 const RIGHT_PANEL_WIDTH: int = 1600
 
+# About panel size
+const ABOUT_PANEL_WIDTH := 400
+const ABOUT_PANEL_HEIGHT := 300
+
 var story_bible: Window
 var about_panel: Window
 
@@ -48,7 +52,7 @@ func _open_about():
 	var AboutPanelScene: PackedScene = preload("res://scenes/panels/about_panel.tscn")
 	about_panel = AboutPanelScene.instantiate()
 	get_tree().root.add_child(about_panel)
-	about_panel.popup_centered(Vector2i(400, 300))
+	about_panel.popup_centered(Vector2i(ABOUT_PANEL_WIDTH, ABOUT_PANEL_HEIGHT))
 
 func _on_sidebar_left_button_pressed():
 	$VBoxContainer/HSplitContainer/TabContainer.visible = !$VBoxContainer/HSplitContainer/TabContainer.visible

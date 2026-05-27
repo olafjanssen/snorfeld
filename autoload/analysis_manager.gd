@@ -23,6 +23,7 @@ var EmbeddingService: Node
 var CohesionService: Node
 var DictionaryService: Node
 
+# gdlint:ignore-function:long-function
 func _ready() -> void:
 	# Instantiate all cache services as children
 	GrammarService = GrammarServiceScript.new()

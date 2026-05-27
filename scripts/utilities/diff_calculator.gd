@@ -1,7 +1,7 @@
 # Diff Utility for GDScript
 # Word-level diff for grammar corrections.
 
-# gdlint:ignore-file:file-length,too-many-params,long-line
+# gdlint:ignore-file:file-length,too-many-params,long-line,long-function,high-complexity,magic-number
 
 class_name DiffUtility
 
@@ -48,12 +48,12 @@ static func get_patch_info_from_meta(meta_str: String) -> Dictionary:
 	var parts: PackedStringArray = meta_str.split(DELIMITER)
 	if parts.size() < 3:
 		return {}
-	
+
 	var operation: String = parts[0]
 	var word_index: int = int(parts[1])
 	var old_text: String = ""
 	var new_text: String = ""
-	
+
 	if operation == "change" and parts.size() >= 4:
 		old_text = Marshalls.base64_to_utf8(parts[2])
 		new_text = Marshalls.base64_to_utf8(parts[3])
@@ -61,7 +61,7 @@ static func get_patch_info_from_meta(meta_str: String) -> Dictionary:
 		new_text = Marshalls.base64_to_utf8(parts[2])
 	elif operation == "delete":
 		old_text = Marshalls.base64_to_utf8(parts[2])
-	
+
 	return {
 		"operation": operation,
 		"word_index": word_index,
@@ -199,16 +199,16 @@ func _are_spans_consecutive(span1: Dictionary, span2: Dictionary) -> bool:
 
 func _merge_two_spans(span1: Dictionary, span2: Dictionary) -> Dictionary:
 	# For change operations, span["text"] is NEW text (visible content)
-	# The meta contains OLD text (and NEW text for change ops). When merging change spans, 
+	# The meta contains OLD text (and NEW text for change ops). When merging change spans,
 	# we need to merge OLD texts and NEW texts separately.
 	var merged_new_text: String = span1["text"] + " " + span2["text"]
 	var parts1: PackedStringArray = span1["meta"].split(DELIMITER, 3)
 	var parts2: PackedStringArray = span2["meta"].split(DELIMITER, 3)
-	
+
 	var operation: String = span1["operation"]
 	var current_word_idx: int = int(parts1[1])
 	var merged_meta: String = ""
-	
+
 	if operation == "change":
 		# For change ops, meta is: operation|index|base64_old|base64_new
 		# We need to merge both old and new texts

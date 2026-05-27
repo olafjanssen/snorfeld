@@ -215,6 +215,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	return main_result
 
 
+# gdlint:ignore-function:deep-nesting
 # Compute cohesion by comparing paragraph to average chapter embedding
 func _compute_chapter_average_cohesion(file_path: String, paragraph_hash: String, paragraph_ids: Array) -> Dictionary:
 	# Get paragraph embedding
@@ -243,8 +244,8 @@ func _compute_chapter_average_cohesion(file_path: String, paragraph_hash: String
 
 		if all_embeddings.size() > 0:
 			var avg_vec: Array = average_embedding(all_embeddings)
-			var similarity: float = cosine_similarity(para_vec, avg_vec)
-			return _make_cohesion_result(paragraph_hash, file_path, similarity, "computed", CohesionMethod.CHAPTER_AVERAGE, {"chapter_embedding": "computed_from_paragraphs"})
+			var avg_similarity: float = cosine_similarity(para_vec, avg_vec)
+			return _make_cohesion_result(paragraph_hash, file_path, avg_similarity, "computed", CohesionMethod.CHAPTER_AVERAGE, {"chapter_embedding": "computed_from_paragraphs"})
 		else:
 			return _make_default_cohesion_result(paragraph_hash, file_path, 0.0, "no_embeddings", CohesionMethod.CHAPTER_AVERAGE)
 

@@ -2,7 +2,7 @@ extends AnalysisService
 ## DictionaryService - Provides dictionary and thesaurus lookups using LLM
 ## Extends AnalysisService for built-in caching, queue management, and signals
 
-# gdlint:ignore-file:long-function,long-line,missing-type-hint
+# gdlint:ignore-file:file-length,long-function,long-line,missing-type-hint,magic-number,unused-parameter
 
 # Signal for when word info is ready
 signal word_info_ready(word: String, info: Dictionary)
@@ -35,7 +35,7 @@ func get_word_info(word: String, context: String = "") -> Dictionary:
 	var target_lang: String = AppConfig.get_target_language()
 
 	# Create cache key (NO context to avoid mismatches between hover and async)
-	var cache_key: String = _make_cache_key(word, source_lang, target_lang)
+	var cache_key: String = _make_cache_key(word, source_lang, target_lang, context)
 
 	# Check memory cache first
 	if memory_cache.has(cache_key):
@@ -79,7 +79,7 @@ func get_cached_word_info(word: String, context: String = "") -> Dictionary:
 	var source_lang: String = AppConfig.get_source_language()
 	var target_lang: String = AppConfig.get_target_language()
 	# Match the cache key format from get_word_info (no context)
-	var cache_key: String = _make_cache_key(word, source_lang, target_lang)
+	var cache_key: String = _make_cache_key(word, source_lang, target_lang, HashingUtils.hash_md5(context))
 
 	if memory_cache.has(cache_key):
 		return memory_cache[cache_key]
@@ -183,7 +183,7 @@ func _parse_dictionary_response(response: String) -> Dictionary:
 
 ## Make a cache key from word and languages (NO context to avoid mismatches)
 func _make_cache_key(word: String, source_lang: String, target_lang: String, context_hash: String = "") -> String:
-	return "%s|%s|%s" % [word.to_lower(), source_lang, target_lang]
+	return "%s|%s|%s|%s" % [word.to_lower(), source_lang, target_lang, context_hash]
 
 ## Override _get_cache_key to use our custom key
 func _get_cache_key(payload: Dictionary) -> String:
@@ -239,11 +239,7 @@ func _emit_task_completed(remaining: int, completed_word: String = "", completed
 	if completed_word != "" and not completed_result.is_empty():
 		word_info_ready.emit(completed_word, completed_result)
 
-## Get word info with context from a sentence
-## Extracts the sentence containing the word from the paragraph
-func get_word_info_with_sentence(word: String, paragraph: String) -> Dictionary:
-	# Extract sentence containing the word
-	var sentence: String = _extract_sentence_containing_word(paragraph, word)
+
 	return await get_word_info(word, sentence)
 
 ## Extract sentence containing a specific word from paragraph

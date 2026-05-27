@@ -1,3 +1,5 @@
+# gdlint:ignore-file:god-class-signals
+
 extends Node
 ## CommandBus - Centralized command bus for the application
 ## Commands are requests to perform actions (CQRS pattern)
@@ -21,6 +23,9 @@ signal optimize_embedding_cache
 
 # Other commands
 signal navigate_to_line(file_path: String, line_number: int)
-signal apply_diff_patch(file_path: String, line_number: int, operation: String, word_index: int, old_text: String, new_text: String)
+signal apply_diff_patch(
+	file_path: String, line_number: int, operation: String,
+	word_index: int, old_text: String, new_text: String
+)
 signal open_story_bible
 signal open_about

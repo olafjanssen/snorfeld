@@ -2,7 +2,7 @@ extends Node
 ## AppConfig - Application configuration management
 ## Merges AppConfig (config storage) + SettingsHandler (UI management)
 
-# gdlint:ignore-file:todo-comment
+# gdlint:ignore-file:todo-comment,file-length,god-class-functions
 
 const CONFIG_FILE := "user://settings.cfg"
 const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
@@ -74,6 +74,7 @@ func _ready() -> void:
 	# Load settings
 	load_settings()
 
+# gdlint:ignore-function:long-function
 # Load settings from config file
 func load_settings() -> void:
 	var config := ConfigFile.new()

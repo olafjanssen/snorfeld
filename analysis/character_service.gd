@@ -146,7 +146,6 @@ func _on_priority_character_cache_requested(file_path: String, file_content: Str
 ## ============================================================================
 
 func _on_start_analysis(service_type: String, scope: String) -> void:
-	print(service_type + " starting analysis")
 	if service_type != "CHARACTER":
 		return
 	if scope == "project":
