@@ -1,7 +1,14 @@
 [gd_scene format=3 uid="uid://bmpto71onui3w"]
 
 [ext_resource type="Script" uid="uid://ccyrsq8s2bfeu" path="res://scenes/panels/paragraph_check.gd" id="0"]
+[ext_resource type="FontFile" uid="uid://bqk0jxjqp5vgv" path="res://fonts/Inter-Italic-VariableFont_opsz,wght.ttf" id="3_oubh2"]
 [ext_resource type="PackedScene" uid="uid://tncq4cf0k61t" path="res://scenes/components/paneled_richtextlabel.tscn" id="4_6m5l1"]
+
+[sub_resource type="FontVariation" id="FontVariation_jadwe"]
+variation_opentype = {
+1869640570: 14,
+2003265652: 800
+}
 
 [node name="ParagraphCheck" type="Control" unique_id=242299029]
 layout_mode = 3
@@ -176,6 +183,7 @@ text = "Structure explanation"
 autowrap_mode = 3
 
 [node name="Stats" type="ScrollContainer" parent="TabContainer" unique_id=1122334455]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 

@@ -129,8 +129,8 @@ func _update_dictionary_display() -> void:
 				# Create clickable meta for this synonym
 				var meta: String = _create_synonym_meta(word_index, _selected_word, synonym_word)
 				synonyms_text += "[url=" + meta + "][bgcolor=" + bgcolor + "]" + synonym_word + "[/bgcolor][/url]: " + difference + "\n"
-			synonyms_text += "[/ul]"
-			SynonymsList.set_text(synonyms_text)
+		synonyms_text += "[/ul]"
+		SynonymsList.set_text(synonyms_text)
 	else:
 		SynonymsList.set_text("No synonyms available")
 
@@ -193,6 +193,10 @@ func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 		_update_display_for_active_tab(active_tab)
 
 func _on_word_info_ready(word: String, info: Dictionary) -> void:
+	# Only respond if the result is still relevant data
+	if word != _selected_word:
+		return
+		
 	# Store the word info for display
 	_dictionary_cache_data = info
 	_selected_word = word

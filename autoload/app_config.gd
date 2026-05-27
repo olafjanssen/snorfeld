@@ -17,6 +17,10 @@ const DEFAULT_LLM_MODEL := "qwen3.5:9b"
 const DEFAULT_LLM_TEMPERATURE := 0.3  # Default sampling temperature for LLM
 const DEFAULT_LLM_MAX_TOKENS := 1024
 
+# Dictionary/Thesaurus language defaults
+const DEFAULT_SOURCE_LANGUAGE := "en-us"
+const DEFAULT_TARGET_LANGUAGE := "en-us"
+
 # Embedding model defaults
 const DEFAULT_EMBEDDING_ENDPOINT := "http://localhost:11434/api/embeddings"
 const DEFAULT_EMBEDDING_MODEL := "qwen3-embedding:0.6b"
@@ -51,6 +55,10 @@ var _cache_location: String = DEFAULT_CACHE_LOCATION
 # Cohesion analysis settings
 var _cohesion_method: String = DEFAULT_COHESION_METHOD
 var _cohesion_window_size: int = DEFAULT_COHESION_WINDOW_SIZE
+
+# Language options
+var _source_language : String = DEFAULT_SOURCE_LANGUAGE
+var _target_language : String = DEFAULT_TARGET_LANGUAGE
 
 # Editor line length
 var _editor_line_length: int = DEFAULT_EDITOR_LINE_LENGTH
@@ -178,6 +186,22 @@ func get_cohesion_window_size() -> int:
 
 func has_cohesion_window_size() -> bool:
 	return _cohesion_window_size != null
+
+# Dictionary/Thesaurus language getters
+func get_source_language() -> String:
+	return _source_language
+
+func get_target_language() -> String:
+	return _target_language
+
+# Dictionary/Thesaurus language setters
+func set_source_language(language: String) -> void:
+	_source_language = language
+	save_settings()
+
+func set_target_language(language: String) -> void:
+	_target_language = language
+	save_settings()
 
 # Embedding configuration setters
 func set_embedding_endpoint(endpoint: String) -> void:
