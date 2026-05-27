@@ -9,7 +9,6 @@ var current_file_path: String = ""
 var last_text: String = ""
 var last_cursor_line: int = -1
 var last_word_index: int = -1
-var last_word: String = ""
 
 var font_size: int
 var default_font_size : int
@@ -129,27 +128,34 @@ func _on_caret_changed():
 
 	# Detect word under caret and emit word_selected if changed
 	var current_word: String = _get_word_at_caret()
-	if current_word != last_word:
-		last_word = current_word
-		if current_word != "":
-			# Find word index in the line
-			var line_text: String = get_line(cursor_line)
-			var words_in_line: PackedStringArray = line_text.split(" ")
-			var word_idx: int = 0
-			var found: bool = false
-			for i in range(words_in_line.size()):
-				# Clean the word for comparison (remove punctuation)
-				var cleaned: String = words_in_line[i].strip_edges()
-				while cleaned.length() > 0 and _is_punctuation(cleaned.substr(cleaned.length() - 1, 1)):
-					cleaned = cleaned.substr(0, cleaned.length() - 1)
-				while cleaned.length() > 0 and _is_punctuation(cleaned.substr(0, 1)):
-					cleaned = cleaned.substr(1)
-				if cleaned == current_word:
-					word_idx = i
-					found = true
-					break
-			if found:
-				EventBus.word_selected.emit(current_file_path, cursor_line + 1, word_idx, current_word)
+	if current_word.is_empty():
+		return
+
+	# Find word index in the line
+	var line_text: String = get_line(cursor_line)
+	# If caret is at the end of the line, we're probably writing and we don't emit word_selected
+	if get_caret_column() == len(line_text):
+		return
+
+	line_text = line_text.strip_edges()
+	var words_in_line: PackedStringArray = line_text.split(" ")
+	var word_idx: int = 0
+	var found: bool = false
+	for i in range(words_in_line.size()):
+		# Clean the word for comparison (remove punctuation)
+		var cleaned: String = words_in_line[i].strip_edges()
+		while cleaned.length() > 0 and _is_punctuation(cleaned.substr(cleaned.length() - 1, 1)):
+			cleaned = cleaned.substr(0, cleaned.length() - 1)
+		while cleaned.length() > 0 and _is_punctuation(cleaned.substr(0, 1)):
+			cleaned = cleaned.substr(1)
+		if cleaned == current_word:
+			word_idx = i
+			found = true
+			break
+	if found and word_idx != last_word_index:
+		print(current_word, "  ", word_idx, "  ",last_word_index)
+		last_word_index = word_idx
+		EventBus.word_selected.emit(current_file_path, cursor_line + 1, word_idx, current_word)
 
 func _is_punctuation(character: String) -> bool:
 	var code: int = ord(character)
@@ -207,9 +213,6 @@ func _on_text_changed():
 	if current_text != last_text:
 		last_text = current_text
 		EventBus.editor_content_changed.emit(current_file_path, current_text)
-		# Reset last_word since text changed - caret will trigger word detection again
-		last_word = ""
-
 
 # gdlint:ignore-function:too-many-params,long-function,long-line
 func _on_apply_diff_patch_command(

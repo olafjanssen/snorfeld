@@ -127,7 +127,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 ## Build the LLM prompt for dictionary/thesaurus lookup
 func _build_dictionary_prompt(word: String, context: String, source_lang: String, target_lang: String) -> String:
 	var prompt: String = """
-You are a helpful dictionary and thesaurus assistant.
+You are a helpful dictionary and thesaurus assistant for {{TARGET_LANG}} language.
 Return a JSON object with the following structure for the word '{{WORD}}':
 {
   "word": "the word itself",
@@ -145,12 +145,13 @@ Return a JSON object with the following structure for the word '{{WORD}}':
 }
 
 Guidelines:
-- Provide 3-8 high-quality synonyms
+- Provide 3-8 high-quality synonyms or alternatives in the target {{TARGET_LANG}} language.
 - For each synonym, explain the subtle difference in meaning/connotation in one short phrase
+- Use plain text, no Markdown markup
 - Definition should be accurate for the word in context
 - Use {{SOURCE_LANG}} language for all responses
 - Be concise but precise
-""".replace("{{WORD}}", word).replace("{{SOURCE_LANG}}", source_lang)
+""".replace("{{WORD}}", word).replace("{{SOURCE_LANG}}", source_lang).replace("{{TARGET_LANG}}", target_lang)
 
 	if context != "":
 		prompt += "\n\nContext from text: " + context
