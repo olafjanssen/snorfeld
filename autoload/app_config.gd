@@ -24,6 +24,10 @@ const DEFAULT_EMBEDDING_MODEL := "qwen3-embedding:0.6b"
 # Cache location: "local" for project folder, "global" for user data folder
 const DEFAULT_CACHE_LOCATION := "global"
 
+# Cohesion analysis defaults
+const DEFAULT_COHESION_METHOD := "chapter_average"
+const DEFAULT_COHESION_WINDOW_SIZE := 2
+
 # Editor line length default (number of characters)
 const DEFAULT_EDITOR_LINE_LENGTH := 66
 
@@ -43,6 +47,10 @@ var _embedding_model: String
 
 # Cache location setting
 var _cache_location: String = DEFAULT_CACHE_LOCATION
+
+# Cohesion analysis settings
+var _cohesion_method: String = DEFAULT_COHESION_METHOD
+var _cohesion_window_size: int = DEFAULT_COHESION_WINDOW_SIZE
 
 # Editor line length
 var _editor_line_length: int = DEFAULT_EDITOR_LINE_LENGTH
@@ -73,6 +81,8 @@ func load_settings() -> void:
 		_embedding_model = config.get_value("embedding", "model", DEFAULT_EMBEDDING_MODEL)
 		_cache_location = config.get_value("cache", "location", DEFAULT_CACHE_LOCATION)
 		_editor_line_length = config.get_value("editor", "line_length", DEFAULT_EDITOR_LINE_LENGTH)
+		_cohesion_method = config.get_value("cohesion", "method", DEFAULT_COHESION_METHOD)
+		_cohesion_window_size = config.get_value("cohesion", "window_size", DEFAULT_COHESION_WINDOW_SIZE)
 	else:
 		# Use defaults
 		_llm_endpoint = DEFAULT_LLM_ENDPOINT
@@ -98,6 +108,8 @@ func save_settings() -> void:
 	config.set_value("embedding", "model", _embedding_model)
 	config.set_value("cache", "location", _cache_location)
 	config.set_value("editor", "line_length", _editor_line_length)
+	config.set_value("cohesion", "method", _cohesion_method)
+	config.set_value("cohesion", "window_size", _cohesion_window_size)
 
 	var err := config.save(CONFIG_FILE)
 	if err != OK:
@@ -151,6 +163,16 @@ func get_embedding_model() -> String:
 func get_cache_location() -> String:
 	return _cache_location
 
+# Cohesion analysis getters
+func get_cohesion_method() -> String:
+	return _cohesion_method
+
+func get_cohesion_window_size() -> int:
+	return _cohesion_window_size
+
+func has_cohesion_window_size() -> bool:
+	return _cohesion_window_size != null
+
 # Embedding configuration setters
 func set_embedding_endpoint(endpoint: String) -> void:
 	_embedding_endpoint = endpoint
@@ -163,6 +185,15 @@ func set_embedding_model(model: String) -> void:
 # Cache location setter
 func set_cache_location(location: String) -> void:
 	_cache_location = location
+	save_settings()
+
+# Cohesion analysis setters
+func set_cohesion_method(method: String) -> void:
+	_cohesion_method = method
+	save_settings()
+
+func set_cohesion_window_size(window_size: int) -> void:
+	_cohesion_window_size = window_size
 	save_settings()
 
 # Editor line length getter

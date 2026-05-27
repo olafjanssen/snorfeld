@@ -39,7 +39,8 @@ enum CacheServiceType {
 	STRUCTURE,
 	CHARACTER,
 	OBJECT,
-	EMBEDDING
+	EMBEDDING,
+	COHESION
 }
 
 # Analysis type enum (backward compatibility)
