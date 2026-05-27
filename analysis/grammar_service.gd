@@ -45,10 +45,14 @@ func analyze_grammar(
 		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
 		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
+	# Get source and target languages
+	var source_lang: String = AppConfig.get_source_language()
+	var target_lang: String = AppConfig.get_target_language()
+
 	# Format prompt using template
 	var prompt: String = PromptTemplates.format_prompt(
 		PromptTemplates.GRAMMAR_PROMPT,
-		{"context": context, "paragraph": paragraph}
+		{"context": context, "paragraph": paragraph, "source_lang": source_lang, "target_lang": target_lang}
 	)
 
 	var options: Dictionary = {

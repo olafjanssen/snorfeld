@@ -52,9 +52,11 @@ func _build_style_context(context_before: String, context_after: String) -> Stri
 
 
 func _build_style_prompt(context: String, paragraph: String) -> String:
+	var source_lang: String = AppConfig.get_source_language()
+	var target_lang: String = AppConfig.get_target_language()
 	return PromptTemplates.format_prompt(
 		PromptTemplates.STYLE_PROMPT,
-		{"context": context, "paragraph": paragraph}
+		{"context": context, "paragraph": paragraph, "source_lang": source_lang, "target_lang": target_lang}
 	)
 
 

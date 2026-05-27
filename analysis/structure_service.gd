@@ -56,9 +56,13 @@ func _build_structure_context(full_chapter: String, context_before: String, cont
 
 
 func _build_structure_prompt(context: String, paragraph: String) -> String:
+	var source_lang: String = AppConfig.get_source_language()
+	var target_lang: String = AppConfig.get_target_language()
 	return PromptTemplates.format_prompt(PromptTemplates.STRUCTURE_PROMPT, {
 		"context": context,
-		"paragraph": paragraph
+		"paragraph": paragraph,
+		"source_lang": source_lang,
+		"target_lang": target_lang
 	})
 
 

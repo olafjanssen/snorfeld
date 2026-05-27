@@ -333,8 +333,10 @@ func _extract_objects_from_text(text: String, chapter_id: String, existing_objec
 ## Build the prompt for object extraction
 # gdlint:ignore-function:high-complexity
 func _build_object_extraction_prompt(existing_objects_json: String, chapter_id: String, text: String) -> String:
+	var source_lang: String = AppConfig.get_source_language()
+	var target_lang: String = AppConfig.get_target_language()
 	return """
-You are a helpful writing assistant specializing in object analysis for a novel. Analyze the following chapter text.
+You are a helpful writing assistant specializing in object analysis for a novel. Analyze the following chapter text in %s language.
 
 Your task is to identify ONLY tangible objects and abstract concepts (Chekhov's guns) that appear in this chapter. DO NOT include characters, people, locations, or places.
 
@@ -344,6 +346,7 @@ IMPORTANT GUIDELINES:
 - Be COMPACT: Use concise, standardized descriptions
 - Be COMPLETE: Include all relevant information revealed in this chapter
 - Only include items that are actually described or used in the chapter
+- All descriptions and explanations must be in %s language
 
 CRITICAL: DO NOT include any of the following:
 - Character names or people
@@ -356,10 +359,10 @@ Existing objects for reference:
 
 Chapter: %s
 
-Chapter Text:
+Chapter Text (in %s):
 %s
 
-For each important TANGIBLE OBJECT or ABSTRACT CONCEPT that appears in this chapter, return its complete updated profile:
+For each important TANGIBLE OBJECT or ABSTRACT CONCEPT that appears in this chapter, return its complete updated profile (all descriptions in %s):
 - name: EXACT match with existing objects if they exist
 - object_type: Array of type categories (e.g., ["weapon", "family heirloom", "gift", "tool", "symbol", "concept", "idea"])
 - description: Physical description and purpose (for tangible objects) or definition (for concepts)
@@ -386,7 +389,7 @@ Respond with a JSON object:
 	}
   ]
 }
-""" % [existing_objects_json, chapter_id, text]
+""" % [target_lang, source_lang, existing_objects_json, chapter_id, target_lang, text, source_lang]
 
 
 ## Get LLM options

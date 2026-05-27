@@ -10,61 +10,61 @@ extends RefCounted
 
 # Grammar analysis prompt template
 const GRAMMAR_PROMPT := """
-You are a helpful writing assistant. Analyze the following text and provide:
+You are a helpful writing assistant. Analyze the following text in {target_lang} language and provide:
 1. A corrected version with improved spelling and grammar (keep the original meaning),
    be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
-2. A brief textual explanation of the changes made
+2. A brief textual explanation of the changes made in {source_lang} language
 
 Context:
 {context}
 
-Paragraph to analyze:
+Paragraph to analyze (in {target_lang}):
 {paragraph}
 
 Respond with a JSON object containing 'corrected' and 'explanation' fields:
 {
-  \"corrected\": \"[corrected text]\",
-  \"explanation\": \"[brief textual explanation of changes]\"
+  \"corrected\": \"[corrected text in {target_lang}]\",
+  \"explanation\": \"[brief textual explanation of changes in {source_lang}]\"
 }
 """
 
 # Style analysis prompt template
 const STYLE_PROMPT := """
-You are a helpful writing assistant. Analyze the following text and provide:
+You are a helpful writing assistant. Analyze the following text in {target_lang} language and provide:
 1. An enhanced version with improved style, flow, and readability (keep the original meaning),
    be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
-2. A brief textual explanation of the stylistic improvements made
+2. A brief textual explanation of the stylistic improvements made in {source_lang} language
 
 Context:
 {context}
 
-Paragraph to analyze:
+Paragraph to analyze (in {target_lang}):
 {paragraph}
 
 Respond with a JSON object containing 'enhanced' and 'explanation' fields:
 {
-  \"enhanced\": \"[enhanced text]\",
-  \"explanation\": \"[brief textual explanation of stylistic changes]\"
+  \"enhanced\": \"[enhanced text in {target_lang}]\",
+  \"explanation\": \"[brief textual explanation of stylistic changes in {source_lang}]\"
 }
 """
 
 # Structure analysis prompt template
 const STRUCTURE_PROMPT := """
-You are a helpful writing assistant specializing in story structure. Analyze the following text and provide:
+You are a helpful writing assistant specializing in story structure. Analyze the following text in {target_lang} language and provide:
 1. A rewrite for this paragraph to improve plot, pacing, or structural flow,
    be aware the text may contain dialogue between \"...\" and MarkDown markup, do not add MarkDown markup of your own
-2. A brief textual explanation of how this suggestion enhances the narrative
+2. A brief textual explanation in {source_lang} language of how this suggestion enhances the narrative
 
 Context:
 {context}
 
-Paragraph to analyze:
+Paragraph to analyze (in {target_lang}):
 {paragraph}
 
 Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 {
-  \"suggestion\": \"[structural suggestion]\",
-  \"explanation\": \"[brief textual explanation of the structural improvement]\"
+  \"suggestion\": \"[structural suggestion in {target_lang}]\",
+  \"explanation\": \"[brief textual explanation of the structural improvement in {source_lang}]\"
 }
 """
 
@@ -74,21 +74,21 @@ Respond with a JSON object containing 'suggestion' and 'explanation' fields:
 
 # Character extraction prompt template
 const CHARACTER_EXTRACTION_PROMPT := """
-You are a character analysis assistant. Extract all characters from the following chapter text.
+You are a character analysis assistant. Extract all characters from the following chapter text in {target_lang} language.
 For each character mentioned, provide:
 - name: The character's name
-- description: Brief physical and personality description
-- role: Role in the story (protagonist, antagonist, supporting, etc.)
+- description: Brief physical and personality description in {source_lang} language
+- role: Role in the story (protagonist, antagonist, supporting, etc.) in {source_lang} language
 - first_mention: First line or context where they appear in this chapter
-- relationships: Connections to other characters mentioned
-- motivations: What drives this character in this chapter
-- development: How the character changes or what we learn about them
+- relationships: Connections to other characters mentioned, described in {source_lang} language
+- motivations: What drives this character in this chapter, described in {source_lang} language
+- development: How the character changes or what we learn about them, described in {source_lang} language
 
 Existing characters (for context - DO NOT re-analyze these unless they appear in the text):
 {existing_characters}
 
 Chapter ID: {chapter_id}
-Chapter text:
+Chapter text (in {target_lang}):
 {chapter_text}
 
 Important rules:
@@ -97,19 +97,20 @@ Important rules:
 - Add new characters that appear for the first time
 - Be precise about names - use canonical names from existing characters when matching
 - Return an empty characters array if no characters are mentioned
+- All descriptions, roles, and explanations must be in {source_lang} language
 
 Respond with a JSON object containing 'characters' array of character objects.
 """
 
 # Character description prompt (for single character analysis)
 const CHARACTER_DESCRIPTION_PROMPT := """
-You are a character analysis expert. Provide a detailed analysis of the following character based on the context provided.
+You are a character analysis expert. Provide a detailed analysis in {source_lang} language of the following character based on the context provided in {target_lang} language.
 
 Character name: {character_name}
-Context (excerpts where character appears):
+Context (excerpts where character appears in {target_lang}):
 {context}
 
-Provide:
+Provide all responses in {source_lang} language:
 1. Physical appearance description
 2. Personality traits
 3. Role in the story
@@ -128,14 +129,14 @@ Respond with a JSON object containing all fields.
 # Object extraction prompt template
 const OBJECT_EXTRACTION_PROMPT := """
 You are an object analysis assistant (Chekhov's gun principle).
-Extract all important objects from the following chapter text.
+Extract all important objects from the following chapter text in {target_lang} language.
 An important object is one that:
 - Appears repeatedly or has symbolic meaning
 - Could be relevant to plot development (Chekhov's gun)
 - Has emotional significance to characters
 - Represents themes or motifs
 
-For each important object, provide:
+For each important object, provide all descriptions in {source_lang} language:
 - name: The object's name or description
 - description: What it looks like, what it is
 - first_mention: First line or context where it appears in this chapter
@@ -148,7 +149,7 @@ Existing objects (for context - DO NOT re-analyze these unless they appear in th
 {existing_objects}
 
 Chapter ID: {chapter_id}
-Chapter text:
+Chapter text (in {target_lang}):
 {chapter_text}
 
 Important rules:
@@ -157,6 +158,7 @@ Important rules:
 - For existing objects, only update their data if new information is revealed
 - Add new objects that appear for the first time
 - Return an empty objects array if no important objects are mentioned
+- All descriptions and explanations must be in {source_lang} language
 
 Respond with a JSON object containing 'objects' array of object objects.
 """
@@ -167,12 +169,12 @@ Respond with a JSON object containing 'objects' array of object objects.
 
 # Passage summary prompt (for chapter-level semantic understanding)
 const PASSAGE_SUMMARY_PROMPT := """
-You are a literary analysis assistant. Provide a comprehensive summary and analysis of the following text passage.
+You are a literary analysis assistant. Provide a comprehensive summary and analysis in {source_lang} language of the following text passage in {target_lang} language.
 
-Passage:
+Passage (in {target_lang}):
 {passage}
 
-Provide:
+Provide all responses in {source_lang} language:
 1. summary: Brief summary of what happens (2-3 sentences)
 2. themes: Main themes present in this passage
 3. tone: The tone or mood of the passage

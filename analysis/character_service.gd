@@ -335,33 +335,36 @@ func _get_llm_options() -> Dictionary:
 ## Build the prompt for character extraction
 # gdlint:ignore-function:high-complexity
 func _build_character_extraction_prompt(existing_characters_json: String, chapter_id: String, text: String) -> String:
+	var source_lang: String = AppConfig.get_source_language()
+	var target_lang: String = AppConfig.get_target_language()
 	return """
-You are a helpful writing assistant specializing in character analysis for a novel. Analyze the following chapter text.
+You are a helpful writing assistant specializing in character analysis for a novel. Analyze the following chapter text in %s language.
 
-Your task is to identify the characters that appear in this chapter and provide their complete, consistent profiles. Use the existing character database to maintain consistency.
+Your task is to identify the characters that appear in this chapter and provide their complete, consistent profiles in %s language. Use the existing character database to maintain consistency.
 
 IMPORTANT GUIDELINES:
 - Be CONSISTENT: Use the EXACT same character names from existing characters when they reappear
 - Be COMPACT: Use concise, standardized traits, archetypes, and roles - avoid synonyms and duplicates
 - Be SELECTIVE: Focus on actual named characters, ignore background figures, mentions of people, and generic descriptions of characters
 - Be COMPLETE: Include all relevant information revealed in this chapter
+- All descriptions, roles, and explanations must be in %s language
 
 Existing characters for reference:
 %s
 
 Chapter: %s
 
-Chapter Text:
+Chapter Text (in %s):
 %s
 
 For each character that appears in this chapter, return their complete updated profile:
 - name: EXACT match with existing characters if they exist
-- plot_roles: Array of their role(s) in the story
+- plot_roles: Array of their role(s) in the story (in %s)
 - archetypes: Array of their character archetype(s) - use consistent, standard terms
 - traits: Array of their personality traits - use consistent, standard terms, no duplicates
-- relationships: Object of {character_name: relationship_description}
+- relationships: Object of {character_name: relationship_description} (in %s)
 - aliases: Array of OTHER NAMES they are LITERALLY called in this chapter text (only if the exact alias string appears as a name in the chapter)
-- notes: Brief description of their appearance/role in THIS chapter
+- notes: Brief description of their appearance/role in THIS chapter (in %s)
 
 IMPORTANT: Only include an alias if that exact string is used as a name for the character in this chapter. Do NOT include descriptive phrases, roles, pronouns, or empty strings as aliases.
 
@@ -379,7 +382,7 @@ Respond with a JSON object:
     }
   ]
 }
-""" % [existing_characters_json, chapter_id, text]
+""" % [target_lang, source_lang, source_lang, existing_characters_json, chapter_id, target_lang, text, source_lang, source_lang, source_lang]
 
 
 ## Call LLM with retry logic for characters
