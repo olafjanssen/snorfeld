@@ -132,7 +132,29 @@ func _on_caret_changed():
 	if current_word != last_word:
 		last_word = current_word
 		if current_word != "":
-			EventBus.word_selected.emit(current_file_path, cursor_line + 1, current_word)
+			# Find word index in the line
+			var line_text: String = get_line(cursor_line)
+			var words_in_line: PackedStringArray = line_text.split(" ")
+			var word_idx: int = 0
+			var found: bool = false
+			for i in range(words_in_line.size()):
+				# Clean the word for comparison (remove punctuation)
+				var cleaned: String = words_in_line[i].strip_edges()
+				while cleaned.length() > 0 and _is_punctuation(cleaned.substr(cleaned.length() - 1, 1)):
+					cleaned = cleaned.substr(0, cleaned.length() - 1)
+				while cleaned.length() > 0 and _is_punctuation(cleaned.substr(0, 1)):
+					cleaned = cleaned.substr(1)
+				if cleaned == current_word:
+					word_idx = i
+					found = true
+					break
+			if found:
+				EventBus.word_selected.emit(current_file_path, cursor_line + 1, word_idx, current_word)
+
+func _is_punctuation(character: String) -> bool:
+	var code: int = ord(character)
+	# ASCII punctuation
+	return (code >= 33 and code <= 47) or (code >= 58 and code <= 64) or (code >= 91 and code <= 96) or (code >= 123 and code <= 126)
 
 func _get_word_at_caret() -> String:
 	var cursor_line: int = get_caret_line()
@@ -250,29 +272,26 @@ func _on_apply_diff_patch_command(
 				insert_text(" ", cursor_line, insert_col + new_text.length())
 
 	elif operation == "change":
-		# For change operations, use old_text to determine deletion count
-		var old_words: PackedStringArray = old_text.split(" ")
-		if word_index >= 0 && word_index + old_words.size() <= words.size():
-			# Verify old words match
-			var matches: bool = true
-			for k: int in range(old_words.size()):
-				if words[word_index + k] != old_words[k]:
-					matches = false
-					break
-			if matches:
-				# Calculate range to replace
-				var start_col: int = 0
-				for i: int in range(word_index):
-					start_col += words[i].length() + 1
-				var end_col: int = start_col
-				for i: int in range(old_words.size()):
-					end_col += words[word_index + i].length()
-					if i < old_words.size() - 1:
-						end_col += 1
-				# Remove old text
+		# For change operations, use word_index to find position
+		# Then do a simple string replace within that position range
+		if word_index >= 0 and word_index < words.size():
+			# Calculate start column for this word
+			var start_col: int = 0
+			for i: int in range(word_index):
+				start_col += words[i].length() + 1
+
+			# Check if old_text appears at this position in the paragraph
+			if paragraph.substr(start_col, old_text.length()) == old_text:
+				var end_col: int = start_col + old_text.length()
 				remove_text(cursor_line, start_col, cursor_line, end_col)
-				# Insert new text
 				insert_text(new_text, cursor_line, start_col)
+			else:
+				# Fallback: try to find old_text in the paragraph
+				var pos: int = paragraph.find(old_text)
+				if pos >= 0:
+					var end_col: int = pos + old_text.length()
+					remove_text(cursor_line, pos, cursor_line, end_col)
+					insert_text(new_text, cursor_line, pos)
 
 	end_complex_operation()
 

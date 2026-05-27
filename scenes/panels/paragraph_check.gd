@@ -24,6 +24,7 @@ var current_paragraph_hash: String = ""
 var _corrected_text: String = ""
 var _enhanced_text: String = ""
 var _suggestion_text: String = ""
+var bgcolor: String = ""
 
 # Store cache data for all analysis types
 var _grammar_cache_data: Dictionary = {}
@@ -33,6 +34,7 @@ var _dictionary_cache_data: Dictionary = {}
 
 # Store selected word for dictionary lookup
 var _selected_word: String = ""
+var _selected_word_index: int = -1
 
 func _ready():
 	EventBus.paragraph_selected.connect(_on_paragraph_selected)
@@ -45,6 +47,8 @@ func _ready():
 	AnalysisManager.DictionaryService.word_info_ready.connect(_on_word_info_ready)
 	# Connect to tab changed signal
 	$TabContainer.tab_changed.connect(_on_tab_changed)
+
+	bgcolor = get_theme_color("diff_change_bg", "DiffCalculator").to_html()
 
 # gdlint:ignore-function:long-function
 func _update_diff_displays() -> void:
@@ -93,17 +97,68 @@ func _update_dictionary_display() -> void:
 	WordValue.text = _selected_word
 	DefinitionValue.text = _dictionary_cache_data.get("definition", "")
 
-	# Build synonyms list
+	# Build synonyms list with clickable links
 	var synonyms: Array = _dictionary_cache_data.get("synonyms", [])
 	if synonyms.size() > 0:
+		# Find the word in the line (with punctuation)
+		var word_info: Dictionary = _find_word_in_line()
+		if word_info.is_empty():
+			SynonymsList.set_text("No synonyms available")
+			return
+		var word_index: int = word_info["word_index"]
+		var actual_word: String = word_info["actual_word"]
 		var synonyms_text: String = "[ul]"
 		for syn in synonyms:
 			if syn is Dictionary:
-				synonyms_text += "[b]" + syn.get("word", "") + "[/b]: " + syn.get("difference", "") + "\n"
+				var synonym_word: String = syn.get("word", "")
+				var difference: String = syn.get("difference", "")
+				# Create clickable meta for this synonym
+				var meta: String = _create_synonym_meta(word_index, _selected_word, synonym_word)
+				synonyms_text += "[url=" + meta + "][bgcolor=" + bgcolor + "]" + synonym_word + "[/bgcolor][/url]: " + difference + "\n"
 		synonyms_text += "[/ul]"
 		SynonymsList.set_text(synonyms_text)
 	else:
 		SynonymsList.set_text("No synonyms available")
+
+func _find_word_in_line() -> Dictionary:
+	# Get the actual word at the stored word_index with its punctuation
+	# Returns {word_index: int, actual_word: String} or empty dict if not found
+
+	if _selected_word_index < 0 or current_paragraph_text == "":
+		return {}
+
+	var words: PackedStringArray = current_paragraph_text.split(" ")
+	if _selected_word_index >= words.size():
+		return {}
+
+	return {"word_index": _selected_word_index, "actual_word": words[_selected_word_index]}
+
+func _is_punctuation(character: String) -> bool:
+	var code: int = ord(character)
+	# ASCII punctuation
+	return (code >= 33 and code <= 47) or (code >= 58 and code <= 64) or (code >= 91 and code <= 96) or (code >= 123 and code <= 126)
+
+func _create_synonym_meta(word_index: int, old_word: String, new_word: String) -> String:
+	# Format: change|word_index|base64(old_word)|base64(new_word)
+	# Preserve trailing punctuation from old_word on new_word
+	# e.g., if old_word is "Okay," and new_word is "Alright", we want "Alright,"
+	var new_word_with_punct: String = new_word
+	# Get trailing punctuation from old_word
+	var old_trailing: String = ""
+	var old_clean: String = old_word
+	while old_clean.length() > 0 and _is_punctuation(old_clean.substr(old_clean.length() - 1, 1)):
+		old_trailing = old_clean.substr(old_clean.length() - 1, 1) + old_trailing
+		old_clean = old_clean.substr(0, old_clean.length() - 1)
+	# Get leading punctuation from old_word
+	var old_leading: String = ""
+	while old_clean.length() > 0 and old_clean.length() < old_word.length() and _is_punctuation(old_clean.substr(0, 1)):
+		old_leading += old_clean.substr(0, 1)
+		old_clean = old_clean.substr(1)
+	new_word_with_punct = old_leading + new_word + old_trailing
+
+	var encoded_old: String = Marshalls.utf8_to_base64(old_word)
+	var encoded_new: String = Marshalls.utf8_to_base64(new_word_with_punct)
+	return "change|%d|%s|%s" % [word_index, encoded_old, encoded_new]
 
 func _on_analysis_task_completed(service_type: String, _remaining: int) -> void:
 	if service_type not in ['grammar','style','structure','dictionary']:
@@ -150,9 +205,10 @@ func _on_editor_content_changed(path: String, _content: String):
 	current_paragraph_text = para_data.get("text", "")
 	_update_diff_displays()
 
-func _on_word_selected(file_path: String, line_number: int, word: String):
-	# Store the selected word
+func _on_word_selected(file_path: String, line_number: int, word_index: int, word: String):
+	# Store the selected word and its index
 	_selected_word = word
+	_selected_word_index = word_index
 	current_file_path = file_path
 	current_line_number = line_number
 

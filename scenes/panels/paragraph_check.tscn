@@ -26,7 +26,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-current_tab = 0
+current_tab = 3
 
 [node name="Grammar" type="ScrollContainer" parent="TabContainer" unique_id=1483406397]
 visible = false
@@ -231,12 +231,12 @@ theme_override_constants/separation = 12
 
 [node name="SynonymsLabel" type="Label" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=834381665]
 layout_mode = 2
-text = "Synonyms:"
+text = "Alternatives:"
 
 [node name="SmallSpacer5" type="HSeparator" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=834381666]
 layout_mode = 2
 theme_type_variation = &"HSeparator"
 theme_override_constants/separation = 4
 
-[node name="SynonymsList" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=269824063 instance=ExtResource("4_6m5l1")]
+[node name="SynonymsList" parent="TabContainer/Dictionary/MarginContainer/VBoxContainer" unique_id=1025356994 instance=ExtResource("4_6m5l1")]
 layout_mode = 2
