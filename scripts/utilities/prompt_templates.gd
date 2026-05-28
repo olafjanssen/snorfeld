@@ -206,13 +206,3 @@ static func format_prompt(template: String, vars: Dictionary) -> String:
 			value = str(value)
 		result = result.replace(placeholder, value)
 	return result
-
-## Get words from text (helper for context building)
-static func get_words(text: String, max_words: int) -> String:
-	var words := text.split(" ", false)
-	if words.size() <= max_words:
-		return text
-	var result_words := []
-	for i in range(min(words.size(), max_words)):
-		result_words.append(words[i])
-	return " ".join(result_words)

@@ -116,7 +116,7 @@ func _update_diff_displays() -> void:
 	if _suggestion_text != "":
 		var diff_utility_structure: DiffUtility = DiffUtility.new()
 		diff_utility_structure.set_control(self)
-		Suggestion.set_text(diff_utility_structure.calculate_diff(current_paragraph_text, _suggestion_text))
+		Suggestion.set_text(_suggestion_text)
 	else:
 		Suggestion.set_text("No structural suggestions.")
 
@@ -346,7 +346,7 @@ func _update_display_for_active_tab(tab_index: int):
 				_enhanced_text = _style_cache_data.get("enhanced", "")
 				StyleExplanation.text = _style_cache_data.get("explanation", "")
 			else:
-				Correction.set_text(icon_text + "Generating analysis...")
+				Enhancement.set_text(icon_text + "Generating analysis...")
 				CommandBus.priority_analysis.emit("style", current_file_path, {"line_number": current_line_number})
 				return
 		2:  # Structure tab
@@ -354,7 +354,7 @@ func _update_display_for_active_tab(tab_index: int):
 				_suggestion_text = _structure_cache_data.get("suggestion", "")
 				StructureExplanation.text = _structure_cache_data.get("explanation", "")
 			else:
-				Correction.set_text(icon_text + "Generating analysis...")
+				Suggestion.set_text(icon_text + "Generating analysis...")
 				CommandBus.priority_analysis.emit("structure", current_file_path, {"line_number": current_line_number})
 				return
 		# gdlint:ignore-next-line:magic-number

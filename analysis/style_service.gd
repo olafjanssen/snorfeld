@@ -4,7 +4,6 @@ extends AnalysisService
 # gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line
 
 # Constants for context limits
-const CONTEXT_WORDS: int = 100
 const CONTEXT_CHARACTERS: int = 1000
 
 func _ready() -> void:
@@ -32,23 +31,10 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 ## ============================================================================
 
 # Analyzes text for stylistic improvements
-func analyze_style(
-	paragraph: String,
-	context_before: String = "",
-	context_after: String = ""
-) -> Dictionary:
-	var context: String = _build_style_context(context_before, context_after)
+func analyze_style(paragraph: String, context: String = "") -> Dictionary:
 	var prompt: String = _build_style_prompt(context, paragraph)
 	var llm_response: Dictionary = await _call_style_llm(prompt)
 	return _parse_style_response(llm_response, paragraph)
-
-
-func _build_style_context(context_before: String, context_after: String) -> String:
-	if context_before.length() == 0 and context_after.length() == 0:
-		return ""
-	var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
-	var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
-	return "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
 
 
 func _build_style_prompt(context: String, paragraph: String) -> String:
@@ -94,26 +80,19 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
-	var contexts: Array = _extract_context(file_content, paragraph)
-	var context_before: String = contexts[0]
-	var context_after: String = contexts[1]
+	var context: String = _extract_context(file_content, paragraph)
 
-	var result: Dictionary = await analyze_style(paragraph, context_before, context_after)
+	var result: Dictionary = await analyze_style(paragraph, context)
 	return _build_style_cache_data(paragraph_hash, paragraph, result)
 
 
-func _extract_context(file_content: String, paragraph: String) -> Array:
-	if file_content.length() == 0 or paragraph.length() == 0:
-		return ["", ""]
+func _extract_context(file_content: String, paragraph: String) -> String:
 	var paragraph_index: int = file_content.find(paragraph)
 	if paragraph_index == -1:
-		return ["", ""]
-	var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
-	var context_before: String = file_content.substr(before_start, paragraph_index - before_start)
-	var after_start: int = paragraph_index + paragraph.length()
-	var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
-	var context_after: String = file_content.substr(after_start, after_end - after_start)
-	return [context_before, context_after]
+		return ""
+	var start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
+	var end: int = min(file_content.length(), paragraph_index + paragraph.length() + CONTEXT_CHARACTERS)
+	return file_content.substr(start, end - start)
 
 
 func _build_style_cache_data(paragraph_hash: String, paragraph: String, result: Dictionary) -> Dictionary:

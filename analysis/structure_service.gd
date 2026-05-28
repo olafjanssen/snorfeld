@@ -4,8 +4,6 @@ extends AnalysisService
 # gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line
 
 # Constants for context limits
-const FULL_CHAPTER_WORDS: int = 500
-const CONTEXT_WORDS: int = 200
 const CONTEXT_CHARACTERS: int = 1000
 
 func _ready() -> void:
@@ -35,24 +33,12 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 # Analyzes text for structural/plot/pacing enhancements
 func analyze_structure(
 	paragraph: String,
-	context_before: String = "",
-	context_after: String = "",
+	context: String = "",
 	full_chapter: String = ""
 ) -> Dictionary:
-	var context: String = _build_structure_context(full_chapter, context_before, context_after)
-	var prompt: String = _build_structure_prompt(context, paragraph)
+	var prompt: String = _build_structure_prompt(full_chapter if full_chapter.length() > 0 else context, paragraph)
 	var llm_response: Dictionary = await _call_structure_llm(prompt)
 	return _parse_structure_response(llm_response)
-
-
-func _build_structure_context(full_chapter: String, context_before: String, context_after: String) -> String:
-	if full_chapter.length() > 0:
-		return "Full chapter context:\n%s...\n\n" % PromptTemplates.get_words(full_chapter, FULL_CHAPTER_WORDS)
-	if context_before.length() > 0 or context_after.length() > 0:
-		var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
-		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
-		return "Surrounding text context:\n%s... %s...\n\n" % [before_words, after_words]
-	return ""
 
 
 func _build_structure_prompt(context: String, paragraph: String) -> String:
@@ -100,24 +86,19 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
-	var contexts: Array = _extract_context(file_content, paragraph)
+	var context: String = _extract_context(file_content, paragraph)
 
-	var result: Dictionary = await analyze_structure(paragraph, contexts[0], contexts[1], file_content)
+	var result: Dictionary = await analyze_structure(paragraph, context, file_content)
 	return _build_structure_cache_data(paragraph_hash, paragraph, result)
 
 
-func _extract_context(file_content: String, paragraph: String) -> Array:
-	if file_content.length() == 0 or paragraph.length() == 0:
-		return ["", ""]
+func _extract_context(file_content: String, paragraph: String) -> String:
 	var paragraph_index: int = file_content.find(paragraph)
 	if paragraph_index == -1:
-		return ["", ""]
-	var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
-	var context_before: String = file_content.substr(before_start, paragraph_index - before_start)
-	var after_start: int = paragraph_index + paragraph.length()
-	var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
-	var context_after: String = file_content.substr(after_start, after_end - after_start)
-	return [context_before, context_after]
+		return ""
+	var start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
+	var end: int = min(file_content.length(), paragraph_index + paragraph.length() + CONTEXT_CHARACTERS)
+	return file_content.substr(start, end - start)
 
 
 func _build_structure_cache_data(paragraph_hash: String, paragraph: String, result: Dictionary) -> Dictionary:

@@ -4,7 +4,6 @@ extends AnalysisService
 # gdlint:ignore-file:file-length,too-many-params,long-function,missing-return-type,long-line,high-complexity
 
 # Constants for context limits
-const CONTEXT_WORDS: int = 100
 const CONTEXT_CHARACTERS: int = 1000
 
 func _ready() -> void:
@@ -32,19 +31,7 @@ func _get_cache_key_from_data(data: Dictionary) -> String:
 ## ============================================================================
 
 # Analyzes text for grammar/spelling corrections
-func analyze_grammar(
-	paragraph: String,
-	context_before: String = "",
-	context_after: String = ""
-) -> Dictionary:
-	# Build context from surrounding text (trim to reasonable size)
-	var context: String = ""
-	if context_before.length() > 0 or context_after.length() > 0:
-		# Take up to CONTEXT_WORDS before and after
-		var before_words: String = PromptTemplates.get_words(context_before, CONTEXT_WORDS)
-		var after_words: String = PromptTemplates.get_words(context_after, CONTEXT_WORDS)
-		context = "Context (text before and after):\n%s... %s...\n\n" % [before_words, after_words]
-
+func analyze_grammar(paragraph: String, context: String = "") -> Dictionary:
 	# Get source and target languages
 	var source_lang: String = AppConfig.get_source_language()
 	var target_lang: String = AppConfig.get_target_language()
@@ -92,21 +79,10 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	var paragraph_hash: String = payload.get("hash", "")
 	var paragraph: String = payload.get("paragraph", "")
 	var file_content: String = payload.get("file_content", "")
-
-	# Extract context from file_content
-	var context_before: String = ""
-	var context_after: String = ""
-	if file_content.length() > 0 and paragraph.length() > 0:
-		var paragraph_index: int = file_content.find(paragraph)
-		if paragraph_index != -1:
-			var before_start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
-			context_before = file_content.substr(before_start, paragraph_index - before_start)
-			var after_start: int = paragraph_index + paragraph.length()
-			var after_end: int = min(file_content.length(), after_start + CONTEXT_CHARACTERS)
-			context_after = file_content.substr(after_start, after_end - after_start)
+	var context: String = _extract_context(file_content, paragraph)
 
 	# Call LLM to analyze grammar
-	var result: Dictionary = await analyze_grammar(paragraph, context_before, context_after)
+	var result: Dictionary = await analyze_grammar(paragraph, context)
 
 	# Build cache data
 	return {
@@ -117,6 +93,15 @@ func _analyze(payload: Dictionary) -> Dictionary:
 		"llm_model": result.get("model", "unknown"),
 		"cached_at": Time.get_unix_time_from_system()
 	}
+
+
+func _extract_context(file_content: String, paragraph: String) -> String:
+	var paragraph_index: int = file_content.find(paragraph)
+	if paragraph_index == -1:
+		return ""
+	var start: int = max(0, paragraph_index - CONTEXT_CHARACTERS)
+	var end: int = min(file_content.length(), paragraph_index + paragraph.length() + CONTEXT_CHARACTERS)
+	return file_content.substr(start, end - start)
 
 
 ## ============================================================================
