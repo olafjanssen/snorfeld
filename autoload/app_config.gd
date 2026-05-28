@@ -8,7 +8,7 @@ const CONFIG_FILE := "user://settings.cfg"
 const SettingsPanelScene = preload("res://scenes/settings/settings_panel.tscn")
 
 # Application version
-const VERSION := "0.1.0"
+const VERSION := "0.1.5"
 
 # Default settings
 const DEFAULT_LLM_ENDPOINT := "http://localhost:11434/api/generate"
