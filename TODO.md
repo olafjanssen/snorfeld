@@ -1,16 +1,23 @@
 # Development plans
 - [ ] Story Bible panel
-  - [x] Character tab with list of characters and their character sheets
   - [ ] Location tab with list of locations and their descriptions
-  - [x] Object or chekov's gun overview
   - [ ] Plot overview and suggestions
-- [ ] Usability improvements
-	- [x] Create an outline tab showing the chapter outline instead of files
-- [ ] Statistics
-  - [x] Create paragraph and chapter embeddings
 
 ## Features Done
-- [x] Architectural design
+0.1.5
+- [x] Usability improvements
+	- [x] Create an outline tab showing the chapter outline instead of files
+	- [x] Allow setting a source and target language for translation
+	- [x] Add dictionary and thesaurus lookup
+- [x] Statistics
+  - [x] Create paragraph and chapter embeddings
+  - [x] Show initial cohesion metrics
+
+0.1.0
+- [x] Story Bible panel
+  - [x] Character tab with list of characters and their character sheets
+  - [x] Object or chekov's gun overview
+-[x] Architectural design
   - [x] Create a book service that can give an entire overview of the structure of the project
   - [x] Split up complex methods and classes according to GDScript linter issues 
   - [x] Allow choosing between storing cache globally or in project folder
