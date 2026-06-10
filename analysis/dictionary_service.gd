@@ -60,6 +60,9 @@ func get_word_info(word: String, context: String) -> Dictionary:
 		"file_path": "dictionary.gd"
 	}
 
+	# Clear any pending dictionary tasks to prevent queue buildup
+	clear_queue()
+
 	# Queue the task
 	queue_task(payload, true)  # Priority = true for immediate processing
 
@@ -127,26 +130,28 @@ func _analyze(payload: Dictionary) -> Dictionary:
 ## Build the LLM prompt for dictionary/thesaurus lookup
 func _build_dictionary_prompt(word: String, context: String, source_lang: String, target_lang: String) -> String:
 	var prompt: String = """
-You are a helpful dictionary and thesaurus assistant for {{TARGET_LANG}} language.
+You are a helpful writing assistant specialized in word choice for {{TARGET_LANG}} language.
 Return a JSON object with the following structure for the word '{{WORD}}':
 {
   "word": "the word itself",
   "definition": "clear, concise definition in {{SOURCE_LANG}} language",
   "synonyms": [
     {
-      "word": "synonym1",
-      "difference": "subtle difference from the original word and why it could work better in the context"
+      "word": "alternative1",
+      "difference": "why this word fits better in the context and what subtle changes to surrounding text might be needed"
     },
     {
-      "word": "synonym2",
-      "difference": "subtle difference from the original word and why it could work better in the context"
+      "word": "alternative2",
+      "difference": "why this word fits better in the context and what subtle changes to surrounding text might be needed"
     }
   ]
 }
 
 Guidelines:
-- Provide 3-8 high-quality synonyms or alternatives in the target {{TARGET_LANG}} language.
-- For each synonym, explain the subtle difference in meaning/connotation in one short phrase
+- Focus on suggesting 3-8 alternative words that would fit BEST in the given context
+- Each alternative should be a word or short phrase that could replace the original word
+- The 'difference' field should explain: (a) the nuance of meaning, (b) why it works better in this context
+- Prioritize alternatives that require minimal changes to the rest of the sentence
 - Use plain text, no Markdown markup
 - Definition should be accurate for the word in context
 - Use {{SOURCE_LANG}} language for all responses
@@ -155,7 +160,7 @@ Guidelines:
 
 	if context != "":
 		prompt += "\n\nContext from text: " + context
-		prompt += "\nConsider the meaning of the word in this specific context."
+		prompt += "\nAnalyze how the word functions in this specific sentence and suggest alternatives that fit naturally."
 
 	prompt += "\n\nReturn ONLY the JSON object, no other text."
 

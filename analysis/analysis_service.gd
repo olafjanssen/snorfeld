@@ -220,6 +220,14 @@ func remove_task_from_queue(key: String) -> void:
 	queue_mutex.unlock()
 	_emit_queue_updated()
 
+## Remove all tasks from the queue
+func clear_queue() -> void:
+	queue_mutex.lock()
+	task_queue.clear()
+	queued_keys.clear()
+	queue_mutex.unlock()
+	_emit_queue_updated()
+
 ## Check if a key is currently queued
 func is_queued(key: String) -> bool:
 	return queued_keys.has(key)
