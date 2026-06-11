@@ -60,6 +60,7 @@ func _ready():
 
 	caret_changed.connect(_on_caret_changed)
 	text_changed.connect(_on_text_changed)
+	gui_input.connect(_on_gui_input)
 
 func _on_save_all_files():
 	# Emit final editor_content_changed with current content before shutdown
@@ -239,6 +240,24 @@ func _on_text_changed():
 	if current_text != last_text:
 		last_text = current_text
 		EventBus.editor_content_changed.emit(current_file_path, current_text)
+
+func _on_gui_input(event: InputEvent) -> void:
+	# Check for mouse release after selection (only emit signal, don't handle)
+	if event is InputEventMouseButton:
+		var mouse_event: InputEventMouseButton = event
+		if mouse_event.pressed == false and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			if has_selection():
+				var selected_text: String = get_selected_text()
+				var trimmed: String = selected_text.strip_edges()
+				if not trimmed.is_empty():
+					var words: PackedStringArray = trimmed.split(" ")
+					var non_empty_words: PackedStringArray = []
+					for w in words:
+						if not w.is_empty():
+							non_empty_words.append(w)
+					if non_empty_words.size() <= 5:
+						var cursor_line: int = get_caret_line()
+						EventBus.text_selected.emit(current_file_path, cursor_line + 1, trimmed, non_empty_words.size())
 
 # gdlint:ignore-function:too-many-params,long-function,long-line,deep-nesting,high-complexity
 func _on_apply_diff_patch_command(

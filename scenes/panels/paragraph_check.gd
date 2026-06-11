@@ -72,6 +72,10 @@ var _dictionary_cache_data: Dictionary = {}
 # Store selected word for dictionary lookup
 var _selected_word: String = ""
 var _selected_word_index: int = -1
+# Store selected phrase for multi-word dictionary lookup
+var _selected_phrase: String = ""
+# Track if dictionary lookup should be triggered (only on explicit selection)
+var _selection_active: bool = false
 
 func _ready():
 	EventBus.paragraph_selected.connect(_on_paragraph_selected)
@@ -80,6 +84,7 @@ func _ready():
 	EventBus.analysis_task_completed.connect(_on_analysis_task_completed)
 	EventBus.editor_content_changed.connect(_on_editor_content_changed)
 	EventBus.word_selected.connect(_on_word_selected)
+	EventBus.text_selected.connect(_on_text_selected)
 	# Connect to dictionary word_info_ready signal
 	AnalysisManager.DictionaryService.word_info_ready.connect(_on_word_info_ready)
 	# Connect to tab changed signal
@@ -125,7 +130,17 @@ func _on_theme_changed() -> void:
 
 # gdlint:ignore-function:long-function,deep-nesting
 func _update_dictionary_display() -> void:
-	if _selected_word_index == -1 or _selected_word.is_empty():
+	if _selected_word.is_empty():
+		WordValue.text = "No word selected"
+		DefinitionValue.text = ""
+		SynonymsList.set_text("")
+		return
+
+	# Only show dictionary info if there's an active selection
+	if not _selection_active:
+		WordValue.text = "Select text for dictionary lookup"
+		DefinitionValue.text = ""
+		SynonymsList.set_text("")
 		return
 
 	if _dictionary_cache_data.is_empty():
@@ -133,7 +148,7 @@ func _update_dictionary_display() -> void:
 
 	# Update dictionary tab with word info
 	if _dictionary_cache_data.is_empty():
-		WordValue.text = _selected_word if _selected_word != "" else "No word selected"
+		WordValue.text = "Loading..."
 		DefinitionValue.text = ""
 		SynonymsList.set_text("")
 		return
@@ -153,8 +168,8 @@ func _update_dictionary_display() -> void:
 		var synonyms_text: String = "[ul]"
 		for syn in synonyms:
 			if syn is Dictionary:
-				var synonym_word: String = syn.get("word", "")
-				var difference: String = syn.get("difference", "")
+				var synonym_word: String = str(syn.get("word", ""))
+				var difference: String = str(syn.get("difference", ""))
 				# Create clickable meta for this synonym
 				var meta: String = _create_synonym_meta(
 					word_index, _selected_word, synonym_word
@@ -269,19 +284,41 @@ func _on_editor_content_changed(path: String, _content: String):
 	_update_diff_displays()
 
 func _on_word_selected(file_path: String, line_number: int, word_index: int, word: String):
-	# Store the selected word and its index
+	# Store the selected word and its index (for UI display only)
 	_selected_word = word
 	_selected_word_index = word_index
+	_selected_phrase = ""  # Clear phrase selection when caret moves
+	_selection_active = false  # No explicit selection
 	current_file_path = file_path
 	current_line_number = line_number
 
-	# Get the paragraph containing the word for context
+	# Get the paragraph containing the word for context (for other analysis types)
 	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
 	current_paragraph_hash = para_data.get("hash", "")
 	current_paragraph_text = para_data.get("text", "")
 
-	# Clear old dictionary cache
-	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(_selected_word, current_paragraph_text)
+	# Clear dictionary display since there's no explicit selection
+	_dictionary_cache_data = {}
+
+	var active_tab: int = $TabContainer.get_current_tab()
+	if active_tab == DICTIONARY_TAB:
+		_update_dictionary_display()
+
+func _on_text_selected(file_path: String, line_number: int, text: String, _word_count: int):
+	# Store the selected phrase
+	_selected_phrase = text
+	_selected_word = text  # Also store as word for display purposes
+	_selection_active = true  # Explicit selection made
+	current_file_path = file_path
+	current_line_number = line_number
+
+	# Get the paragraph containing the text for context
+	var para_data: Dictionary = BookService.get_paragraph_at_line(file_path, line_number)
+	current_paragraph_hash = para_data.get("hash", "")
+	current_paragraph_text = para_data.get("text", "")
+
+	# Lookup the phrase in dictionary
+	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(_selected_phrase, current_paragraph_text)
 
 	var active_tab: int = $TabContainer.get_current_tab()
 	if active_tab == DICTIONARY_TAB:

@@ -2,6 +2,19 @@
 
 All notable changes to Snorfeld.
 
+## [0.1.8]
+
+### Added
+- **Analysis**
+  - Also receive alternatives for selected text (max 5 words)
+  - JSON repair llm prompt
+
+### Changed
+- **Analysis**
+  - Dictionary service no longer queues up indefinately
+  - Widened synonym search to word alternatives
+  - Dictionary service only called when selecting text not by caret changes
+
 ## [0.1.5]
 
 ### Added

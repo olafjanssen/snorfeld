@@ -266,7 +266,7 @@ func _load_jsonl_cache(cache_dir: String) -> void:
 		line = line.strip_edges()
 		if line == "":
 			continue
-		var data := JsonUtils.parse_json(line)
+		var data := JsonUtils.parse_json(line, true)  # Silent mode for cache loading
 		if data == null or data.is_empty():
 			continue
 		# Decode any encoded fields

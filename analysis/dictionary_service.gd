@@ -110,7 +110,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 		result = response["parsed_json"]
 	elif response.get("raw_response", "") != "":
 		# Try to parse raw response
-		result = _parse_dictionary_response(response["raw_response"])
+		result = await _parse_dictionary_response(response["raw_response"])
 		if result.has("error") and result["error"] == "Failed to parse LLM response":
 			result["word"] = word
 	else:
@@ -129,40 +129,46 @@ func _analyze(payload: Dictionary) -> Dictionary:
 
 ## Build the LLM prompt for dictionary/thesaurus lookup
 func _build_dictionary_prompt(word: String, context: String, source_lang: String, target_lang: String) -> String:
+	var phrase_or_word: String = "word"
+	if word.contains(" "):
+		phrase_or_word = "phrase"
+
 	var prompt: String = """
-You are a helpful writing assistant specialized in word choice for {{TARGET_LANG}} language.
-Return a JSON object with the following structure for the word '{{WORD}}':
+You are a helpful writing assistant specialized in word and phrase alternatives for {{TARGET_LANG}} language.
+Return a JSON object with the following structure for the {{PHRASE_OR_WORD}} '{{WORD}}':
 {
-  "word": "the word itself",
+  "word": "the {{PHRASE_OR_WORD}} itself",
   "definition": "clear, concise definition in {{SOURCE_LANG}} language",
   "synonyms": [
     {
-      "word": "alternative1",
-      "difference": "why this word fits better in the context and what subtle changes to surrounding text might be needed"
+      "word": "alternative1 in {{TARGET_LANG}}",
+      "difference": "why this {{PHRASE_OR_WORD}} fits better in the context and what subtle changes to surrounding text might be needed"
     },
     {
-      "word": "alternative2",
-      "difference": "why this word fits better in the context and what subtle changes to surrounding text might be needed"
+      "word": "alternative2 in {{TARGET_LANG}}",
+      "difference": "why this {{PHRASE_OR_WORD}} fits better in the context and what subtle changes to surrounding text might be needed"
     }
   ]
 }
 
 Guidelines:
-- Focus on suggesting 3-8 alternative words that would fit BEST in the given context
-- Each alternative should be a word or short phrase that could replace the original word
-- The 'difference' field should explain: (a) the nuance of meaning, (b) why it works better in this context
+- Focus on suggesting 3-8 alternative words or phrases that would fit BEST in the given context
+- Each alternative should be a word or short phrase that could replace the original {{PHRASE_OR_WORD}}
+- For multi-word selections, suggest alternative phrases of similar length and meaning
+- The 'difference' field should explain: (a) the nuance of meaning, (b) why it works better in this context, and (c) any minor grammatical adjustments needed to the surrounding sentence
 - Prioritize alternatives that require minimal changes to the rest of the sentence
+- If a better alternative requires slight rephrasing of the surrounding text, note this in the difference
 - Use plain text, no Markdown markup
-- Definition should be accurate for the word in context
+- Definition should be accurate for the {{PHRASE_OR_WORD}} in context
 - Use {{SOURCE_LANG}} language for all responses
 - Be concise but precise
-""".replace("{{WORD}}", word).replace("{{SOURCE_LANG}}", source_lang).replace("{{TARGET_LANG}}", target_lang)
+""".replace("{{WORD}}", word).replace("{{PHRASE_OR_WORD}}", phrase_or_word).replace("{{SOURCE_LANG}}", source_lang).replace("{{TARGET_LANG}}", target_lang)
 
 	if context != "":
 		prompt += "\n\nContext from text: " + context
-		prompt += "\nAnalyze how the word functions in this specific sentence and suggest alternatives that fit naturally."
+		prompt += "\nAnalyze how the " + phrase_or_word + " functions in this specific sentence and suggest alternatives that fit naturally."
 
-	prompt += "\n\nReturn ONLY the JSON object, no other text."
+	prompt += "\n\nIMPORTANT: Return ONLY a valid JSON object. Do NOT add any other text, explanations, or markdown before or after the JSON. The response must start with { and end with }."
 
 	return prompt
 
@@ -173,18 +179,55 @@ func _parse_dictionary_response(response: String) -> Dictionary:
 	if not json_data.is_empty():
 		return json_data
 
-	# If there's extra text before/after the JSON, try to extract it
-	# Look for the first { and last }
-	var start_brace: int = response.find("{")
-	var end_brace: int = response.rfind("}")
-	if start_brace >= 0 and end_brace > start_brace:
-		var json_substring: String = response.substr(start_brace, end_brace - start_brace + 1)
+	# Try to find matching JSON braces by tracking depth
+	var brace_depth: int = 0
+	var json_start: int = -1
+	var json_end: int = -1
+
+	for i in range(response.length()):
+		var character: String = response.substr(i, 1)
+		if character == "{":
+			if brace_depth == 0:
+				json_start = i
+			brace_depth += 1
+		elif character == "}":
+			brace_depth -= 1
+			if brace_depth == 0 and json_start >= 0:
+				json_end = i
+				break
+
+	# If we found a balanced JSON block, try to parse it
+	if json_start >= 0 and json_end > json_start:
+		var json_substring: String = response.substr(json_start, json_end - json_start + 1)
 		json_data = JsonUtils.parse_json(json_substring)
 		if not json_data.is_empty():
 			return json_data
 
-	# Return error
-	return {"error": "Failed to parse LLM response", "raw_response": response}
+	# Try JSON repair via LLM
+	return await _repair_json(response)
+
+## Attempt to repair malformed JSON using LLM
+func _repair_json(bad_response: String) -> Dictionary:
+	var repair_prompt: String = "You are a JSON repair assistant. The following text is supposed to be a JSON object but has formatting errors.\n"
+	repair_prompt += "Fix all JSON syntax errors and return ONLY the corrected valid JSON object with the same structure.\n\n"
+	repair_prompt += "Broken JSON:\n" + bad_response + "\n\n"
+	repair_prompt += "Return ONLY the corrected JSON object, starting with { and ending with }."
+
+	var response: Dictionary = await LLMClient.generate_json("", repair_prompt, {"temperature": 0.0, "max_tokens": 256})
+
+	if response.get("error", null) != null:
+		return {"error": "Failed to parse and repair LLM response", "raw_response": bad_response}
+
+	if response.get("parsed_json", null) != null:
+		return response["parsed_json"]
+
+	if response.get("raw_response", "") != "":
+		# Try to parse the repaired response
+		var repaired_json: Dictionary = JsonUtils.parse_json(response["raw_response"])
+		if not repaired_json.is_empty():
+			return repaired_json
+
+	return {"error": "Failed to parse and repair LLM response", "raw_response": bad_response}
 
 ## Make a cache key from word and languages (NO context to avoid mismatches)
 func _make_cache_key(word: String, source_lang: String, target_lang: String, context: String) -> String:

@@ -12,6 +12,8 @@ signal file_selected(path: String)
 signal paragraph_selected(file_path: String, line_number: int)
 # Word selection signal - carries file_path, line_number, word_index, and the selected word
 signal word_selected(file_path: String, line_number: int, word_index: int, word: String)
+# Text selection signal - carries file_path, line_number, selected_text, and word_count (1-5)
+signal text_selected(file_path: String, line_number: int, text: String, word_count: int)
 
 # For diff span clicks: old_text and new_text are provided
 # For change: both are set

@@ -5,15 +5,16 @@ extends RefCounted
 
 ## Parse JSON string to Dictionary
 ## @param json_string The JSON string to parse
+## @param silent If true, don't print errors (default: false)
 ## @return Dictionary with parsed data, or empty dict on error
-static func parse_json(json_string: String) -> Dictionary:
+static func parse_json(json_string: String, silent: bool = false) -> Dictionary:
 	var json := JSON.new()
 	var error := json.parse(json_string)
 	if error == OK:
 		return json.get_data()
 	else:
-		print(json_string)
-		push_error("JSON parse error at line %d: %s" % [json.get_error_line(), json.get_error_message()])
+		if not silent:
+			push_error("JSON parse error at line %d: %s" % [json.get_error_line(), json.get_error_message()])
 		return {}
 
 ## Stringify Dictionary to JSON string
