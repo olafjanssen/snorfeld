@@ -1,6 +1,6 @@
 # GDScript Linter - Code Quality Report
 
-Generated: 2026-05-27T19:36:33
+Generated: 2026-06-11T11:38:51
 Project: snorfeld
 
 ---
@@ -39,45 +39,38 @@ Always explain your reasoning for recommending a refactor vs an ignore directive
 | Metric | Value |
 |--------|-------|
 | Files Analyzed | 46 |
-| Total Lines | 9882 |
-| Total Issues | 14 |
-| Critical | 0 |
-| Warnings | 1 |
-| Info | 13 |
-| Debt Score | 1815 |
+| Total Lines | 9959 |
+| Total Issues | 7 |
+| Critical | 1 |
+| Warnings | 2 |
+| Info | 4 |
+| Debt Score | 1900 |
 
 ---
 
 ## Issues by File
 
-### `res://scenes/panels/paragraph_check.gd` (7 issues)
+### `res://scenes/panels/paragraph_check.gd` (3 issues)
 
-- **Line 124** [WARNING]: Function '_update_dictionary_display' has 4 nesting levels (max 3) (`deep-nesting`)
-- **Line 153** [INFO]: Line exceeds 120 chars (124) (`long-line`)
-- **Line 205** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
-- **Line 206** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
-- **Line 236** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
-- **Line 358** [INFO]: Magic number 3 (consider using a named constant) (`magic-number`)
-- **Line 361** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
+- **Line 230** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
+- **Line 231** [INFO]: Magic number 4 (consider using a named constant) (`magic-number`)
+- **Line 321** [INFO]: Line exceeds 120 chars (122) (`long-line`)
 
-### `res://scenes/editor/code_edit.gd` (5 issues)
+### `res://scenes/editor/code_edit.gd` (2 issues)
 
-- **Line 180** [INFO]: Magic number 58 (consider using a named constant) (`magic-number`)
-- **Line 181** [INFO]: Magic number 91 (consider using a named constant) (`magic-number`)
-- **Line 182** [INFO]: Magic number 123 (consider using a named constant) (`magic-number`)
-- **Line 223** [INFO]: Magic number 33 (consider using a named constant) (`magic-number`)
-- **Line 225** [INFO]: Magic number 58 (consider using a named constant) (`magic-number`)
+- **Line 244** [WARNING]: Function '_on_gui_input' has 6 nesting levels (max 3) (`deep-nesting`)
+- **Line 258** [INFO]: Magic number 5 (consider using a named constant) (`magic-number`)
 
-### `res://scenes/main/popup_menu.gd` (2 issues)
+### `res://analysis/dictionary_service.gd` (2 issues)
 
-- **Line 45** [INFO]: Line exceeds 120 chars (127) (`long-line`)
-- **Line 46** [INFO]: Line exceeds 120 chars (127) (`long-line`)
+- **Line 131** [CRITICAL]: Function '_build_dictionary_prompt' has complexity 18 (max 15) (`high-complexity`)
+- **Line 176** [WARNING]: Function '_parse_dictionary_response' has complexity 11 (warning at 10) (`high-complexity`)
 
 ---
 
 ## Metadata
 
 - **Generator**: GDScript Linter
-- **Analysis Time**: 901ms
+- **Analysis Time**: 605ms
 
 > Ask an AI: "Review these issues and suggest fixes for each file."

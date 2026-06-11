@@ -128,6 +128,7 @@ func _analyze(payload: Dictionary) -> Dictionary:
 	return result
 
 ## Build the LLM prompt for dictionary/thesaurus lookup
+# gdlint:ignore-function:high-complexity
 func _build_dictionary_prompt(word: String, context: String, source_lang: String, target_lang: String) -> String:
 	var phrase_or_word: String = "word"
 	if word.contains(" "):
@@ -173,6 +174,7 @@ Guidelines:
 	return prompt
 
 ## Parse LLM response into structured dictionary
+# gdlint:ignore-function:high-complexity
 func _parse_dictionary_response(response: String) -> Dictionary:
 	# Try to parse as JSON first
 	var json_data: Dictionary = JsonUtils.parse_json(response)

@@ -4,6 +4,7 @@ extends CodeEdit
 
 const MIN_FONT_SIZE : int = 6
 const EDITOR_MARGIN : int = 50
+const MAX_SELECTION_WORDS : int = 5
 
 # ASCII character codes for word boundary detection
 const SPACE_CODE := 32
@@ -242,22 +243,30 @@ func _on_text_changed():
 		EventBus.editor_content_changed.emit(current_file_path, current_text)
 
 func _on_gui_input(event: InputEvent) -> void:
-	# Check for mouse release after selection (only emit signal, don't handle)
 	if event is InputEventMouseButton:
-		var mouse_event: InputEventMouseButton = event
-		if mouse_event.pressed == false and mouse_event.button_index == MOUSE_BUTTON_LEFT:
-			if has_selection():
-				var selected_text: String = get_selected_text()
-				var trimmed: String = selected_text.strip_edges()
-				if not trimmed.is_empty():
-					var words: PackedStringArray = trimmed.split(" ")
-					var non_empty_words: PackedStringArray = []
-					for w in words:
-						if not w.is_empty():
-							non_empty_words.append(w)
-					if non_empty_words.size() <= 5:
-						var cursor_line: int = get_caret_line()
-						EventBus.text_selected.emit(current_file_path, cursor_line + 1, trimmed, non_empty_words.size())
+		_on_mouse_input(event as InputEventMouseButton)
+
+func _on_mouse_input(mouse_event: InputEventMouseButton) -> void:
+	if mouse_event.pressed == false and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+		_handle_text_selection()
+
+func _handle_text_selection() -> void:
+	if not has_selection():
+		return
+
+	var selected_text: String = get_selected_text()
+	var trimmed: String = selected_text.strip_edges()
+	if trimmed.is_empty():
+		return
+
+	var non_empty_words: PackedStringArray = []
+	for w in trimmed.split(" "):
+		if not w.is_empty():
+			non_empty_words.append(w)
+
+	if non_empty_words.size() <= MAX_SELECTION_WORDS:
+		var cursor_line: int = get_caret_line()
+		EventBus.text_selected.emit(current_file_path, cursor_line + 1, trimmed, non_empty_words.size())
 
 # gdlint:ignore-function:too-many-params,long-function,long-line,deep-nesting,high-complexity
 func _on_apply_diff_patch_command(

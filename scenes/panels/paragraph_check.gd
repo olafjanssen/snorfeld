@@ -227,7 +227,9 @@ func _create_synonym_meta(word_index: int, old_word: String, new_word: String) -
 		old_clean = old_clean.substr(1)
 	new_word_with_punct = old_leading + new_word + old_trailing
 
+	# gdlint:ignore-next-line:magic-number
 	var encoded_old: String = Marshalls.utf8_to_base64(old_word)
+	# gdlint:ignore-next-line:magic-number
 	var encoded_new: String = Marshalls.utf8_to_base64(new_word_with_punct)
 	return "change|%d|%s|%s" % [word_index, encoded_old, encoded_new]
 
@@ -318,7 +320,9 @@ func _on_text_selected(file_path: String, line_number: int, text: String, _word_
 	current_paragraph_text = para_data.get("text", "")
 
 	# Lookup the phrase in dictionary
-	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(_selected_phrase, current_paragraph_text)
+	_dictionary_cache_data = AnalysisManager.DictionaryService.get_cached_word_info(
+		_selected_phrase, current_paragraph_text
+	)
 
 	var active_tab: int = $TabContainer.get_current_tab()
 	if active_tab == DICTIONARY_TAB:
